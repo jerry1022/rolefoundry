@@ -4,6 +4,7 @@ import { initialWorkspace, workspaceSchema, type Workspace } from "./domain";
 const KEY = "rolefoundry.workspace.v1";
 type Context = {
   state: Workspace;
+  ready: boolean;
   update: (fn: (current: Workspace) => Workspace) => void;
   reset: () => void;
   storageWarning: boolean;
@@ -39,6 +40,7 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
     <WorkspaceContext.Provider
       value={{
         state,
+        ready,
         update: (fn) => setState((s) => workspaceSchema.parse(fn(s))),
         reset: () => setState(structuredClone(initialWorkspace)),
         storageWarning,

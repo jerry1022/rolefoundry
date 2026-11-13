@@ -1,5 +1,28 @@
 import { test, expect } from "@playwright/test";
 import { readFile } from "node:fs/promises";
+import { initialWorkspace } from "../../src/lib/domain";
+
+test("editing waits for hydration and restores the saved draft before accepting input", async ({
+  page,
+}) => {
+  await page.addInitScript(
+    (workspace) => {
+      localStorage.setItem("rolefoundry.workspace.v1", JSON.stringify(workspace));
+    },
+    { ...initialWorkspace, resume: "Previously saved draft" },
+  );
+  await page.route(/\/_next\/.*\.js/, async (route) => {
+    await new Promise((resolve) => setTimeout(resolve, 900));
+    await route.continue();
+  });
+  await page.goto("/resume/", { waitUntil: "commit" });
+  const editor = page.getByLabel("Resume draft");
+  await expect(editor).toBeDisabled();
+  await expect(editor).toBeEditable();
+  await expect(editor).toHaveValue("Previously saved draft");
+  await editor.fill("A clean replacement draft");
+  await expect(editor).toHaveValue("A clean replacement draft");
+});
 
 test("all workspace routes render without client errors", async ({ page }) => {
   const errors: string[] = [];

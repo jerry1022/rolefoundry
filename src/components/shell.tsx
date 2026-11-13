@@ -32,7 +32,7 @@ const navigation = [
 ];
 function ShellContent({ children }: { children: ReactNode }) {
   const path = usePathname();
-  const { state, storageWarning } = useWorkspace();
+  const { state, ready, storageWarning } = useWorkspace();
   const [menu, setMenu] = useState(false);
   const active = (href: string) =>
     href === "/" ? path === "/" : path.startsWith(href.replace(/\/$/, ""));
@@ -159,14 +159,17 @@ function ShellContent({ children }: { children: ReactNode }) {
             </a>
           </div>
         </header>
-        <main id="main-content">
+        <main id="main-content" aria-busy={!ready}>
           {storageWarning && (
             <div className="notice warning" role="status">
               Browser storage is unavailable or was reset. Your current changes may only last for
               this session.
             </div>
           )}
-          {children}
+          <fieldset className="workspace-controls" disabled={!ready}>
+            <legend className="sr-only">Career workspace</legend>
+            {children}
+          </fieldset>
         </main>
         <footer className="footer">
           <span>

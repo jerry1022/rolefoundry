@@ -13,6 +13,13 @@
   --coral: #f3b99d;
   --radius: 16px;
 }
+.workspace-controls {
+  display: contents;
+  border: 0;
+  padding: 0;
+  margin: 0;
+  min-width: 0;
+}
 * {
   box-sizing: border-box;
 }

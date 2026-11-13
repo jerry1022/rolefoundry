@@ -8,6 +8,8 @@ Store career direction, preferences and capability evidence without collapsing c
 
 The skill profile edits a name, one career track and self-reported skills. Scenario results are recorded separately in versioned localStorage. Zod rejects incompatible stored shapes. No raw resume file or remote portfolio content is fetched.
 
+All workspace form controls are disabled in server-rendered HTML until client hydration and local state restoration finish. This prevents early input from racing with saved values. Persistence starts only after restoration, including the unavailable-storage fallback.
+
 ## Data and contracts
 
 Production records: `career_preferences`, `skill_claims`, `evidence`, `evidence_skill_links` and `portfolio_references`. Evidence fields include owner, source type, skill, observed result, source version, reviewer state and date. Source types are resume claim, self-report, scenario response and portfolio reference. A portfolio URL alone is not a reviewed artifact.
