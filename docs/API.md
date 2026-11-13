@@ -18,7 +18,7 @@
 
 | Method and path | Input | Output / authorization |
 | --- | --- | --- |
-| GET `/jobs` | q, track, workplace, location, level, cursor | Published active jobs; public |
+| GET `/jobs` | q, track, specialization, workplace, location, level, cursor | Published active jobs; public |
 | GET `/jobs/{id}` | Job ID | Job, requirements, permitted source metadata; public |
 | PUT/DELETE `/bookmarks/{jobId}` | Job ID | Idempotent owner bookmark mutation |
 | GET/PATCH `/profile` | Name, direction, workplace preferences, weekly hours | Owner profile and version |

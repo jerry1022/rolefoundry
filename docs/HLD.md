@@ -54,6 +54,8 @@ No browser can call privileged database functions, provider APIs or worker crede
 
 ## 4. Modules
 
+Job discovery distinguishes four foundational assessment tracks from ten detailed job specializations. The original nine career directions and the retained design/content direction are documented in [career classifications](CAREER_PATHS.md). A category with no sample opening still presents its learning and evidence guide.
+
 | Module | Ownership and principal output |
 | --- | --- |
 | Identity and access | Invitations, sessions, roles, consent and quotas |

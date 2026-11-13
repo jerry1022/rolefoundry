@@ -3,6 +3,7 @@ import { mkdir } from "node:fs/promises";
 
 // Capture the actual running fixture-backed site; never a synthesized mockup.
 await mkdir("docs/assets", { recursive: true });
+const baseURL = process.env.ROLEFOUNDRY_URL || "http://127.0.0.1:3000";
 const browser = await chromium.launch();
 try {
   const page = await browser.newPage({
@@ -14,8 +15,17 @@ try {
     ["/jobs/", "jobs"],
     ["/learning/", "learning"],
   ]) {
-    await page.goto(`http://127.0.0.1:3000${route}`);
+    await page.goto(`${baseURL}${route}`);
     await page.locator("h1").waitFor();
+    await page
+      .locator("main")
+      .getAttribute("aria-busy")
+      .then(async (value) => {
+        if (value === "true")
+          await page.waitForFunction(
+            () => document.querySelector("main")?.getAttribute("aria-busy") === "false",
+          );
+      });
     await page.evaluate(() => document.fonts.ready);
     await page.screenshot({
       path: `docs/assets/${name}.png`,
@@ -27,7 +37,7 @@ try {
     );
   }
   await page.setViewportSize({ width: 390, height: 844 });
-  await page.goto("http://127.0.0.1:3000/");
+  await page.goto(`${baseURL}/`);
   await page.screenshot({ path: "docs/assets/mobile.png", fullPage: true, animations: "disabled" });
 } finally {
   await browser.close();

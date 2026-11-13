@@ -13,6 +13,144 @@
   --coral: #f3b99d;
   --radius: 16px;
 }
+.career-path-section {
+  margin: 28px 0 24px;
+}
+.career-path-section .section-heading {
+  align-items: flex-start;
+}
+.career-path-section .section-heading p {
+  max-width: 640px;
+}
+.career-path-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 10px;
+}
+.career-path-card {
+  text-align: left;
+  min-width: 0;
+  padding: 15px 13px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: white;
+  transition:
+    border-color 0.15s,
+    background 0.15s;
+}
+.career-path-card:hover {
+  background: #f0f5e9;
+  border-color: #bfd0ac;
+}
+.career-path-card.selected {
+  background: #e6efdd;
+  border-color: #9fb98b;
+}
+.career-path-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 13px;
+  color: #81966c;
+}
+.career-path-card-top > span {
+  font-size: 10px;
+  border-radius: 5px;
+  padding: 3px 6px;
+  background: #f0f4e9;
+}
+.career-path-card strong {
+  display: block;
+  min-height: 36px;
+  font-size: 11px;
+  line-height: 1.7;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+.career-path-card small {
+  display: block;
+  font-size: 9px;
+  color: #98a58b;
+  margin-top: 10px;
+}
+.career-guide {
+  margin-top: 17px;
+}
+.career-guide-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 20px;
+}
+.career-guide-heading h2 {
+  margin-top: 8px;
+  line-height: 1.6;
+}
+.career-guide-heading > div > p:last-child {
+  font-size: 11px;
+  line-height: 1.9;
+  margin-top: 10px;
+  color: #87987a;
+  max-width: 650px;
+}
+.career-guide-columns {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 35px;
+  margin-top: 23px;
+}
+.career-guide-columns h3 {
+  font-size: 12px;
+  margin-bottom: 10px;
+}
+.career-guide-columns ol,
+.career-guide-columns ul {
+  padding-left: 19px;
+  margin: 0 0 17px;
+  font-size: 11px;
+  line-height: 2;
+  color: #87987a;
+}
+.career-guide-columns > div > p {
+  font-size: 11px;
+  line-height: 1.9;
+  color: #87987a;
+}
+.career-guide-note {
+  border-top: 1px solid var(--line);
+  margin-top: 18px;
+  padding-top: 14px;
+  font-size: 9px;
+  line-height: 1.8;
+  color: #9ba78f;
+}
+.job-specialization {
+  margin-top: 9px;
+  font-size: 10px;
+  line-height: 1.7;
+  color: #718b5d;
+}
+@media (max-width: 1150px) {
+  .career-path-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .career-guide-heading {
+    flex-wrap: wrap;
+  }
+}
+@media (max-width: 600px) {
+  .career-path-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .career-path-section .section-heading {
+    flex-wrap: wrap;
+  }
+  .career-guide-columns {
+    grid-template-columns: 1fr;
+    gap: 15px;
+  }
+}
 .workspace-controls {
   display: contents;
   border: 0;

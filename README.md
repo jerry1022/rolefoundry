@@ -52,7 +52,7 @@ Changes stay in your browser. Reset them from **Catalog studio**.
 | Workspace | Working scaffold behavior |
 | --- | --- |
 | **Overview** | Recommended sample roles, growth snapshot and a next learning step |
-| **Discover roles** | Keyword/track/workplace filters, bookmarks and role details |
+| **Discover roles** | Ten specializations, career guides, keyword/track/workplace filters, bookmarks and role details |
 | **My skill profile** | Editable direction, self-report and separate scenario evidence |
 | **Skill check** | Twelve authored scenarios across four career tracks |
 | **Learning path** | Six official course links, skill-gap ranking, prerequisites and practice prompts |
@@ -94,6 +94,8 @@ tests/               Domain tests and browser journeys
 ```
 
 ## Design documentation
+
+- [Original AI career classifications and learning pathways](docs/CAREER_PATHS.md)
 
 - [Integrated product plan](ai-career-platform-plan.md)
 - [High-level design](docs/HLD.md)

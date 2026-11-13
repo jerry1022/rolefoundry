@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { getCareerPath, type CareerPathId } from "./career-paths";
 
 export const tracks = [
   "Engineering & data",
@@ -35,6 +36,7 @@ export interface Job {
   initials: string;
   color: string;
   track: Track;
+  specialization: CareerPathId;
   location: string;
   mode: "Hybrid" | "Remote" | "On-site";
   level: string;
@@ -113,6 +115,7 @@ export function searchJobs(
   track: string,
   mode: string,
   skills: Skill[],
+  specialization: CareerPathId | "all" = "all",
 ) {
   const terms = query.toLowerCase().trim().split(/\s+/).filter(Boolean);
   return jobs
@@ -121,6 +124,8 @@ export function searchJobs(
         job.title,
         job.company,
         job.location,
+        getCareerPath(job.specialization).title,
+        ...getCareerPath(job.specialization).aliases,
         ...job.skills.map((s) => `${s} ${skillLabels[s]}`),
       ]
         .join(" ")
@@ -128,7 +133,8 @@ export function searchJobs(
       return (
         terms.every((term) => text.includes(term)) &&
         (track === "All tracks" || job.track === track) &&
-        (mode === "Any workplace" || job.mode === mode)
+        (mode === "Any workplace" || job.mode === mode) &&
+        (specialization === "all" || job.specialization === specialization)
       );
     })
     .sort(

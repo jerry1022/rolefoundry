@@ -1,6 +1,50 @@
 import { test, expect } from "@playwright/test";
 import { readFile } from "node:fs/promises";
 import { initialWorkspace } from "../../src/lib/domain";
+import { careerPaths } from "../../src/lib/career-paths";
+
+test("all original career paths remain browsable even without sample openings", async ({
+  page,
+}) => {
+  await page.goto("/jobs/");
+  const categories = page.getByRole("group", { name: "AI career specializations" });
+  await expect(categories.getByRole("button")).toHaveCount(10);
+  for (const path of careerPaths) {
+    await categories.getByRole("button", { name: `${path.title}`, exact: false }).click();
+    await expect(page.locator("#selected-career-heading")).toHaveText(path.title);
+    await expect(
+      page.getByRole("heading", { name: "Learning sequence", exact: true }),
+    ).toBeVisible();
+    await expect(
+      page.getByRole("heading", { name: "Evidence to build", exact: true }),
+    ).toBeVisible();
+  }
+  await categories.getByRole("button", { name: /MLOps & AI platform engineering/ }).click();
+  await expect(page.locator(".job-card")).toHaveCount(0);
+  await expect(page.locator(".career-guide")).toContainText("tested release rollback");
+  await expect(page.locator(".empty-state")).toContainText("Its career guide stays available");
+  await page.getByRole("button", { name: "All specializations", exact: true }).click();
+  await expect(page.locator(".job-card")).toHaveCount(8);
+});
+
+test("specialization filters combine with other filters and reset together", async ({ page }) => {
+  await page.goto("/jobs/");
+  await page
+    .getByRole("group", { name: "AI career specializations" })
+    .getByRole("button", { name: /AI \/ LLM application engineering/ })
+    .click();
+  await page.getByLabel("Workplace", { exact: true }).selectOption("Remote");
+  await expect(page.locator(".job-card")).toHaveCount(1);
+  await expect(page.locator(".job-card")).toContainText("LLM Product Engineer");
+  await page.getByRole("button", { name: "Reset", exact: true }).click();
+  await expect(page.locator(".job-card")).toHaveCount(8);
+  await expect(
+    page.getByRole("button", { name: "All specializations", exact: true }),
+  ).toHaveAttribute("aria-pressed", "true");
+  await page.getByLabel("Search jobs", { exact: true }).fill("資料科學家");
+  await expect(page.locator(".job-card")).toHaveCount(1);
+  await expect(page.locator(".job-card")).toContainText("AI Growth Analyst");
+});
 
 test("editing waits for hydration and restores the saved draft before accepting input", async ({
   page,
@@ -46,7 +90,7 @@ test("all workspace routes render without client errors", async ({ page }) => {
 
 test("filters jobs, persists bookmarks, and tracks a role without applying", async ({ page }) => {
   await page.goto("/jobs/");
-  await page.getByRole("textbox", { name: "Search jobs" }).fill("AI Application");
+  await page.getByRole("textbox", { name: "Search jobs" }).fill("Orbit");
   await expect(page.locator(".job-card")).toHaveCount(1);
   await page.getByRole("button", { name: "Save AI Application Engineer", exact: true }).click();
   await page.reload();

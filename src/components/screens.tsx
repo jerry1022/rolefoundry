@@ -48,6 +48,8 @@ import {
   type Track,
 } from "@/lib/domain";
 import { useWorkspace } from "@/lib/workspace";
+import { careerPaths, getCareerPath, type CareerPathId } from "@/lib/career-paths";
+import { CareerPathBrowser } from "./career-path-browser";
 
 function PageHeading({
   eyebrow,
@@ -141,6 +143,7 @@ function JobDetails({ job, onClose }: { job: Job; onClose: () => void }) {
       <p className="muted">
         {job.location} · {job.mode} · {job.level}
       </p>
+      <p className="job-specialization">{getCareerPath(job.specialization).title}</p>
       <p className="detail-summary">{job.summary}</p>
       <h3>What you would work on</h3>
       <ul className="detail-list">
@@ -229,6 +232,7 @@ function JobCard({
       <button className="job-title-button" onClick={() => onOpen(job)}>
         <h3>{job.title}</h3>
       </button>
+      {!compact && <p className="job-specialization">{getCareerPath(job.specialization).title}</p>}
       <p className="job-location">
         <MapPin size={13} />
         {job.location}
@@ -462,11 +466,21 @@ export function JobsScreen() {
   const [query, setQuery] = useState("");
   const [track, setTrack] = useState("All tracks");
   const [mode, setMode] = useState("Any workplace");
+  const [specialization, setSpecialization] = useState<CareerPathId | "all">("all");
   const [savedOnly, setSavedOnly] = useState(false);
   const [selected, setSelected] = useState<Job | null>(null);
-  const results = searchJobs(jobs, query, track, mode, state.knownSkills).filter(
+  const candidates = searchJobs(jobs, query, track, mode, state.knownSkills).filter(
     (job) => !savedOnly || state.savedJobs.includes(job.id),
   );
+  const results = searchJobs(jobs, query, track, mode, state.knownSkills, specialization).filter(
+    (job) => !savedOnly || state.savedJobs.includes(job.id),
+  );
+  const counts = Object.fromEntries(
+    careerPaths.map((path) => [
+      path.id,
+      candidates.filter((job) => job.specialization === path.id).length,
+    ]),
+  ) as Record<CareerPathId, number>;
   return (
     <>
       <PageHeading
@@ -533,6 +547,7 @@ export function JobsScreen() {
               setTrack("All tracks");
               setMode("Any workplace");
               setSavedOnly(false);
+              setSpecialization("all");
             }}
           >
             <RotateCcw size={13} />
@@ -540,6 +555,7 @@ export function JobsScreen() {
           </button>
         </div>
       </div>
+      <CareerPathBrowser selected={specialization} counts={counts} onSelect={setSpecialization} />
       <div className="results-heading">
         <span>
           <strong>{results.length}</strong> possibilities to explore
@@ -558,7 +574,11 @@ export function JobsScreen() {
         <div className="empty-state">
           <Search size={30} />
           <h2>No roles in this corner yet.</h2>
-          <p>Try another keyword, workplace, or career track.</p>
+          <p>
+            {specialization !== "all"
+              ? "No sample roles match this specialization and your current filters. Its career guide stays available above; try All specializations or reset your filters."
+              : "Try another keyword, workplace, or career track."}
+          </p>
         </div>
       )}
       {selected && <JobDetails job={selected} onClose={() => setSelected(null)} />}

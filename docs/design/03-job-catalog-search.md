@@ -10,6 +10,8 @@ Eight fictional openings demonstrate four career tracks, workplace filters, AND 
 
 ## Data and interfaces
 
+Jobs have both a broad assessment `track` and a primary `specialization` with a stable ID from the career-path catalog. The original nine specializations remain browsable even with no openings; design/content adds a tenth direction. Each has a work description, learning sequence, evidence suggestions and a project example. Keyword search includes canonical specialization names and reviewed bilingual aliases. See [career classifications](../CAREER_PATHS.md).
+
 Target records: `companies`, `jobs`, `job_sources`, `job_requirements`, `job_skill_links` and owner-scoped `bookmarks`. Store source job ID, original link, rights basis, first/last observation, last successful validation and status. Salary amount, currency and interval are separate fields; undisclosed salary is null, never zero. Requirements distinguish mandatory from preferred.
 
 `GET /jobs` accepts `q`, `track`, `workplace`, location, level and cursor. `GET /jobs/{id}` returns only published content. Bookmark operations require identity. Search results include source freshness and do not claim complete market coverage.

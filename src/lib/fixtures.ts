@@ -4,6 +4,7 @@ import type { Course, Job, Question, Track } from "./domain";
 export const jobs: Job[] = [
   {
     id: "rf-01",
+    specialization: "ai-llm-applications",
     title: "AI Application Engineer",
     company: "Orbit Labs",
     initials: "O",
@@ -24,6 +25,7 @@ export const jobs: Job[] = [
   },
   {
     id: "rf-02",
+    specialization: "ai-llm-applications",
     title: "LLM Product Engineer",
     company: "Layers",
     initials: "L",
@@ -44,6 +46,7 @@ export const jobs: Job[] = [
   },
   {
     id: "rf-03",
+    specialization: "ai-product-consulting",
     title: "AI Product Manager",
     company: "Forma",
     initials: "f",
@@ -64,6 +67,7 @@ export const jobs: Job[] = [
   },
   {
     id: "rf-04",
+    specialization: "machine-learning",
     title: "Data & ML Engineer",
     company: "Northstar",
     initials: "N",
@@ -84,6 +88,7 @@ export const jobs: Job[] = [
   },
   {
     id: "rf-05",
+    specialization: "ai-automation-operations",
     title: "AI Workflow Specialist",
     company: "Daybreak",
     initials: "D",
@@ -104,6 +109,7 @@ export const jobs: Job[] = [
   },
   {
     id: "rf-06",
+    specialization: "ai-design-content",
     title: "Generative Content Designer",
     company: "Studio Field",
     initials: "F",
@@ -124,6 +130,7 @@ export const jobs: Job[] = [
   },
   {
     id: "rf-07",
+    specialization: "ai-product-consulting",
     title: "AI Solutions Consultant",
     company: "Common Ground",
     initials: "C",
@@ -144,6 +151,7 @@ export const jobs: Job[] = [
   },
   {
     id: "rf-08",
+    specialization: "data-analytics-science",
     title: "AI Growth Analyst",
     company: "Parcel",
     initials: "P",

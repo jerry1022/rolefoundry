@@ -5,8 +5,8 @@ This document records the scope of local verification for v0.1. CI reports the c
 | Check | Local result | Scope |
 | --- | --- | --- |
 | TypeScript | Passed | Generated Next route types and strict type checking |
-| Vitest | 9 tests passed | Filters, overlap/gaps, prerequisites, fixed scoring, fixture isolation and state validation |
-| Playwright Chromium | 8 journeys passed | All nine routes, hydration-safe editing, bookmarks, evidence, learning, resume content export, tracker, reset and mobile navigation |
+| Vitest | 12 tests passed | Original career paths, combined filters, bilingual aliases, overlap/gaps, prerequisites, fixed scoring, fixture isolation and state validation |
+| Playwright Chromium | 10 journeys passed | All specializations and empty-category guides, all nine routes, hydration-safe editing, bookmarks, evidence, learning, resume content export, tracker, reset and mobile navigation |
 | Next production build | Passed | All nine application routes plus not-found output |
 | Static export | Passed | Project base path `/rolefoundry` |
 | Worker dry run | Passed | Task schema and transition only; no live queue |

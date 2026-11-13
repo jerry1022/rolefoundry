@@ -9,8 +9,43 @@ import {
 } from "../../src/lib/domain";
 import { courses, jobs, questions } from "../../src/lib/fixtures";
 import { FixtureJobRepository } from "../../src/lib/services";
+import { careerPaths, careerPathIds } from "../../src/lib/career-paths";
 
 describe("job discovery and evidence boundaries", () => {
+  it("retains the nine original pathways and the creative AI direction, including empty categories", () => {
+    expect(careerPaths.map((path) => path.id)).toEqual([...careerPathIds]);
+    expect(careerPaths).toHaveLength(10);
+    expect(
+      careerPaths.every(
+        (path) =>
+          path.learning.length >= 3 && path.evidence.length >= 2 && path.project.length > 30,
+      ),
+    ).toBe(true);
+    expect(jobs.every((job) => careerPathIds.includes(job.specialization))).toBe(true);
+    expect(searchJobs(jobs, "", "All tracks", "Any workplace", [], "mlops-platform")).toEqual([]);
+    expect(careerPaths.find((path) => path.id === "mlops-platform")).toBeDefined();
+  });
+  it("combines specialization with existing track, keyword and workplace filters", () => {
+    expect(
+      searchJobs(jobs, "python", "Engineering & data", "Remote", [], "ai-llm-applications").map(
+        (job) => job.id,
+      ),
+    ).toEqual(["rf-02"]);
+    expect(
+      searchJobs(jobs, "", "Product & strategy", "Any workplace", [], "machine-learning"),
+    ).toEqual([]);
+  });
+  it("searches original role names and Traditional Chinese category aliases", () => {
+    expect(
+      searchJobs(jobs, "AI Application", "All tracks", "Any workplace", []).map((job) => job.id),
+    ).toEqual(["rf-01", "rf-02"]);
+    expect(
+      searchJobs(jobs, "AI PM", "All tracks", "Any workplace", []).map((job) => job.id),
+    ).toEqual(["rf-03", "rf-07"]);
+    expect(
+      searchJobs(jobs, "資料科學家", "All tracks", "Any workplace", []).map((job) => job.id),
+    ).toEqual(["rf-08"]);
+  });
   it("combines keywords, track and workplace without returning unrelated roles", () => {
     expect(
       searchJobs(jobs, "python", "Engineering & data", "Remote", ["python"]).map((j) => j.id),

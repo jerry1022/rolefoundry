@@ -4,6 +4,8 @@ RoleFoundry is an open-source AI career workspace. This documentation separates 
 
 ## Start here
 
+- [AI career classifications](CAREER_PATHS.md): the original nine directions, creative AI work, and their relationship to assessment tracks.
+
 1. [Product plan](../ai-career-platform-plan.md): audience, scope, capabilities, milestones and acceptance criteria.
 2. [High-level design](HLD.md): architecture, deployment, data ownership and technology choices.
 3. [Detailed design index](design/README.md): each module's responsibilities, interfaces, flows and failure cases.
