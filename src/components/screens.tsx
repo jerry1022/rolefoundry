@@ -1,4 +1,5 @@
 "use client";
+import { PageHeading } from "./ui/page-heading";
 import Link from "next/link";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import {
@@ -51,28 +52,6 @@ import { useWorkspace } from "@/lib/workspace";
 import { careerPaths, getCareerPath, type CareerPathId } from "@/lib/career-paths";
 import { CareerPathBrowser } from "./career-path-browser";
 
-function PageHeading({
-  eyebrow,
-  title,
-  description,
-  action,
-}: {
-  eyebrow: string;
-  title: string;
-  description: string;
-  action?: ReactNode;
-}) {
-  return (
-    <div className="page-heading">
-      <div>
-        <p className="eyebrow">{eyebrow}</p>
-        <h1>{title}</h1>
-        <p className="page-description">{description}</p>
-      </div>
-      {action}
-    </div>
-  );
-}
 function SectionHeading({
   title,
   subtitle,
@@ -1540,13 +1519,14 @@ export function ArchitectureScreen() {
             <li>Scenario scoring and local evidence records.</li>
             <li>Local resume editing, text export and an application board.</li>
             <li>Optional invitation-only Auth, consent, RLS and atomic quota reservations.</li>
+            <li>Private preferences and evidence history through replaceable service ports.</li>
             <li>Typed repository, provider and worker contracts.</li>
           </ul>
         </section>
         <section className="panel">
           <h2>What comes next</h2>
           <ul className="detail-list">
-            <li>Account-backed career profiles and private document storage.</li>
+            <li>Private document storage and account-backed career workflows.</li>
             <li>Authorized catalogs and source lifecycle management.</li>
             <li>Persistent queues and isolated document processing.</li>
             <li>Model adapters and output validation using versioned consent.</li>

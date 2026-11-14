@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { ApplicationError } from "../platform/errors";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 export const featureSchema = z.enum(["assessment", "resume"]);
@@ -22,11 +23,9 @@ const failures = {
   RF_ORIGIN: [403, "The request origin is not permitted."],
   RF_TOO_LARGE: [413, "The request is too large."],
 } as const;
-export class IdentityError extends Error {
-  readonly status: number;
+export class IdentityError extends ApplicationError {
   constructor(readonly code: keyof typeof failures) {
-    super(failures[code][1]);
-    this.status = failures[code][0];
+    super(code, failures[code][0], failures[code][1]);
   }
 }
 export function databaseError(error: { message: string; code?: string }): IdentityError {
@@ -59,6 +58,9 @@ const adminActions = new Set([
 ]);
 const ownerActions = new Set([
   "profile:read",
+  "profile:write",
+  "evidence:read",
+  "evidence:write",
   "consent:read",
   "consent:write",
   "usage:read",

@@ -1,6 +1,6 @@
 # Production API contract
 
-**Mixed implementation status.** The identity endpoints under `/api/v1/identity` are implemented for configured server deployments; see [their exact API and setup](IDENTITY_SETUP.md). The resource contracts below describe the remaining production modules and are not deployed handlers. The public static demo excludes all dynamic identity handlers.
+**Mixed implementation status.** The identity endpoints under `/api/v1/identity` are implemented for configured server deployments; see [their exact API and setup](IDENTITY_SETUP.md). Profile/evidence endpoints are also implemented: see [their exact inputs, versions and pagination](PROFILE_SETUP.md). Other resource contracts below remain planned. The public static demo excludes all dynamic identity handlers.
 
 ## Conventions
 
@@ -23,7 +23,9 @@
 | PUT/DELETE `/bookmarks/{jobId}` | Job ID | Idempotent owner bookmark mutation |
 | GET/PATCH `/profile` | Name, direction, workplace preferences, weekly hours | Owner profile and version |
 | GET `/evidence` | Cursor, skill ID | Owner evidence with provenance |
-| POST `/evidence` | Self-report or portfolio reference | Owner reference; cannot forge scored evidence |
+| POST `/evidence` | Self-report or portfolio reference plus profile revision | Owner evidence; cannot forge scored evidence |
+| GET/PATCH/DELETE `/evidence/{id}` | Evidence ID; expected profile/evidence versions for writes | Owner immutable history, new version or full deletion |
+| POST `/profile/import` | Explicitly reviewed preferences/claims, revision 0 | Import only into a new owner profile |
 | POST `/assessments` | Track | Attempt with public question fields |
 | POST `/assessments/{id}/submit` | Attempt version and answers | Grading task |
 | GET `/assessments/{id}` | Attempt ID | Owner attempt and published result |

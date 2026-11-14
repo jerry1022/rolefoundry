@@ -30,7 +30,7 @@ The worker command is a dry run only. It is not a persistent queue consumer.
 
 Browser tests start their own server on port 3100, avoiding unrelated development services on port 3000. Set `E2E_PORT` to choose another test port. An occupied test port is an error; the suite never silently reuses an unknown server.
 
-For optional invitation-only authentication, local Supabase setup, runtime secrets and hosted configuration, follow [Identity setup](IDENTITY_SETUP.md). Career workspace data remains browser-local in this release.
+For optional invitation-only authentication, local Supabase setup, runtime secrets and hosted configuration, follow [Identity setup](IDENTITY_SETUP.md). See [Profile setup](PROFILE_SETUP.md) for module 02 private preferences/evidence. Other career data remains browser-local.
 
 ## Vercel
 
@@ -46,7 +46,7 @@ The future long-lived Node worker is hosted separately. Do not keep a Vercel req
 NEXT_PUBLIC_BASE_PATH=/rolefoundry npm run build:pages
 ```
 
-The output is `out/`. All ten routes are pre-rendered; interactions execute locally after hydration. The base path is needed for project-hosted GitHub Pages, but should be empty for a custom domain/root site. GitHub Actions builds and publishes the export when Pages is configured to use Actions. Static hosting cannot supply the planned private REST API, authorization or worker.
+The output is `out/`. All ten routes are pre-rendered; interactions execute locally after hydration. The base path is needed for project-hosted GitHub Pages, but should be empty for a custom domain/root site. GitHub Actions builds and publishes the export when Pages is configured to use Actions. Static hosting excludes all identity/profile handlers and cannot supply authorization or a worker.
 
 ## Docker
 

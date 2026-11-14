@@ -6,7 +6,7 @@ Provide stable shared identifiers for jobs, claims, questions, course outcomes a
 
 ## Current scaffold
 
-Nine canonical skill IDs and English display names live in `domain.ts`. The union type prevents arbitrary identifiers from silently entering state. The skill catalog service has `resolveAlias` and `list` ports, without a production adapter.
+Nine canonical skill IDs and English display names live in `src/modules/skills/catalog.ts`, with compatibility re-exports from `domain.ts`. Module 02 seeds the same stable IDs in `skills` for evidence foreign keys; aliases, relations, dictionary versions and admin workflows remain planned. The union type prevents arbitrary identifiers from silently entering state. The skill catalog service has `resolveAlias` and `list` ports, without a production adapter.
 
 ## Target data
 

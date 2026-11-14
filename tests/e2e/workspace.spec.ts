@@ -201,4 +201,6 @@ test("public demo labels identity as unavailable and fails closed", async ({ pag
   await expect(page.getByLabel("Email address")).toHaveCount(0);
   const response = await request.get("/api/v1/identity/session");
   expect(response.status()).toBe(503);
+  expect((await request.get("/api/v1/profile")).status()).toBe(503);
+  expect((await request.get("/api/v1/evidence")).status()).toBe(503);
 });

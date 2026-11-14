@@ -1,4 +1,10 @@
 import "server-only";
+import {
+  readJsonBody as body,
+  requireSameOrigin,
+  errorResponse,
+  privateHeaders,
+} from "../platform/http";
 import { z } from "zod";
 import { databaseError, featureSchema, IdentityError } from "./core";
 import { identityConfig, identityContext } from "./server";
@@ -23,49 +29,13 @@ const quota = z
   .strict();
 const refund = z.object({ taskId: z.uuid(), reason: z.string().trim().min(1).max(1000) }).strict();
 
-async function body<T>(request: Request, schema: z.ZodType<T>): Promise<T> {
-  if (request.headers.get("content-type")?.split(";")[0].trim() !== "application/json")
-    throw new IdentityError("RF_INVALID_INPUT");
-  const reader = request.body?.getReader();
-  if (!reader) throw new IdentityError("RF_INVALID_INPUT");
-  const chunks: Uint8Array[] = [];
-  let size = 0;
-  try {
-    while (true) {
-      const part = await reader.read();
-      if (part.done) break;
-      size += part.value.byteLength;
-      if (size > 8192) {
-        await reader.cancel();
-        throw new IdentityError("RF_TOO_LARGE");
-      }
-      chunks.push(part.value);
-    }
-    const bytes = new Uint8Array(size);
-    let offset = 0;
-    for (const chunk of chunks) {
-      bytes.set(chunk, offset);
-      offset += chunk.byteLength;
-    }
-    const result = schema.safeParse(JSON.parse(new TextDecoder().decode(bytes)));
-    if (!result.success) throw new IdentityError("RF_INVALID_INPUT");
-    return result.data;
-  } catch (error) {
-    if (error instanceof IdentityError) throw error;
-    throw new IdentityError("RF_INVALID_INPUT");
-  }
-}
 export async function identityHttp(request: Request, action: string[]) {
   const requestId = crypto.randomUUID();
-  const headers = { "Cache-Control": "no-store", Vary: "Cookie", "X-Request-Id": requestId };
+  const headers = privateHeaders(requestId);
   const success = (data: unknown, status = 200) => Response.json({ data }, { status, headers });
   try {
     const config = identityConfig();
-    if (
-      !["GET", "HEAD"].includes(request.method) &&
-      request.headers.get("origin") !== config.appOrigin
-    )
-      throw new IdentityError("RF_ORIGIN");
+    requireSameOrigin(request, config.appOrigin);
     const ctx = await identityContext();
     const route = `${request.method} ${action.join("/")}`;
     if (route === "GET policies") return success(await ctx.service.policies());
@@ -150,10 +120,6 @@ export async function identityHttp(request: Request, action: string[]) {
     }
     throw new IdentityError("RF_NOT_FOUND");
   } catch (error) {
-    const failure = error instanceof IdentityError ? error : new IdentityError("RF_UNAVAILABLE");
-    return Response.json(
-      { error: { code: failure.code, message: failure.message, requestId } },
-      { status: failure.status, headers },
-    );
+    return errorResponse(error, requestId);
   }
 }

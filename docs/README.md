@@ -1,8 +1,11 @@
 # Design documentation
 
-RoleFoundry is an open-source AI career workspace. This documentation separates the browser-local career scaffold, implemented server identity and the remaining production design. All documents are written in English.
+RoleFoundry is an open-source AI career workspace. This documentation separates the browser-local career scaffold, implemented server identity/private profile and the remaining production design. All documents are written in English.
 
 ## Start here
+
+- [Module delivery and dependency rules](MODULE_DEVELOPMENT.md): ordered progress, replaceable ports/adapters and upgrade contracts.
+- [Profile/evidence setup](PROFILE_SETUP.md): implemented module 02, exact API and provenance/invalidation boundaries.
 
 - [AI career classifications](CAREER_PATHS.md): the original nine directions, creative AI work, and their relationship to assessment tracks.
 - [Identity setup](IDENTITY_SETUP.md): implemented module 01, local Auth/database tests and hosted configuration.
@@ -23,4 +26,4 @@ RoleFoundry is an open-source AI career workspace. This documentation separates 
 - **Contract:** a TypeScript interface or schema, with no production adapter yet.
 - **Planned:** design only. Requires implementation and validation before use.
 
-The public catalog inspector is a demo route, not an administrative security boundary. Identity admin operations live behind server verification in Account & privacy. Live job feeds, model calls, document uploads and external applications remain unconnected. Static exports do not include the identity backend.
+The public catalog inspector is a demo route, not an administrative security boundary. Identity admin operations live behind server verification in Account & privacy. Live job feeds, model calls, document uploads and external applications remain unconnected. Static exports do not include identity or profile APIs.

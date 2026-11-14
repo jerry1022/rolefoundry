@@ -19,6 +19,7 @@ jobs:
       - run: npm run typecheck
       - run: npm test
       - run: npm run docs:check
+      - run: npm run architecture:check
       - run: npm run worker:demo
       - run: npm run build
       - run: npx playwright install --with-deps chromium
