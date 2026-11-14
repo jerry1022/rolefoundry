@@ -1,15 +1,16 @@
 # Design documentation
 
-RoleFoundry is an open-source AI career workspace. This documentation separates the **working browser-local scaffold** from the **planned production system**. All documents are written in English.
+RoleFoundry is an open-source AI career workspace. This documentation separates the browser-local career scaffold, implemented server identity and the remaining production design. All documents are written in English.
 
 ## Start here
 
 - [AI career classifications](CAREER_PATHS.md): the original nine directions, creative AI work, and their relationship to assessment tracks.
+- [Identity setup](IDENTITY_SETUP.md): implemented module 01, local Auth/database tests and hosted configuration.
 
 1. [Product plan](../ai-career-platform-plan.md): audience, scope, capabilities, milestones and acceptance criteria.
 2. [High-level design](HLD.md): architecture, deployment, data ownership and technology choices.
 3. [Detailed design index](design/README.md): each module's responsibilities, interfaces, flows and failure cases.
-4. [API contract](API.md): proposed production endpoints; these are not deployed API handlers.
+4. [API contract](API.md): planned domain resources plus a link to the implemented identity API.
 5. [Data model](DATA_MODEL.md): intended relational model, evidence provenance and access rules.
 6. [Deployment](DEPLOYMENT.md): local development, Vercel, GitHub Pages and the future worker.
 7. [Roadmap](ROADMAP.md): implemented scope and production milestones.
@@ -22,4 +23,4 @@ RoleFoundry is an open-source AI career workspace. This documentation separates 
 - **Contract:** a TypeScript interface or schema, with no production adapter yet.
 - **Planned:** design only. Requires implementation and validation before use.
 
-The public catalog inspector is a demo route, not an administrative security boundary. No live job feeds, authentication, model calls, file uploads, or external applications are connected.
+The public catalog inspector is a demo route, not an administrative security boundary. Identity admin operations live behind server verification in Account & privacy. Live job feeds, model calls, document uploads and external applications remain unconnected. Static exports do not include the identity backend.

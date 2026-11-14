@@ -1,6 +1,6 @@
 # RoleFoundry — High-Level Design
 
-**Version:** 0.1 · **Status:** scaffold implemented; production architecture planned
+**Version:** 0.2 identity foundation · **Status:** career scaffold and server identity implemented; remaining production modules planned
 
 ## 1. Purpose and scope
 
@@ -14,7 +14,7 @@ Job discovery must work before account creation or assessment. Completing a cour
 
 ## 2. Current executable system
 
-The repository contains a Next.js App Router application with nine navigable routes, a shared application shell, typed fixtures, deterministic domain functions and versioned browser-local persistence. A dry-run worker validates a task contract. Production ports are defined in `src/lib/services.ts`; they do not call external services.
+The repository contains a Next.js App Router application with ten navigable pages, a shared shell, typed career fixtures and browser-local persistence. Module 01 adds real Supabase identity APIs, a database migration, consent and quota transactions, and worker guards. Other domain ports remain contracts. The worker demo still does not consume a queue or execute analyses.
 
 | Capability | Current state |
 | --- | --- |
@@ -26,7 +26,8 @@ The repository contains a Next.js App Router application with nine navigable rou
 | Resume | Local text editing, deterministic checklist, text export |
 | Applications | Local manual board, stages and notes |
 | Administration | Read-only fixture provenance inspector and confirmed local reset |
-| AI/auth/database | Contracts and designs only; no live implementation |
+| Identity/database | Configurable Supabase Auth/PostgreSQL, email OTP, invitations, roles, consent, quotas and audit |
+| AI/career persistence | Contracts and designs only; no live implementation |
 
 ## 3. Target architecture
 
@@ -81,7 +82,7 @@ See [module designs](design/README.md) for interfaces and failure semantics.
 | Web | Next.js App Router, React | Server-render public catalog; private authenticated workspace |
 | Styling | CSS tokens and responsive components, Lucide icons | Keep the existing design system; add localization without replacing components |
 | Validation | Zod | Validate requests, persisted records and AI outputs |
-| Storage | Versioned localStorage | Supabase PostgreSQL, Auth and private Storage |
+| Storage | Browser-local career data; Supabase identity records | Extend PostgreSQL and private Storage to the other domains |
 | Search | Deterministic in-memory filters | SQL predicates, skill aliases and pgvector reranking |
 | Tasks | Dry-run contract | Supabase Queues/pgmq with a Node worker |
 | AI | No provider connected | Gateway adapter selected through a fixed evaluation set |
@@ -111,7 +112,7 @@ Confirm source usage rights → normalize a batch → deduplicate by source ID a
 
 ## 7. API and task boundaries
 
-Production REST endpoints use `/api/v1`. Long operations return `202` with a task ID. Task states are `queued`, `running`, `succeeded` and `failed`. The browser polls an owner-scoped task resource. Read-only fixture pages currently do not expose these endpoints.
+Production REST endpoints use `/api/v1`. Implemented identity endpoints use `/api/v1/identity`; other domain APIs remain planned. Analysis reservations atomically create an identity task and durable outbox row. Task states are `queued`, `running`, `succeeded` and `failed`; the identity task resource is owner-scoped. Module 12 will connect the outbox to actual execution.
 
 Persist the business record and queued message in one database transaction. Worker results use an idempotency key derived from owner, task type and input version. Visibility leases can expire, so handlers must tolerate redelivery. A provider request can be repeated after a crash; do not describe queue delivery as end-to-end exactly-once AI execution.
 

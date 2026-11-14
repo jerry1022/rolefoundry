@@ -60,12 +60,25 @@ Changes stay in your browser. Reset them from **Catalog studio**.
 | **Applications** | Manual stages, notes and persistent local state |
 | **Catalog studio** | Transparent fixture provenance and a confirmed local reset |
 | **Architecture** | An explorable overview of the planned service boundaries |
+| **Account & privacy** | Optional server-backed email OTP, invitations, consent, weekly allowance and admin controls; static demo stays local |
 
 ### Honest by default
 
 This is a **functional product scaffold**, not a live recruiting service. Employers, openings and salaries are fictional. Course summaries and skill mappings are independent editorial metadata; course availability and pricing belong to the provider. RoleFoundry is not affiliated with DeepLearning.AI.
 
-There is no connected authentication, database, job feed, AI model, document upload, PDF export or application submission. The resume checklist and skill overlap are deterministic. Completing a course does **not** verify a skill; overlap does **not** predict hiring. Use sample information in the public demo.
+The public demo has no connected authentication or private backend. Configured server deployments now support [module 01 identity](docs/IDENTITY_SETUP.md) with Supabase Auth/PostgreSQL, invitations, consent and quotas. Career workspace persistence, live job feeds, AI analysis, document upload/PDF export and application submission remain future work. The resume checklist and skill overlap are deterministic. Completing a course does **not** verify a skill; overlap does **not** predict hiring. Use sample information in the public demo.
+
+### Run the identity foundation locally
+
+With Docker running:
+
+```bash
+npm run identity:start
+npm run identity:invite -- developer@example.test
+npm run identity:dev
+```
+
+Open `http://127.0.0.1:3200/account/`; receive your code in local Mailpit at port 54324. No cloud credentials are required. See the [identity setup guide](docs/IDENTITY_SETUP.md) for administrator bootstrap, hosted settings and `npm run identity:test`.
 
 ## Architecture that can grow with the product
 
@@ -73,20 +86,22 @@ There is no connected authentication, database, job feed, AI model, document upl
 flowchart LR
     UI[Next.js workspace] --> D[Typed domain modules]
     D --> F[Fixture repositories — today]
-    D -.-> DB[(Supabase — planned)]
+    D --> DB[(Supabase identity — implemented)]
     D -.-> Q[pgmq + Node worker — planned]
     Q -.-> AI[AI Gateway — planned]
     DB -.-> S[Jobs ↔ skills ↔ evidence ↔ courses]
 ```
 
-Today: **Next.js · React · TypeScript · Zod · CSS tokens · Lucide · Vitest · Playwright**.
+Today: **Next.js · React · TypeScript · Zod · Supabase Auth/PostgreSQL · CSS tokens · Lucide · Vitest · Playwright**.
 
-Production design: **Supabase Auth/PostgreSQL/Storage · pgvector · durable task queues · independent worker · schema-validated AI adapters**. The architecture is a modular monolith, with explicit module ports rather than premature microservices.
+Production extensions: **private Storage · pgvector · pgmq consumer · independent worker · schema-validated AI adapters**. The identity ledger/outbox is implemented; analysis execution is not. The architecture is a modular monolith, with explicit module ports rather than premature microservices.
 
 ```text
-src/app/             Nine routes and application layout
+src/app/             Ten pages, identity API routes and application layout
 src/components/      Shared shell and interactive screens
 src/lib/             Domain rules, schemas, fixtures and service ports
+src/modules/identity Verified identity services and worker authorization guards
+supabase/            Identity migration, Auth hook and local OTP templates
 apps/worker/         Dry-run worker contract
 docs/                HLD, 13 module designs, API, data model and deployment
 tests/               Domain tests and browser journeys
@@ -100,6 +115,7 @@ tests/               Domain tests and browser journeys
 - [Integrated product plan](ai-career-platform-plan.md)
 - [High-level design](docs/HLD.md)
 - [All 13 detailed module designs](docs/design/README.md)
+- [Implemented identity module and setup](docs/IDENTITY_SETUP.md)
 - [Production API contract](docs/API.md) and [data model](docs/DATA_MODEL.md)
 - [Career journey playbook](AI_CAREER_PLAN.md)
 - [Deployment guide](docs/DEPLOYMENT.md) and [roadmap](docs/ROADMAP.md)

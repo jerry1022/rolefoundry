@@ -1382,7 +1382,7 @@ export function AdminScreen() {
                 <td>
                   <span className="pill">No backend</span>
                 </td>
-                <td>Auth, consent, RLS and deletion</td>
+                <td>Account-backed career data and deletion</td>
               </tr>
             </tbody>
           </table>
@@ -1395,7 +1395,7 @@ export function AdminScreen() {
             {
               icon: Database,
               title: "Durable workspace",
-              text: "Supabase Auth, PostgreSQL and private Storage. Tenant-scoped access and deletion.",
+              text: "Account identity is available when configured. Private career storage and deletion workflows follow.",
             },
             {
               icon: Network,
@@ -1539,16 +1539,17 @@ export function ArchitectureScreen() {
             <li>Fixture-backed search, overlap matching and course ranking.</li>
             <li>Scenario scoring and local evidence records.</li>
             <li>Local resume editing, text export and an application board.</li>
+            <li>Optional invitation-only Auth, consent, RLS and atomic quota reservations.</li>
             <li>Typed repository, provider and worker contracts.</li>
           </ul>
         </section>
         <section className="panel">
           <h2>What comes next</h2>
           <ul className="detail-list">
-            <li>Authentication, RLS and database migrations.</li>
+            <li>Account-backed career profiles and private document storage.</li>
             <li>Authorized catalogs and source lifecycle management.</li>
             <li>Persistent queues and isolated document processing.</li>
-            <li>Model adapters, output validation and explicit consent.</li>
+            <li>Model adapters and output validation using versioned consent.</li>
             <li>Production telemetry, backups and deployment controls.</li>
           </ul>
         </section>
