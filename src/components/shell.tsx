@@ -13,6 +13,7 @@ import {
   Network,
   PanelsTopLeft,
   Settings2,
+  ShieldCheck,
   Sparkles,
   Sprout,
   Target,
@@ -29,6 +30,7 @@ const navigation = [
   { href: "/learning/", label: "Learning path", icon: GraduationCap },
   { href: "/resume/", label: "Resume studio", icon: FileText },
   { href: "/applications/", label: "Applications", icon: BriefcaseBusiness },
+  { href: "/account/", label: "Account & privacy", icon: ShieldCheck },
 ];
 function ShellContent({ children }: { children: ReactNode }) {
   const path = usePathname();

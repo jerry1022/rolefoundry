@@ -81,6 +81,7 @@ test("all workspace routes render without client errors", async ({ page }) => {
     "/applications/",
     "/admin/",
     "/architecture/",
+    "/account/",
   ]) {
     await page.goto(route);
     await expect(page.locator("h1")).toBeVisible();
@@ -181,6 +182,7 @@ test("mobile routes fit the viewport and navigation works", async ({ page }) => 
     "/resume/",
     "/applications/",
     "/architecture/",
+    "/account/",
   ]) {
     await page.goto(route);
     await expect(page.locator("h1")).toBeVisible();
@@ -191,4 +193,12 @@ test("mobile routes fit the viewport and navigation works", async ({ page }) => 
   await page.getByRole("button", { name: "Open navigation" }).click();
   await page.getByRole("link", { name: "Discover roles", exact: true }).click();
   await expect(page.locator("h1")).toHaveText("Find your kind of next.");
+});
+
+test("public demo labels identity as unavailable and fails closed", async ({ page, request }) => {
+  await page.goto("/account/");
+  await expect(page.locator("h1")).toBeVisible();
+  await expect(page.getByLabel("Email address")).toHaveCount(0);
+  const response = await request.get("/api/v1/identity/session");
+  expect(response.status()).toBe(503);
 });

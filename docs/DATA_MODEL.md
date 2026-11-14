@@ -1,6 +1,6 @@
 # Data model
 
-**Status:** relational design, not an applied schema. No Supabase project or migrations are connected to this scaffold.
+**Status:** module 01 has an executable Supabase migration for identity, consent, quota policy, reservation/task outbox and audit records. The remaining career-domain tables below are design only. See [identity setup](IDENTITY_SETUP.md); no hosted Supabase project is configured automatically.
 
 ## Ownership and groups
 
