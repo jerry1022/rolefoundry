@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import { skillLabels } from "@/modules/skills/catalog";
+import { skillLabel } from "@/modules/skills/model";
 import type { CapabilityEvidence } from "@/modules/profile/model";
 const sourceLabels = {
   "self-report": "Self-report",
@@ -37,7 +37,7 @@ export function EvidenceCard({
       <div className="tags">
         {evidence.skills.map((skill) => (
           <span className="skill-tag" key={skill}>
-            {skillLabels[skill]}
+            {skillLabel(skill, evidence.skillLabels)}
           </span>
         ))}
       </div>

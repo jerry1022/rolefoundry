@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { tracks } from "../skills/catalog";
-import { skillSchema } from "../skills/catalog";
+import { skillIdSchema as skillSchema } from "../skills/model";
 import { careerPathIds } from "./specializations";
 export const catalogText = (max: number) =>
   z
@@ -135,6 +135,14 @@ export const publishedJobSchema = jobDraftSchema.omit({ canonicalKey: true }).ex
   revision: z.number().int().positive(),
   publishedAt: z.string(),
   sources: z.array(jobSourceSchema).min(1),
+  dictionaryVersion: z.number().int().positive(),
+  sourceDictionaryVersion: z.number().int().positive(),
+  requirements: z.array(
+    requirementSchema.extend({
+      sourceSkills: z.array(skillSchema),
+      skillLabels: z.record(z.string(), z.string()),
+    }),
+  ),
 });
 export type PublishedJob = z.infer<typeof publishedJobSchema>;
 export const catalogPageSchema = z.object({

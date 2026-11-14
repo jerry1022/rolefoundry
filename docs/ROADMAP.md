@@ -27,13 +27,14 @@
 - [x] Identity task ledger and transactional outbox.
 - [ ] Module 12 pgmq adapter, real worker leases and telemetry.
 
-See [module-by-module delivery status](MODULE_DEVELOPMENT.md); module 04 is the next implementation.
+See [module-by-module delivery status](MODULE_DEVELOPMENT.md); module 05 is the next implementation.
 
 ## v0.3 — Real catalogs and reviewed evidence
 
 - [x] Module 03 source policies, reviewed publication/expiry, anonymous catalog and private bookmarks.
 - [ ] Module 10 authorized live source adapters and reviewed content population.
-- [ ] Reviewed bilingual skill aliases and taxonomy versions.
+- [x] Module 04 bilingual dictionary/aliases, immutable versions, relation DAGs and reviewed admin merges.
+- [ ] External editorial calibration of skill mappings and assessment rubrics.
 - [ ] Curated catalog of 30–50 courses with source review dates.
 - [ ] Larger foundational question bank with expert calibration.
 - [ ] Traditional Chinese UI and locale-aware formatting.

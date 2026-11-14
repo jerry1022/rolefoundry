@@ -11,7 +11,7 @@ See the [complete requirement audit](IMPLEMENTATION_AUDIT.md) before claiming th
 | 01 Identity/access | Implemented; base PR #1 | Hosted hook/SMTP/secrets and migration review |
 | 02 Profile/evidence | Implemented on top of 01 | Review migration/API/UI and local integration results |
 | 03 Jobs/search | Published catalog, source governance and private bookmarks implemented | Later dictionary/matching/ingestion/application integrations |
-| 04 Skill dictionary | Minimal stable registry shared with 02; full module planned | Bilingual aliases, versioning, redirects and cycle prevention |
+| 04 Skill dictionary | Bilingual snapshots, aliases, DAGs, admin review, historical-safe merges and runtime IDs implemented | Human mapping review and later report/version integration |
 | 05 Assessment | Local preview only | Immutable questions/rubrics, private attempts, scoring and evidence integration |
 | 06 Matching | Local overlap only | Versioned inputs, conditions/unknowns, stale/deleted evidence handling |
 | 07 Courses/learning | Editorial local demo only | Reviewed catalog, two-week plans, prerequisites and owner progress |
@@ -22,7 +22,7 @@ See the [complete requirement audit](IMPLEMENTATION_AUDIT.md) before claiming th
 | 12 Workers | Identity/profile outboxes; worker dry run | Leases, retries, delivery recovery, handler registry and invalidation processing |
 | 13 Operations | Identity admin controls only | Reviewed publication, recovery, deletion and telemetry |
 
-Work follows the document sequence, but dependencies are explicit. Modules 05–08 may establish producers and deterministic domain rules before 11/12. They cannot be described as running asynchronous AI features until the gateway/worker integration passes its own checks. Module 02 seeds only the canonical IDs needed for foreign keys; this does not complete module 04. Keep each new module's review focused; use a stacked PR base if its predecessor is still open, without silently merging it.
+Work follows the document sequence, but dependencies are explicit. Modules 05–08 may establish producers and deterministic domain rules before 11/12. They cannot be described as running asynchronous AI features until the gateway/worker integration passes its own checks. Module 02 seeded the initial foreign-key registry; module 04 now adds versioned administration and runtime IDs. Keep each new module's review focused; use a stacked PR base if its predecessor is still open, without silently merging it.
 
 ## Dependency rules
 
@@ -53,6 +53,10 @@ flowchart LR
 - Keep existing demo APIs as compatibility exports where necessary; new production modules must not depend on the demo workspace shape.
 
 `npm run architecture:check` enforces the profile/job/skill core and profile/job UI import boundaries with the TypeScript parser. Extend its coverage when adding modules. It supplements behavior tests; it does not prove runtime security or transactional correctness.
+
+## Dictionary concurrency and historical joins
+
+Dictionary writes lock catalog, then dictionary exclusively. Link inserts use a shared dictionary lock. Merge updates canonical join projections without taking owner locks; immutable source IDs/content remain unchanged. Reports must record both dictionary and profile/input versions. See [dictionary integration](SKILL_DICTIONARY_SETUP.md).
 
 ## Version and deletion contracts
 

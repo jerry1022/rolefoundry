@@ -33,7 +33,12 @@ async function rpc(client: SupabaseClient, name: string, input?: Record<string, 
   return data;
 }
 const cursorSchema = z
-  .object({ after: z.uuid(), revision: revisionSchema, skill: z.string().nullable() })
+  .object({
+    after: z.uuid(),
+    revision: revisionSchema,
+    dictionaryVersion: z.number().int().positive(),
+    skill: z.string().nullable(),
+  })
   .strict();
 export class SupabaseProfileRepository implements ProfileRepository {
   constructor(private readonly client: SupabaseClient) {}
@@ -66,23 +71,27 @@ export class SupabaseProfileRepository implements ProfileRepository {
         data: z.array(evidenceSchema),
         lastId: z.uuid().nullable(),
         revision: revisionSchema,
+        dictionaryVersion: z.number().int().positive(),
       })
       .parse(
         await rpc(this.client, "profile_list_evidence", {
           p_skill: query.skill || null,
           p_after: cursor?.after || null,
           p_revision: cursor?.revision ?? null,
+          p_dictionary_version: cursor?.dictionaryVersion ?? null,
           p_limit: query.limit,
         }),
       );
     return evidencePageSchema.parse({
       data: result.data,
       revision: result.revision,
+      dictionaryVersion: result.dictionaryVersion,
       nextCursor: result.lastId
         ? Buffer.from(
             JSON.stringify({
               after: result.lastId,
               revision: result.revision,
+              dictionaryVersion: result.dictionaryVersion,
               skill: query.skill || null,
             }),
           ).toString("base64url")

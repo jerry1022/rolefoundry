@@ -82,6 +82,7 @@ test("all workspace routes render without client errors", async ({ page }) => {
     "/admin/",
     "/architecture/",
     "/account/",
+    "/dictionary/",
   ]) {
     await page.goto(route);
     await expect(page.locator("h1")).toBeVisible();
@@ -183,6 +184,7 @@ test("mobile routes fit the viewport and navigation works", async ({ page }) => 
     "/applications/",
     "/architecture/",
     "/account/",
+    "/dictionary/",
   ]) {
     await page.goto(route);
     await expect(page.locator("h1")).toBeVisible();
@@ -205,4 +207,5 @@ test("public demo labels identity as unavailable and fails closed", async ({ pag
   expect((await request.get("/api/v1/evidence")).status()).toBe(503);
   expect((await request.get("/api/v1/jobs")).status()).toBe(503);
   expect((await request.get("/api/v1/bookmarks")).status()).toBe(503);
+  expect((await request.get("/api/v1/skills")).status()).toBe(503);
 });
