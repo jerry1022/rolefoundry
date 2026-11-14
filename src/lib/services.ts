@@ -5,7 +5,6 @@ import type {
   Job,
   JobRepository,
   Question,
-  Skill,
   Stage,
   Task,
   Track,
@@ -26,7 +25,7 @@ export class FixtureCourseRepository implements CourseRepository {
   }
 }
 
-// Domain ports. Identity and profile have implementations; other production ports remain contracts.
+// Compatibility exports for implemented modules; remaining domain ports are still contracts.
 import type { Actor } from "../modules/identity/core";
 export type { Actor } from "../modules/identity/core";
 export interface IdentityService {
@@ -34,10 +33,9 @@ export interface IdentityService {
 }
 export type { ProfileService } from "../modules/profile/service";
 export type { ProfileRepository, InternalEvidenceWriter } from "../modules/profile/ports";
-export interface SkillCatalogService {
-  resolveAlias(input: string): Promise<Skill | null>;
-  list(): Promise<{ id: Skill; label: string }[]>;
-}
+export type { SkillDictionaryService as SkillCatalogService } from "../modules/skills/service";
+export type { SkillRepository, SkillAdminRepository } from "../modules/skills/ports";
+export type { JobCatalogService } from "../modules/jobs/service";
 export interface AssessmentService {
   start(
     actor: Actor,

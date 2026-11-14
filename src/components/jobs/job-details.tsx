@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useRef } from "react";
 import type { PublishedJob } from "@/modules/jobs/model";
-import { skillLabels } from "@/modules/skills/catalog";
+import { skillLabel } from "@/modules/skills/model";
 export function JobDetails({ job, onClose }: { job: PublishedJob; onClose: () => void }) {
   const dialog = useRef<HTMLDialogElement>(null);
   useEffect(() => {
@@ -38,7 +38,7 @@ export function JobDetails({ job, onClose }: { job: PublishedJob; onClose: () =>
           <div className="tags">
             {requirement.skills.map((skill) => (
               <span key={skill} className="skill-tag">
-                {skillLabels[skill]}
+                {skillLabel(skill, requirement.skillLabels)}
               </span>
             ))}
           </div>

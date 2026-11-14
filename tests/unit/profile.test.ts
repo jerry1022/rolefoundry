@@ -85,7 +85,7 @@ describe("profile domain through replaceable ports", () => {
     const { service, repository } = setup();
     const member = await actor();
     for (const evidence of [
-      { ...claim, skills: ["unknown"] },
+      { ...claim, skills: ["unknown!"] },
       { ...claim, source: "scenario", reviewState: "scored" },
       { ...claim, reviewState: "reviewed" },
     ])

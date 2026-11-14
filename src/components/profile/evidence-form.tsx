@@ -1,6 +1,6 @@
 "use client";
 import { useId, useState } from "react";
-import { skillLabels, type Skill } from "@/modules/skills/catalog";
+import type { SkillEntry } from "@/modules/skills/model";
 import {
   publicEvidenceSchema,
   type CapabilityEvidence,
@@ -12,8 +12,10 @@ export function EvidenceForm({
   busy,
   onSave,
   onCancel,
+  skillOptions,
 }: {
   initial?: CapabilityEvidence;
+  skillOptions: SkillEntry[];
   busy: boolean;
   onSave: (value: PublicEvidenceInput) => Promise<void>;
   onCancel: () => void;
@@ -25,7 +27,7 @@ export function EvidenceForm({
   const [label, setLabel] = useState(initial?.label || "");
   const [context, setContext] = useState(initial?.context || "");
   const [date, setDate] = useState((initial?.observedAt || new Date().toISOString()).slice(0, 10));
-  const [skills, setSkills] = useState<Skill[]>(initial?.skills || []);
+  const [skills, setSkills] = useState<string[]>(initial?.canonicalSkills || initial?.skills || []);
   const [level, setLevel] = useState(initial?.claimedLevel ?? 1);
   const [url, setUrl] = useState(initial?.url || "");
   const [error, setError] = useState("");
@@ -39,6 +41,12 @@ export function EvidenceForm({
       <form
         onSubmit={(event) => {
           event.preventDefault();
+          if (
+            skills.some((id) => skillOptions.find((skill) => skill.id === id)?.status !== "active")
+          ) {
+            setError("Deselect deprecated skills and choose a current skill before saving.");
+            return;
+          }
           const parsed = publicEvidenceSchema.safeParse({
             source,
             label,
@@ -106,7 +114,7 @@ export function EvidenceForm({
           </div>
           <fieldset className="profile-options">
             <legend>Related skills</legend>
-            {(Object.keys(skillLabels) as Skill[]).map((skill) => (
+            {skillOptions.map(({ id: skill, nameEn, status }) => (
               <label key={skill}>
                 <input
                   type="checkbox"
@@ -117,7 +125,7 @@ export function EvidenceForm({
                     )
                   }
                 />
-                {skillLabels[skill]}
+                {nameEn}
               </label>
             ))}
           </fieldset>

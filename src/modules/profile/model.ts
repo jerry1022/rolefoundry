@@ -1,7 +1,8 @@
 import { z } from "zod";
 import { ApplicationError } from "../platform/errors";
-import { tracks, skillSchema } from "../skills/catalog";
-export { skillSchema } from "../skills/catalog";
+import { tracks } from "../skills/catalog";
+import { skillIdSchema as skillSchema } from "../skills/model";
+export { skillIdSchema as skillSchema } from "../skills/model";
 
 const text = (max: number) =>
   z
@@ -95,6 +96,9 @@ export const evidenceSchema = z.object({
   observedAt: z.string(),
   createdAt: z.string(),
   skills: z.array(skillSchema),
+  canonicalSkills: z.array(skillSchema).optional(),
+  skillLabels: z.record(z.string(), z.string()).optional(),
+  dictionaryVersion: z.number().int().positive().optional(),
   claimedLevel: z.number().nullable(),
   url: z.string().nullable(),
   sourceRef: z.string().nullable(),
@@ -108,6 +112,7 @@ export const evidencePageSchema = z.object({
   data: z.array(evidenceSchema),
   nextCursor: z.string().nullable(),
   revision: revisionSchema,
+  dictionaryVersion: z.number().int().positive(),
 });
 export type EvidencePage = z.infer<typeof evidencePageSchema>;
 export const importProfileSchema = z

@@ -40,16 +40,16 @@ For hosted deployments, review and apply `20261114020000_profile_evidence.sql` a
 | PATCH `/api/v1/evidence/{id}` | `{expectedRevision, expectedVersion, evidence}`; appends a version |
 | DELETE `/api/v1/evidence/{id}` | `{expectedRevision, expectedVersion}`; removes all versions and returns revision |
 
-Preferences use the four stable assessment tracks, zero to eighty weekly learning hours, and an explicit subset of Remote/Hybrid/On-site. Empty workplace preferences mean unspecified. Name/context are plain text, never HTML. Initial canonical skills are the same nine stable IDs as the demo; the later dictionary module adds aliases and editorial administration.
+Preferences use the four stable assessment tracks, zero to eighty weekly learning hours, and an explicit subset of Remote/Hybrid/On-site. Empty workplace preferences mean unspecified. Name/context are plain text, never HTML. The initial nine canonical IDs remain available; the [versioned dictionary](SKILL_DICTIONARY_SETUP.md) now provides runtime concepts, bilingual labels and editorial administration.
 
 Browser-writable evidence has common fields `label`, `context`, `observedAt` (UTC timestamp, not future-dated), and one or more canonical `skills`. Source-specific fields:
 
 - `self-report`: `claimedLevel` from 0–3; always unreviewed.
 - `portfolio-reference`: an HTTPS `url` without embedded credentials; always unreviewed. The server never fetches it.
 
-Every returned evidence version includes IDs, version, source, observation/creation timestamps, skills, source/rubric versions, review state, optional outcome, self-reported level and portfolio URL. Clients cannot submit owner IDs, review state, scored outcomes or trusted source references through the public API. Type changes are rejected. Portfolio references are not reviewed artifacts; scenario results describe a narrow observation rather than overall mastery.
+Every returned evidence version includes IDs, version, source, observation/creation timestamps, skills, source/rubric versions, review state, optional outcome, self-reported level and portfolio URL. Additional metadata retains the source dictionary version, historical skill labels and current canonical skill IDs. Clients cannot submit owner IDs, review state, scored outcomes or trusted source references through the public API. Type changes are rejected. Portfolio references are not reviewed artifacts; scenario results describe a narrow observation rather than overall mastery.
 
-Private endpoints verify an active session and derive ownership from it. Mutations require the configured same origin and JSON, reject unknown fields and limit bodies to 8 KiB. Unauthorized access is 401; inactive/forbidden operations 403; other/missing evidence IDs 404; stale edits 409. Cursors bind the filter and aggregate revision: restart pagination after a material edit. There is a 500-evidence public creation cap per account. The initial history API returns all owner versions; retention/pagination can be added compatibly before a high-volume rollout.
+Private endpoints verify an active session and derive ownership from it. Mutations require the configured same origin and JSON, reject unknown fields and limit bodies to 8 KiB. Unauthorized access is 401; inactive/forbidden operations 403; other/missing evidence IDs 404; stale edits 409. Cursors bind the filter, aggregate revision and dictionary version: restart pagination after a material edit. There is a 500-evidence public creation cap per account. The initial history API returns all owner versions; retention/pagination can be added compatibly before a high-volume rollout.
 
 ## Integration ports
 

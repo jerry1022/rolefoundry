@@ -8,6 +8,8 @@ import type {
   EvidencePage,
   PublicEvidenceInput,
 } from "@/modules/profile/model";
+import type { SkillClient } from "@/modules/skills/ports";
+import type { SkillDictionary } from "@/modules/skills/model";
 import type { ProfileClient } from "@/modules/profile/ports";
 import { ApplicationError } from "@/modules/platform/errors";
 import { PreferencesForm } from "./preferences-form";
@@ -16,7 +18,14 @@ import { EvidenceCard } from "./evidence-card";
 import { DemoImport } from "./demo-import";
 
 /** Screen orchestration depends only on an injected client port. Child forms own draft state. */
-export function ProfileScreen({ client }: { client: ProfileClient }) {
+export function ProfileScreen({
+  client,
+  dictionary,
+}: {
+  client: ProfileClient;
+  dictionary: SkillClient;
+}) {
+  const [skills, setSkills] = useState<SkillDictionary | null>(null);
   const [profile, setProfile] = useState<CareerProfile | null>(null);
   const [page, setPage] = useState<EvidencePage | null>(null);
   const [loading, setLoading] = useState(true);
@@ -32,7 +41,18 @@ export function ProfileScreen({ client }: { client: ProfileClient }) {
     setUnauthorized(err instanceof ApplicationError && [401, 403].includes(err.status));
   }, []);
   const read = useCallback(async () => {
-    const [nextProfile, nextPage] = await Promise.all([client.read(), client.list({ limit: 20 })]);
+    const [nextProfile, nextPage, nextSkills] = await Promise.all([
+      client.read(),
+      client.list({ limit: 20 }),
+      dictionary.get(),
+    ]);
+    if (nextSkills.version !== nextPage.dictionaryVersion)
+      throw new ApplicationError(
+        "RF_CONFLICT",
+        409,
+        "The dictionary changed. Reload before continuing.",
+      );
+    setSkills(nextSkills);
     if (nextProfile.revision !== nextPage.revision)
       throw new ApplicationError(
         "RF_CONFLICT",
@@ -42,18 +62,19 @@ export function ProfileScreen({ client }: { client: ProfileClient }) {
     setProfile(nextProfile);
     setPage(nextPage);
     setUnauthorized(false);
-  }, [client]);
+  }, [client, dictionary]);
   useEffect(() => {
     let active = true;
-    void Promise.all([client.read(), client.list({ limit: 20 })])
-      .then(([p, e]) => {
+    void Promise.all([client.read(), client.list({ limit: 20 }), dictionary.get()])
+      .then(([p, e, d]) => {
         if (!active) return;
-        if (p.revision !== e.revision)
+        if (p.revision !== e.revision || d.version !== e.dictionaryVersion)
           throw new ApplicationError(
             "RF_CONFLICT",
             409,
             "Your profile changed during loading. Reload to continue.",
           );
+        setSkills(d);
         setProfile(p);
         setPage(e);
       })
@@ -66,7 +87,7 @@ export function ProfileScreen({ client }: { client: ProfileClient }) {
     return () => {
       active = false;
     };
-  }, [client, reportError]);
+  }, [client, dictionary, reportError]);
   async function mutate(work: () => Promise<unknown>, message: string) {
     setBusy(true);
     setError("");
@@ -107,6 +128,9 @@ export function ProfileScreen({ client }: { client: ProfileClient }) {
         <p>
           This profile is saved to your signed-in account. Other career pages currently use the
           local demo; its data is uploaded only through the optional reviewed import below.
+          <Link className="text-link" href="/dictionary/">
+            View the shared skill dictionary ↗
+          </Link>
         </p>
       </div>
       {loading && <p role="status">Loading your private profile…</p>}
@@ -140,7 +164,7 @@ export function ProfileScreen({ client }: { client: ProfileClient }) {
           {notice}
         </p>
       )}
-      {!unauthorized && profile && page && (
+      {!unauthorized && profile && page && skills && (
         <>
           <div className="profile-account-grid section-block">
             <PreferencesForm
@@ -193,6 +217,7 @@ export function ProfileScreen({ client }: { client: ProfileClient }) {
               <EvidenceForm
                 key={editor === "new" ? "new" : editor.versionId}
                 initial={editor === "new" ? undefined : editor}
+                skillOptions={skills.skills}
                 busy={busy}
                 onSave={saveEvidence}
                 onCancel={() => setEditor(null)}
