@@ -2,13 +2,15 @@
 
 Implement the numbered designs in reviewable increments. Each module must have executable behavior, authorization/error handling, appropriate tests, an updated README and an accurate implementation status before its PR is considered ready. A completed contract is not a completed integration. Hosted deployment, source agreements, reviewed content and live-provider evaluation remain explicit release gates.
 
+See the [complete requirement audit](IMPLEMENTATION_AUDIT.md) before claiming the overall goal complete.
+
 ## Delivery order and status
 
 | Module | Status on this branch | Next acceptance gate |
 | --- | --- | --- |
 | 01 Identity/access | Implemented; base PR #1 | Hosted hook/SMTP/secrets and migration review |
 | 02 Profile/evidence | Implemented on top of 01 | Review migration/API/UI and local integration results |
-| 03 Jobs/search | Next | Published source-traceable catalog, private bookmarks, lifecycle tests |
+| 03 Jobs/search | Published catalog, source governance and private bookmarks implemented | Later dictionary/matching/ingestion/application integrations |
 | 04 Skill dictionary | Minimal stable registry shared with 02; full module planned | Bilingual aliases, versioning, redirects and cycle prevention |
 | 05 Assessment | Local preview only | Immutable questions/rubrics, private attempts, scoring and evidence integration |
 | 06 Matching | Local overlap only | Versioned inputs, conditions/unknowns, stale/deleted evidence handling |
@@ -50,7 +52,7 @@ flowchart LR
 - Cross-module mutations use public service ports or a deliberately granted database transaction boundary. Do not reach into another module's internal tables from presentation code.
 - Keep existing demo APIs as compatibility exports where necessary; new production modules must not depend on the demo workspace shape.
 
-`npm run architecture:check` enforces the profile/skill core and profile UI import boundaries with the TypeScript parser. Extend its coverage when adding modules. It supplements behavior tests; it does not prove runtime security or transactional correctness.
+`npm run architecture:check` enforces the profile/job/skill core and profile/job UI import boundaries with the TypeScript parser. Extend its coverage when adding modules. It supplements behavior tests; it does not prove runtime security or transactional correctness.
 
 ## Version and deletion contracts
 

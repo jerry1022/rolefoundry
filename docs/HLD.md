@@ -1,6 +1,6 @@
 # RoleFoundry — High-Level Design
 
-**Version:** 0.3 private profile foundation · **Status:** career scaffold, server identity and private profile implemented; remaining production modules planned
+**Version:** 0.4 published catalog foundation · **Status:** career scaffold, server identity, private profile and catalog implemented; remaining production modules planned
 
 ## 1. Purpose and scope
 
@@ -14,11 +14,11 @@ Job discovery must work before account creation or assessment. Completing a cour
 
 ## 2. Current executable system
 
-The repository contains a Next.js App Router application with ten navigable pages, a shared shell, typed career fixtures and browser-local persistence. Module 01 adds real Supabase identity APIs, a database migration, consent and quota transactions, and worker guards. Module 02 adds private preferences, immutable evidence and reference-only invalidations through replaceable ports/adapters. Other domain ports remain contracts. The worker demo still does not consume a queue or execute analyses.
+The repository contains a Next.js App Router application with ten navigable pages, a shared shell, typed career fixtures and browser-local persistence. Module 01 adds real Supabase identity APIs, a database migration, consent and quota transactions, and worker guards. Module 02 adds private preferences, immutable evidence and reference-only invalidations through replaceable ports/adapters. Module 03 adds anonymous/SSR published job browsing, source governance and private bookmarks. Other domain ports remain contracts. The worker demo still does not consume a queue or execute analyses.
 
 | Capability | Current state |
 | --- | --- |
-| Jobs | Fictional fixtures, keyword/track/workplace filters, bookmarks, detail dialog |
+| Jobs | Optional persistent published catalog/SSR with source permissions/freshness and private bookmarks; static fixtures retained |
 | Profile | Optional private preferences/evidence/history with optimistic revisions; static demo stays local |
 | Assessment | Twelve fixed-answer scenarios across four tracks; three per attempt |
 | Matching | Transparent self-reported skill overlap and missing-skill lists |
@@ -84,7 +84,7 @@ See [module designs](design/README.md) for interfaces and failure semantics.
 | Web | Next.js App Router, React | Server-render public catalog; private authenticated workspace |
 | Styling | CSS tokens and responsive components, Lucide icons | Keep the existing design system; add localization without replacing components |
 | Validation | Zod | Validate requests, persisted records and AI outputs |
-| Storage | Browser-local demo; Supabase identity and private profile records | Extend PostgreSQL and private Storage to the other domains |
+| Storage | Browser-local demo; Supabase identity, profile and published catalog records | Extend PostgreSQL and private Storage to the other domains |
 | Search | Deterministic in-memory filters | SQL predicates, skill aliases and pgvector reranking |
 | Tasks | Dry-run contract | Supabase Queues/pgmq with a Node worker |
 | AI | No provider connected | Gateway adapter selected through a fixed evaluation set |
@@ -114,7 +114,7 @@ Confirm source usage rights → normalize a batch → deduplicate by source ID a
 
 ## 7. API and task boundaries
 
-Production REST endpoints use `/api/v1`. Implemented identity endpoints use `/api/v1/identity`; profile/evidence APIs are also implemented; other domain APIs remain planned. Analysis reservations atomically create an identity task and durable outbox row. Task states are `queued`, `running`, `succeeded` and `failed`; the identity task resource is owner-scoped. Module 12 will connect the outbox to actual execution.
+Production REST endpoints use `/api/v1`. Implemented identity endpoints use `/api/v1/identity`; profile/evidence, public catalog and private bookmark APIs are also implemented; other domain APIs remain planned. Analysis reservations atomically create an identity task and durable outbox row. Task states are `queued`, `running`, `succeeded` and `failed`; the identity task resource is owner-scoped. Module 12 will connect the outbox to actual execution.
 
 Persist the business record and queued message in one database transaction. Worker results use an idempotency key derived from owner, task type and input version. Visibility leases can expire, so handlers must tolerate redelivery. A provider request can be repeated after a crash; do not describe queue delivery as end-to-end exactly-once AI execution.
 

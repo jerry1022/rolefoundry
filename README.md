@@ -52,7 +52,7 @@ Changes stay in your browser. Reset them from **Catalog studio**.
 | Workspace | Working scaffold behavior |
 | --- | --- |
 | **Overview** | Recommended sample roles, growth snapshot and a next learning step |
-| **Discover roles** | Ten specializations, career guides, keyword/track/workplace filters, bookmarks and role details |
+| **Discover roles** | Ten specialization guides; optional published database catalog with source freshness, structured filters and private bookmarks; static fixtures remain clearly fictional |
 | **My skill profile** | Account-backed preferences, private claims/references and immutable history when configured; static demo remains local |
 | **Skill check** | Twelve authored scenarios across four career tracks |
 | **Learning path** | Six official course links, skill-gap ranking, prerequisites and practice prompts |
@@ -66,7 +66,7 @@ Changes stay in your browser. Reset them from **Catalog studio**.
 
 This is a **functional product scaffold**, not a live recruiting service. Employers, openings and salaries are fictional. Course summaries and skill mappings are independent editorial metadata; course availability and pricing belong to the provider. RoleFoundry is not affiliated with DeepLearning.AI.
 
-The public demo has no connected authentication or private backend. Configured server deployments now support [module 01 identity](docs/IDENTITY_SETUP.md) with Supabase Auth/PostgreSQL, invitations, consent and quotas. [Module 02](docs/PROFILE_SETUP.md) adds private profile/evidence persistence with explicit demo import. Persistence for other career modules, live job feeds, AI analysis, document upload/PDF export and application submission remain future work. The resume checklist and skill overlap are deterministic. Completing a course does **not** verify a skill; overlap does **not** predict hiring. Use sample information in the public demo.
+The public demo has no connected authentication or private backend. Configured server deployments now support [module 01 identity](docs/IDENTITY_SETUP.md) with Supabase Auth/PostgreSQL, invitations, consent and quotas. [Module 02](docs/PROFILE_SETUP.md) adds private profile/evidence persistence with explicit demo import. [Module 03](docs/CATALOG_SETUP.md) adds a published source-governed catalog and private bookmarks. Live feed ingestion and persistence for remaining career modules, AI analysis, document upload/PDF export and application submission remain future work. The resume checklist and skill overlap are deterministic. Completing a course does **not** verify a skill; overlap does **not** predict hiring. Use sample information in the public demo.
 
 ### Run the identity foundation locally
 
@@ -83,9 +83,9 @@ Open `http://127.0.0.1:3200/account/`; receive your code in local Mailpit at por
 
 ### Continue module development
 
-Follow the [numbered delivery plan and dependency rules](docs/MODULE_DEVELOPMENT.md). Modules 01–02 implement identity and private profiles; module 03 (job catalog/search) is next. Each step updates its design, README and executable acceptance tests. Open PRs remain separate review gates.
+Follow the [numbered delivery plan and dependency rules](docs/MODULE_DEVELOPMENT.md). Modules 01–03 implement identity, private profiles and the published job catalog. Module 04 (skill dictionary) is next; the [complete design audit](docs/IMPLEMENTATION_AUDIT.md) retains every remaining acceptance gate. Each step updates its design, README and executable acceptance tests. Open PRs remain separate review gates.
 
-With identity configured, sign in at `/account/` and visit `/skills/` for the private profile. Existing local data is imported only after preview and explicit approval. See [profile setup and API](docs/PROFILE_SETUP.md).
+The local helper also enables the database catalog at `/jobs/`, initially empty. Follow [catalog setup](docs/CATALOG_SETUP.md) to review/publish permitted source records. With identity configured, sign in at `/account/` and visit `/skills/` for the private profile. Existing local data is imported only after preview and explicit approval. See [profile setup and API](docs/PROFILE_SETUP.md).
 
 ## Architecture that can grow with the product
 
@@ -94,7 +94,7 @@ flowchart LR
     UI[Next.js workspace] --> D[Typed domain modules]
     D --> F[Fixture repositories — today]
     D --> Ports[Repository and authorization ports]
-    Ports --> DB[(Supabase identity and profile adapters)]
+    Ports --> DB[(Supabase identity, profile and catalog adapters)]
     D -.-> Q[pgmq + Node worker — planned]
     Q -.-> AI[AI Gateway — planned]
     DB -.-> S[Jobs ↔ skills ↔ evidence ↔ courses]
@@ -111,8 +111,9 @@ src/lib/             Domain rules, schemas, fixtures and service ports
 src/modules/identity Verified identity services and worker authorization guards
 src/modules/profile  Domain schemas/ports/use cases, adapters and API composition
 src/modules/skills   Stable canonical IDs shared across modules
+src/modules/jobs     Published catalog, source policies and private bookmark ports/adapters
 src/modules/platform Safe application errors and bounded HTTP helpers
-supabase/            Identity/profile migrations, owner RLS and local OTP templates
+supabase/            Identity/profile/catalog migrations, owner RLS and local OTP templates
 apps/worker/         Dry-run worker contract
 docs/                HLD, 13 module designs, API, data model and deployment
 tests/               Domain tests and browser journeys
@@ -128,6 +129,8 @@ tests/               Domain tests and browser journeys
 - [All 13 detailed module designs](docs/design/README.md)
 - [Implemented identity module and setup](docs/IDENTITY_SETUP.md)
 - [Implemented profile/evidence module](docs/PROFILE_SETUP.md)
+- [Published catalog, source governance and bookmarks](docs/CATALOG_SETUP.md)
+- [Complete design acceptance audit](docs/IMPLEMENTATION_AUDIT.md)
 - [Incremental development and replaceable service boundaries](docs/MODULE_DEVELOPMENT.md)
 - [Production API contract](docs/API.md) and [data model](docs/DATA_MODEL.md)
 - [Career journey playbook](AI_CAREER_PLAN.md)

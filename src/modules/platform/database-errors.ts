@@ -1,0 +1,18 @@
+import { ApplicationError } from "./errors";
+const failures = {
+  RF_UNAUTHORIZED: [401, "Sign in to continue."],
+  RF_FORBIDDEN: [403, "This operation is not permitted."],
+  RF_NOT_FOUND: [404, "The resource is unavailable."],
+  RF_INVALID_INPUT: [400, "The request is invalid."],
+  RF_CONFLICT: [409, "The data changed. Reload before trying again."],
+  RF_UNAVAILABLE: [503, "The service is temporarily unavailable."],
+  RF_NOT_CONFIGURED: [503, "This service is not configured for this deployment."],
+} as const;
+export function safeDatabaseError(error: { message: string; code?: string }) {
+  const code = Object.hasOwn(failures, error.message)
+    ? (error.message as keyof typeof failures)
+    : error.code === "42501"
+      ? "RF_FORBIDDEN"
+      : "RF_UNAVAILABLE";
+  return new ApplicationError(code, failures[code][0], failures[code][1]);
+}
