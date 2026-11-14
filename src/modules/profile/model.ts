@@ -1,8 +1,8 @@
 import { z } from "zod";
 import { ApplicationError } from "../platform/errors";
-import { tracks, skillLabels, type Skill } from "../skills/catalog";
+import { tracks, skillSchema } from "../skills/catalog";
+export { skillSchema } from "../skills/catalog";
 
-export const skillSchema = z.enum(Object.keys(skillLabels) as [Skill, ...Skill[]]);
 const text = (max: number) =>
   z
     .string()
