@@ -1,6 +1,6 @@
 # Detailed module designs
 
-These designs describe the production target. The **current scaffold** sections identify executable behavior. Do not interpret a designed endpoint or database table as implemented.
+These designs describe the production target. Modules 01 and 02 have server implementations; remaining modules have the partial/demo status documented in each design. See the [delivery order and dependency contract](../MODULE_DEVELOPMENT.md). The **current scaffold** sections identify executable behavior. Do not interpret a designed endpoint or database table as implemented.
 
 | Design | Module |
 | --- | --- |

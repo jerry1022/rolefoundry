@@ -8,7 +8,7 @@ Own invitations, sessions, member/admin roles, consent and per-feature usage bud
 
 Implemented for configured Next.js server deployments: Supabase email OTP, a Before User Created invitation hook, transactionally activated profiles, server-verified roles, owner RLS, versioned consent, weekly reservations, worker authorization guards and audited infrastructure refunds. The Account & privacy screen exposes sign-in, consent, usage and administrator controls. See [setup and API details](../IDENTITY_SETUP.md).
 
-The public static export remains a browser-local demo; its account page explicitly disables live identity. Career profiles, resumes and the other modules retain their existing local demo behavior until their own persistence work is implemented. The public catalog inspector is not an admin security boundary.
+The public static export remains a browser-local demo; its account page explicitly disables live identity. Module 02 now adds private preferences/evidence in configured deployments; resumes and remaining career modules retain their existing local demo behavior. The public catalog inspector is not an admin security boundary.
 
 ## Data and interfaces
 
