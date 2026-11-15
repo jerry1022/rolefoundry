@@ -1,6 +1,6 @@
 # RoleFoundry — High-Level Design
 
-**Version:** 0.5 versioned dictionary foundation · **Status:** career scaffold, server identity, private profile, catalog and dictionary implemented; remaining production modules planned
+**Version:** 0.6 private assessment and durable grading · **Status:** career scaffold, server identity, private profile, catalog, dictionary and fixed-choice assessments implemented; remaining production modules planned
 
 ## 1. Purpose and scope
 
@@ -14,13 +14,13 @@ Job discovery must work before account creation or assessment. Completing a cour
 
 ## 2. Current executable system
 
-The repository contains a Next.js App Router application with eleven navigable pages, a shared shell, typed career fixtures and browser-local persistence. Module 01 adds real Supabase identity APIs, a database migration, consent and quota transactions, and worker guards. Module 02 adds private preferences, immutable evidence and reference-only invalidations through replaceable ports/adapters. Module 03 adds anonymous/SSR published job browsing, source governance and private bookmarks. Module 04 adds the bilingual versioned dictionary, reviewed aliases/relationships/merges and historical-safe canonical projections. Other domain ports remain contracts. The worker demo still does not consume a queue or execute analyses.
+The repository contains a Next.js App Router application with eleven navigable pages, a shared shell, typed career fixtures and browser-local persistence. Module 01 adds real Supabase identity APIs, a database migration, consent and quota transactions, and worker guards. Module 02 adds private preferences, immutable evidence and reference-only invalidations through replaceable ports/adapters. Module 03 adds anonymous/SSR published job browsing, source governance and private bookmarks. Module 04 adds the bilingual versioned dictionary, reviewed aliases/relationships/merges and historical-safe canonical projections. Module 05 adds private assessment APIs/UI and reviewed immutable questions. An independent pgmq/Node worker grades fixed answers and publishes scenario evidence atomically. The other domain ports remain contracts; no external AI provider runs yet.
 
 | Capability | Current state |
 | --- | --- |
 | Jobs | Optional persistent published catalog/SSR with source permissions/freshness and private bookmarks; static fixtures retained |
 | Profile | Optional private preferences/evidence/history with optimistic revisions; static demo stays local |
-| Assessment | Twelve fixed-answer scenarios across four tracks; three per attempt |
+| Assessment | Optional private immutable attempts, autosave, reviewed bank and actual durable fixed-choice grading; static demo retained |
 | Matching | Transparent self-reported skill overlap and missing-skill lists |
 | Learning | Six official course links, editorial mappings, prerequisite-aware ranking |
 | Resume | Local text editing, deterministic checklist, text export |
@@ -87,7 +87,7 @@ See [module designs](design/README.md) for interfaces and failure semantics.
 | Validation | Zod | Validate requests, persisted records and AI outputs |
 | Storage | Browser-local demo; Supabase identity, profile and published catalog records | Extend PostgreSQL and private Storage to the other domains |
 | Search | Deterministic in-memory filters | SQL predicates, skill aliases and pgvector reranking |
-| Tasks | Dry-run contract | Supabase Queues/pgmq with a Node worker |
+| Tasks | Supabase Queues/pgmq, lease-aware Node worker and assessment handler | Add provider/resume/catalog handlers and invalidation consumers |
 | AI | No provider connected | Gateway adapter selected through a fixed evaluation set |
 | Documents | Plain-text draft/export | Isolated PDF.js/Mammoth parsing and controlled PDF rendering |
 | Checks | TypeScript, Vitest, Playwright | Add database authorization, contract and integration tests |
@@ -103,7 +103,7 @@ Validate upload intent → store privately → create version and task atomicall
 
 ### Assessment to recommendation
 
-Create a versioned attempt → save answers → grade with fixed rules or a reviewed rubric → record scenario evidence → compare target requirements → persist ranked results with input versions. Unknown requirements and missing evidence remain explicit. Production responses never expose correct answers before submission.
+Create a versioned attempt → save answers → grade with fixed rules or a reviewed rubric → record scenario evidence → compare target requirements → persist ranked results with input versions. Unknown requirements and missing evidence remain explicit. Private responses expose reviewed answers only after completed grading. Current deterministic scoring uses no external provider or AI allowance; future short answers require the consent/quota gateway and calibration.
 
 ### Gap to learning
 
@@ -115,7 +115,7 @@ Confirm source usage rights → normalize a batch → deduplicate by source ID a
 
 ## 7. API and task boundaries
 
-Production REST endpoints use `/api/v1`. Implemented identity endpoints use `/api/v1/identity`; profile/evidence, public catalog and private bookmark APIs are also implemented; dictionary APIs and versioned administration are also implemented; other domain APIs remain planned. Analysis reservations atomically create an identity task and durable outbox row. Task states are `queued`, `running`, `succeeded` and `failed`; the identity task resource is owner-scoped. Module 12 will connect the outbox to actual execution.
+Production REST endpoints use `/api/v1`. Implemented identity endpoints use `/api/v1/identity`; profile/evidence, public catalog and private bookmark APIs are also implemented; dictionary APIs and versioned administration are also implemented; private assessment/task and bank administration APIs are also implemented; other domain APIs remain planned. Provider analysis reservations atomically create an identity task and durable outbox row. Task states are `queued`, `running`, `succeeded` and `failed`; the identity task resource is owner-scoped. The assessment path already uses general tasks and pgmq without provider allowance; module 12 still must connect provider reservations and invalidation outboxes to their consumers.
 
 Persist the business record and queued message in one database transaction. Worker results use an idempotency key derived from owner, task type and input version. Visibility leases can expire, so handlers must tolerate redelivery. A provider request can be repeated after a crash; do not describe queue delivery as end-to-end exactly-once AI execution.
 

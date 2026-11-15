@@ -208,4 +208,7 @@ test("public demo labels identity as unavailable and fails closed", async ({ pag
   expect((await request.get("/api/v1/jobs")).status()).toBe(503);
   expect((await request.get("/api/v1/bookmarks")).status()).toBe(503);
   expect((await request.get("/api/v1/skills")).status()).toBe(503);
+  expect((await request.get("/api/v1/assessments")).status()).toBe(503);
+  expect((await request.get("/api/v1/admin/assessments")).status()).toBe(503);
+  expect((await request.get(`/api/v1/tasks/${crypto.randomUUID()}`)).status()).toBe(503);
 });

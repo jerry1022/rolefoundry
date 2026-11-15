@@ -26,7 +26,7 @@ npm run test:e2e
 npm run worker:demo
 ```
 
-The worker command is a dry run only. It is not a persistent queue consumer.
+`worker:demo` is a dry run only. Configured assessment grading uses `npm run worker:local` locally or `npm run worker:start` with hosted secrets; see [assessment/worker setup](ASSESSMENT_SETUP.md).
 
 Browser tests start their own server on port 3100, avoiding unrelated development services on port 3000. Set `E2E_PORT` to choose another test port. An occupied test port is an error; the suite never silently reuses an unknown server.
 
@@ -38,7 +38,7 @@ Import `jerry1022/rolefoundry` into Vercel, select Next.js, keep the repository 
 
 Vercel Hobby is free within its quotas for personal/non-commercial usage. A commercial career platform must use a suitable plan. Fees for a future database, worker or model provider are separate. See [Hobby](https://vercel.com/docs/plans/hobby) and [function limitations](https://vercel.com/docs/functions/limitations).
 
-The future long-lived Node worker is hosted separately. Do not keep a Vercel request open indefinitely as a queue consumer. An API request should persist a task and return its identifier.
+The long-lived Node grading worker is hosted separately using `Dockerfile.worker` or Node 24. Do not keep a Vercel request open indefinitely as a queue consumer. An API request should persist a task and return its identifier.
 
 ## Static export / GitHub Pages
 

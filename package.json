@@ -20,7 +20,9 @@
     "identity:invite": "node scripts/invite-local.mjs",
     "identity:dev": "node scripts/dev-identity.mjs",
     "identity:test": "node scripts/test-identity.mjs",
-    "architecture:check": "node scripts/check-boundaries.mjs"
+    "architecture:check": "node scripts/check-boundaries.mjs",
+    "worker:start": "node --conditions=react-server --import tsx apps/worker/src/main.ts",
+    "worker:local": "node scripts/local-worker.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.7",
@@ -30,7 +32,8 @@
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "server-only": "^0.0.1",
-    "zod": "^4.3.0"
+    "zod": "^4.3.0",
+    "tsx": "^4.21.0"
   },
   "devDependencies": {
     "@playwright/test": "^1.58.0",
@@ -41,7 +44,6 @@
     "pg": "^8.23.1",
     "prettier": "^3.10.1",
     "supabase": "^3.1.0",
-    "tsx": "^4.21.0",
     "typescript": "^5.9.0",
     "vitest": "^4.0.0"
   },

@@ -81,6 +81,7 @@ export const internalEvidenceSchema = z
     sourceRef: z.uuid(),
     sourceVersion: text(200).refine((v) => v.length > 0),
     rubricVersion: text(200).nullable(),
+    dictionaryVersion: z.number().int().positive().optional(),
     outcome: text(2000),
   })
   .strict()

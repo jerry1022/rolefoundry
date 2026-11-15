@@ -107,7 +107,7 @@ A single PostgreSQL transaction creates the task, reservation and durable outbox
 
 `IdentityWorkerGuard` starts work, checks authorization immediately before a provider call, and checks again when publishing a result. Unstarted work can be released; started work consumes budget. Only an administrator can refund a consumed infrastructure failure, with a reason and an immutable audit event. Revocation cannot recall an external call already made, but it prevents subsequent publication. Profile deactivation and hard deletion also prevent publication.
 
-The durable outbox is the handoff to module 12; this PR does not start a queue consumer or execute an AI request. Modules 02/05/08/11 must attach their own resource validation, result records and provider execution to these boundaries.
+The identity durable outbox remains a handoff to module 12; the identity module does not itself execute an AI request. Module 05 separately runs fixed-choice grading through general tasks/pgmq with no external provider, so it requires neither provider consent nor AI allowance. Modules 02/05/08/11 must attach their own resource validation, result records and provider execution to these boundaries.
 
 ## Static demo compatibility
 

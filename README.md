@@ -54,7 +54,7 @@ Changes stay in your browser. Reset them from **Catalog studio**.
 | **Overview** | Recommended sample roles, growth snapshot and a next learning step |
 | **Discover roles** | Ten specialization guides; optional published database catalog with source freshness, structured filters and private bookmarks; static fixtures remain clearly fictional |
 | **My skill profile** | Account-backed preferences, private claims/references and immutable history when configured; static demo remains local |
-| **Skill check** | Twelve authored scenarios across four career tracks |
+| **Skill check** | Private versioned attempts, autosaved answers, durable fixed-choice grading and scenario evidence when configured; twelve-question local demo retained |
 | **Learning path** | Six official course links, skill-gap ranking, prerequisites and practice prompts |
 | **Resume studio** | Local draft editor, fact-focused checklist and text export |
 | **Applications** | Manual stages, notes and persistent local state |
@@ -67,7 +67,7 @@ Changes stay in your browser. Reset them from **Catalog studio**.
 
 This is a **functional product scaffold**, not a live recruiting service. Employers, openings and salaries are fictional. Course summaries and skill mappings are independent editorial metadata; course availability and pricing belong to the provider. RoleFoundry is not affiliated with DeepLearning.AI.
 
-The public demo has no connected authentication or private backend. Configured server deployments now support [module 01 identity](docs/IDENTITY_SETUP.md) with Supabase Auth/PostgreSQL, invitations, consent and quotas. [Module 02](docs/PROFILE_SETUP.md) adds private profile/evidence persistence with explicit demo import. [Module 03](docs/CATALOG_SETUP.md) adds a published source-governed catalog and private bookmarks. Live feed ingestion and persistence for remaining career modules, AI analysis, document upload/PDF export and application submission remain future work. The resume checklist and skill overlap are deterministic. Completing a course does **not** verify a skill; overlap does **not** predict hiring. Use sample information in the public demo.
+The public demo has no connected authentication or private backend. Configured server deployments now support [module 01 identity](docs/IDENTITY_SETUP.md) with Supabase Auth/PostgreSQL, invitations, consent and quotas. [Module 02](docs/PROFILE_SETUP.md) adds private profile/evidence persistence with explicit demo import. [Module 03](docs/CATALOG_SETUP.md) adds a published source-governed catalog and private bookmarks. [Module 04](docs/SKILL_DICTIONARY_SETUP.md) adds reviewed bilingual skill versions. [Module 05](docs/ASSESSMENT_SETUP.md) adds private assessments with a real pgmq/Node grading worker. Live feed ingestion and persistence for remaining career modules, AI analysis, document upload/PDF export and application submission remain future work. The resume checklist and skill overlap are deterministic. Completing a course does **not** verify a skill; overlap does **not** predict hiring. Use sample information in the public demo.
 
 ### Run the identity foundation locally
 
@@ -84,7 +84,7 @@ Open `http://127.0.0.1:3200/account/`; receive your code in local Mailpit at por
 
 ### Continue module development
 
-Follow the [numbered delivery plan and dependency rules](docs/MODULE_DEVELOPMENT.md). Modules 01–04 implement identity, private profiles, the published job catalog and versioned bilingual skills. Module 05 (assessment) is next; the [complete design audit](docs/IMPLEMENTATION_AUDIT.md) retains every remaining acceptance gate. Each step updates its design, README and executable acceptance tests. Open PRs remain separate review gates.
+Follow the [numbered delivery plan and dependency rules](docs/MODULE_DEVELOPMENT.md). Modules 01–05 implement identity, private profiles, the published job catalog, versioned bilingual skills and private fixed-choice assessments. Module 06 (matching) is next; the [complete design audit](docs/IMPLEMENTATION_AUDIT.md) retains every remaining acceptance gate. Each step updates its design, README and executable acceptance tests. Open PRs remain separate review gates.
 
 The local helper also enables the database catalog at `/jobs/`, initially empty. Follow [catalog setup](docs/CATALOG_SETUP.md) to review/publish permitted source records. With identity configured, sign in at `/account/` and visit `/skills/` for the private profile. Existing local data is imported only after preview and explicit approval. See [profile setup and API](docs/PROFILE_SETUP.md).
 
@@ -95,15 +95,15 @@ flowchart LR
     UI[Next.js workspace] --> D[Typed domain modules]
     D --> F[Fixture repositories — today]
     D --> Ports[Repository and authorization ports]
-    Ports --> DB[(Supabase identity, profile and catalog adapters)]
-    D -.-> Q[pgmq + Node worker — planned]
+    Ports --> DB[(Supabase identity, profile, catalog and assessment adapters)]
+    D --> Q[pgmq + independent Node grading worker]
     Q -.-> AI[AI Gateway — planned]
     DB -.-> S[Jobs ↔ skills ↔ evidence ↔ courses]
 ```
 
 Today: **Next.js · React · TypeScript · Zod · Supabase Auth/PostgreSQL · CSS tokens · Lucide · Vitest · Playwright**.
 
-Production extensions: **private Storage · pgvector · pgmq consumer · independent worker · schema-validated AI adapters**. Identity reservations and profile invalidation outboxes are implemented; analysis execution is not. Core profile, catalog and dictionary rules have no framework or database SDK dependency. The UI uses a replaceable client port, and request-scoped composition roots select adapters. [Architecture checks](scripts/check-boundaries.mjs) protect these boundaries. The architecture is a modular monolith, with explicit module ports rather than premature microservices.
+The independent worker now consumes pgmq and executes fixed-choice grading with leases, retries and atomic evidence publication. Run `npm run worker:local` alongside the configured web server; author/review questions first using [assessment setup](docs/ASSESSMENT_SETUP.md). This scoring uses no external model or AI analysis allowance. Production extensions: **private Storage · pgvector · schema-validated AI adapters**. Identity provider reservations and profile invalidation outboxes still await broader dispatch integration. Core profile, catalog, dictionary, assessment and worker rules have no framework or database SDK dependency. The UI uses a replaceable client port, and request-scoped composition roots select adapters. [Architecture checks](scripts/check-boundaries.mjs) protect these boundaries. The architecture is a modular monolith, with explicit module ports rather than premature microservices.
 
 ```text
 src/app/             Eleven pages, domain API routes and application layout
@@ -113,9 +113,11 @@ src/modules/identity Verified identity services and worker authorization guards
 src/modules/profile  Domain schemas/ports/use cases, adapters and API composition
 src/modules/skills   Bilingual dictionary, snapshots, alias/merge ports and adapters
 src/modules/jobs     Published catalog, source policies and private bookmark ports/adapters
+src/modules/assessment Private attempts, reviewed immutable questions and grading adapters
+src/modules/tasks    Queue/handler ports, lease-aware engine and Supabase adapter
 src/modules/platform Safe application errors and bounded HTTP helpers
-supabase/            Identity/profile/catalog migrations, owner RLS and local OTP templates
-apps/worker/         Dry-run worker contract
+supabase/            Identity/profile/catalog/dictionary/assessment migrations, owner RLS and local OTP templates
+apps/worker/         Independent queue consumer and explicit dry-run example
 docs/                HLD, 13 module designs, API, data model and deployment
 tests/               Domain tests and browser journeys
 .github/workflows/   CI and static demo deployment
@@ -132,6 +134,7 @@ tests/               Domain tests and browser journeys
 - [Implemented profile/evidence module](docs/PROFILE_SETUP.md)
 - [Published catalog, source governance and bookmarks](docs/CATALOG_SETUP.md)
 - [Versioned bilingual skill dictionary](docs/SKILL_DICTIONARY_SETUP.md)
+- [Private assessments and durable grading](docs/ASSESSMENT_SETUP.md)
 - [Complete design acceptance audit](docs/IMPLEMENTATION_AUDIT.md)
 - [Incremental development and replaceable service boundaries](docs/MODULE_DEVELOPMENT.md)
 - [Production API contract](docs/API.md) and [data model](docs/DATA_MODEL.md)
@@ -152,7 +155,7 @@ npm run test:e2e
 npm run worker:demo
 ```
 
-The worker command validates a dry-run task. It does not consume a live queue. Browser tests cover discovery, bookmarks, assessment evidence, learning progress, resume export, the tracker, reset and mobile navigation.
+`worker:demo` validates only a dry-run contract. `npm run worker:local` consumes the real local queue; `npm run identity:test` verifies private assessment APIs, actual grading, lease/retry recovery and owner isolation. Browser tests cover discovery, bookmarks, assessment evidence, learning progress, resume export, the tracker, reset and mobile navigation.
 
 ## Deploy your own
 
@@ -162,7 +165,7 @@ The worker command validates a dry-run task. It does not consume a live queue. B
 
 **Docker:** `docker build -t rolefoundry .` then `docker run --rm -p 3000:3000 rolefoundry`.
 
-See [deployment details](docs/DEPLOYMENT.md). The future long-running worker is deployed separately from Vercel Functions.
+See [deployment details](docs/DEPLOYMENT.md). The long-running worker uses `Dockerfile.worker` or `npm run worker:start` and is deployed separately from Vercel Functions; see [worker setup](docs/ASSESSMENT_SETUP.md).
 
 ## Build the next chapter with us
 
