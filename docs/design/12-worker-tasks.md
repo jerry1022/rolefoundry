@@ -4,9 +4,11 @@
 
 Run slow operations outside request handlers: catalog import, resume parse/revise/export, grading, match refresh and learning-plan generation. Provide durable state and predictable recovery.
 
-## Current scaffold
+## Current implementation
 
 `apps/worker/src/index.ts` parses the task schema and executes one dry-run transition. It does not poll a queue, read credentials or pretend to process a document. `npm run worker:demo` demonstrates the contract only.
+
+Module 05 now implements the required durable core: authoritative tasks, task-ID-only pgmq messages, atomic enqueue, lease/heartbeat/reclaim, three-attempt transient retries, stale/owner publication guards, crash-after-commit archival, bounded handler/transport deadlines, shutdown and safe metrics. `apps/worker/src/main.ts` runs the real independent process through injected queue/handler ports. `assessment.grade` is the only live handler. See [worker setup and test scope](../ASSESSMENT_SETUP.md). Other domain handlers, identity provider reservation dispatch, invalidation outbox consumers, provider concurrency limits and operational alerting remain module 12 integration work. The worker does not make AI calls.
 
 ## Target task record
 

@@ -1,5 +1,7 @@
 import { ApplicationError } from "./errors";
 const failures = {
+  RF_NOT_READY: [409, "This track needs three reviewed questions before an assessment can start."],
+  RF_STALE_INPUT: [409, "The task inputs changed. Start from the current version."],
   RF_UNAUTHORIZED: [401, "Sign in to continue."],
   RF_FORBIDDEN: [403, "This operation is not permitted."],
   RF_NOT_FOUND: [404, "The resource is unavailable."],

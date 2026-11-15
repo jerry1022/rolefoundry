@@ -16,7 +16,7 @@ The migration creates `profiles`, `invitations`, `consent_policies`, `consents`,
 
 `resolveActor` calls `auth.getUser()` and reads the current role from the database. Runtime authorization accepts only actor instances produced by that verified resolver, so deserializing `{ userId, role }` is insufficient. SQL independently reauthorizes member/admin mutations; browser roles cannot execute task reservation or worker functions.
 
-`authorize(actor, action, resourceOwnerId?)` rejects anonymous actors for private operations, mismatched owners and non-admin catalog writes. An adapter constructs the actor from a verified session. Browser-supplied roles are ignored. Initial quotas are three assessment analyses and five resume analyses per UTC calendar week; administrators can change future limits without rewriting past usage.
+`authorize(actor, action, resourceOwnerId?)` rejects anonymous actors for private operations, mismatched owners and non-admin catalog writes. An adapter constructs the actor from a verified session. Browser-supplied roles are ignored. These allowances apply to provider-backed analysis; deterministic fixed-choice assessment grading in module 05 uses no provider, consent gate or AI allowance. Initial quotas are three assessment analyses and five resume analyses per UTC calendar week; administrators can change future limits without rewriting past usage.
 
 ## Flow
 

@@ -48,3 +48,19 @@ jobs:
       - name: Stop local identity services
         if: always()
         run: npm run identity:stop
+  worker-image:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build independent worker runtime
+        run: docker build -f Dockerfile.worker -t rolefoundry-worker:ci .
+      - name: Verify runtime imports and missing-secret startup
+        run: |
+          node --input-type=module <<'JS'
+          import { spawnSync } from 'node:child_process';
+          const result = spawnSync('docker', ['run', '--rm', 'rolefoundry-worker:ci'], {encoding:'utf8', timeout:10000});
+          if (result.status !== 1 || !result.stderr.includes('Worker configuration is missing or invalid') || result.stderr.includes('ERR_MODULE_NOT_FOUND'))
+            throw Error('Worker image startup check failed.');
+          console.log('Worker runtime imports resolve; missing configuration fails closed.');
+          JS

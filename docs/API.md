@@ -1,6 +1,6 @@
 # Production API contract
 
-**Mixed implementation status.** The identity endpoints under `/api/v1/identity` are implemented for configured server deployments; see [their exact API and setup](IDENTITY_SETUP.md). Profile/evidence endpoints are also implemented: see [their exact inputs, versions and pagination](PROFILE_SETUP.md). Published job/bookmark APIs and source/lifecycle administration are also implemented: see [catalog API](CATALOG_SETUP.md). Public/versioned skill reads and role-verified dictionary mutations are implemented: see [dictionary API](SKILL_DICTIONARY_SETUP.md). Other resource contracts below remain planned. The public static demo excludes all dynamic identity handlers.
+**Mixed implementation status.** The identity endpoints under `/api/v1/identity` are implemented for configured server deployments; see [their exact API and setup](IDENTITY_SETUP.md). Profile/evidence endpoints are also implemented: see [their exact inputs, versions and pagination](PROFILE_SETUP.md). Published job/bookmark APIs and source/lifecycle administration are also implemented: see [catalog API](CATALOG_SETUP.md). Public/versioned skill reads and role-verified dictionary mutations are implemented: see [dictionary API](SKILL_DICTIONARY_SETUP.md). Private assessment/task APIs and question-bank administration are implemented: see [assessment API](ASSESSMENT_SETUP.md). Other resource contracts below remain planned. The public static demo excludes all dynamic identity handlers.
 
 ## Conventions
 
@@ -26,8 +26,11 @@
 | POST `/evidence` | Self-report or portfolio reference plus profile revision | Owner evidence; cannot forge scored evidence |
 | GET/PATCH/DELETE `/evidence/{id}` | Evidence ID; expected profile/evidence versions for writes | Owner immutable history, new version or full deletion |
 | POST `/profile/import` | Explicitly reviewed preferences/claims, revision 0 | Import only into a new owner profile |
+| GET `/assessments` | Optional cursor | Owner attempt history |
 | POST `/assessments` | Track | Attempt with public question fields |
-| POST `/assessments/{id}/submit` | Attempt version and answers | Grading task |
+| PATCH `/assessments/{id}/answers` | Expected revision and partial answers | Owner draft autosave |
+| POST `/assessments/{id}/submit` | Expected revision, full answers and idempotency header | Fixed-choice grading task; no provider allowance |
+| POST `/assessments/{id}/retry` | Prior task ID and idempotency header | Retry exhausted infrastructure failure with sealed answers |
 | GET `/assessments/{id}` | Attempt ID | Owner attempt and published result |
 | POST `/matches` | Optional target job ID | Match refresh task |
 | GET `/matches` | Run ID, cursor | Owner results, reasons, gaps and input versions |
