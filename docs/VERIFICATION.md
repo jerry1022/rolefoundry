@@ -5,7 +5,7 @@ This document records the scope of local verification for the demo and modules 0
 | Check | Local result | Scope |
 | --- | --- | --- |
 | TypeScript | Passed | Generated Next route types and strict type checking |
-| Vitest | 51 tests passed | Original career paths, combined filters, bilingual aliases, overlap/gaps, prerequisites, fixed scoring, worker deadlines/shutdown/heartbeat ownership, fixture isolation, state validation, verified actors, UTC weeks, injected profile ports, source validation and stale snapshots |
+| Vitest | 59 tests passed (51 through module 05; 8 matching-core tests) | Original career paths, combined filters, bilingual aliases, overlap/gaps, prerequisites, fixed scoring, worker deadlines/shutdown/heartbeat ownership, source-grounded matching rules, fixture isolation, state validation, verified actors, UTC weeks, injected profile ports, source validation and stale snapshots |
 | Playwright Chromium | 11 journeys passed | All specializations and empty-category guides, all eleven routes, hydration-safe editing, bookmarks, evidence, learning, resume content export, tracker, reset, account demo isolation and mobile navigation |
 | Next production build | Passed | All eleven application routes plus not-found output |
 | Static export | Passed | Project base path `/rolefoundry`; all dynamic API handlers excluded |

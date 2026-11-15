@@ -13,7 +13,7 @@ See the [complete requirement audit](IMPLEMENTATION_AUDIT.md) before claiming th
 | 03 Jobs/search | Published catalog, source governance and private bookmarks implemented | Later dictionary/matching/ingestion/application integrations |
 | 04 Skill dictionary | Bilingual snapshots, aliases, DAGs, admin review, historical-safe merges and runtime IDs implemented | Human mapping review and later report/version integration |
 | 05 Assessment | Private immutable attempts/questions/rubrics, autosave and real deterministic grading/evidence implemented | Expert content review; short-answer AI calibration remains a future feature gate |
-| 06 Matching | Local overlap only | Versioned inputs, conditions/unknowns, stale/deleted evidence handling |
+| 06 Matching | In progress: source-grounded rules core and unit tests; live UI still uses local overlap | Versioned persisted inputs/results, task handler, conditions UI and stale/deletion guards |
 | 07 Courses/learning | Editorial local demo only | Reviewed catalog, two-week plans, prerequisites and owner progress |
 | 08 Resume studio | Plain-text local demo only | Private sources, isolated parsing, confirmed facts and immutable exports |
 | 09 Tracking | Local board only | Private versioned applications, events and historical source snapshots |

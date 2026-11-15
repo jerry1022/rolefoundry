@@ -84,7 +84,7 @@ Open `http://127.0.0.1:3200/account/`; receive your code in local Mailpit at por
 
 ### Continue module development
 
-Follow the [numbered delivery plan and dependency rules](docs/MODULE_DEVELOPMENT.md). Modules 01–05 implement identity, private profiles, the published job catalog, versioned bilingual skills and private fixed-choice assessments. Module 06 (matching) is next; the [complete design audit](docs/IMPLEMENTATION_AUDIT.md) retains every remaining acceptance gate. Each step updates its design, README and executable acceptance tests. Open PRs remain separate review gates.
+Follow the [numbered delivery plan and dependency rules](docs/MODULE_DEVELOPMENT.md). Modules 01–05 implement identity, private profiles, the published job catalog, versioned bilingual skills and private fixed-choice assessments. Module 06 (matching) is in progress: its source-grounded rule engine has unit coverage, while persistent report/task APIs and UI are not connected yet; the [complete design audit](docs/IMPLEMENTATION_AUDIT.md) retains every remaining acceptance gate. Each step updates its design, README and executable acceptance tests. Open PRs remain separate review gates.
 
 The local helper also enables the database catalog at `/jobs/`, initially empty. Follow [catalog setup](docs/CATALOG_SETUP.md) to review/publish permitted source records. With identity configured, sign in at `/account/` and visit `/skills/` for the private profile. Existing local data is imported only after preview and explicit approval. See [profile setup and API](docs/PROFILE_SETUP.md).
 

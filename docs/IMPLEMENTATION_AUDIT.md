@@ -37,7 +37,7 @@ The integration suite runs against actual local GoTrue, PostgREST, PostgreSQL an
 ## 06 — Matching and gap analysis
 
 - Design: [06-matching-gaps.md](design/06-matching-gaps.md).
-- Status: Pending implementation and verification.
+- Status: In progress. Pure rule engine and eight unit tests are implemented; persisted snapshots, task execution, private APIs/UI and deletion/version integration are still pending. This is not a completed module.
 - Required acceptance scope: Test hard conflicts versus unknowns, mandatory versus preferred requirements, empty profiles, unrelated jobs, duplicate skills, stale versions and deterministic ordering. Human review must confirm that every reported strength or gap has supporting source data.
 
 ## 07 — Course catalog and learning plans

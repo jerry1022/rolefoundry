@@ -8,6 +8,14 @@ Help a job seeker prioritize opportunities and choose the next useful action. Re
 
 `matchJob` computes covered and missing canonical skills against self-report. `searchJobs` sorts by overlap with stable ID tie-breaking. Percentages mean required fixture skill coverage only. The UI exposes this limitation explicitly.
 
+## Implementation in progress
+
+`src/modules/matching` now owns narrow input projections and a pure `rules-v1` engine. It distinguishes unknown/confirmed/conflicting conditions, keeps source and evidence-version citations, counts each canonical mandatory skill once, separates preferred skills and retains negative scenario feedback as practice gaps. Self-reports, resume claims and portfolio references remain explicitly unverified; coverage is not a competency level. A learning-only claim and an incorrect scenario do not cover a requirement.
+
+The engine accepts explicit experience years and owner confirmations for the exact job version's education/work-authorization text. It never infers these facts from skill overlap or free-text similarity. An adapter must construct scenario signals from trusted structured assessment observations, never by parsing feedback prose. Sorting uses explicit conflict count, confirmed conditions, mandatory coverage, preferred coverage and stable job IDs. Semantic/model ranking is unavailable in this initial rules recipe; adding it requires a versioned recipe and reviewed evaluation rather than silently changing old results.
+
+Eight unit tests cover the above rules. They do not prove persistence, authorization, input freshness, deletion or browser integration. Those pieces are still pending; the current live product continues to use local demo overlap until the complete private path is ready.
+
 ## Target data and interface
 
 `match_runs` stores owner, profile/evidence version, catalog version and ranking recipe. `match_results` links jobs to condition checks, supporting evidence and gaps. `gap_items` distinguish missing evidence, short-term learning, longer-term experience and unknown information. `refresh(actor, jobId?)` enqueues a versioned computation.
