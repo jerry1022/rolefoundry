@@ -4,11 +4,13 @@
 
 Translate important job gaps into manageable learning and practice. DeepLearning.AI is the initial curated provider. RoleFoundry is independent and does not imply a partnership, official endorsement or course completion integration.
 
-## Current scaffold
+## Current implementation
 
-Six official links have authored summaries, skill outcomes, prerequisites and practice prompts. `recommendCourses` filters to requested gaps, prioritizes fewer missing prerequisites, then greater gap coverage. Users choose a target role and manually mark completion. Completion does not create skill evidence.
+Module 07 implements source-governed immutable course metadata, anonymous published reads, administrator author/review/publish/retire workflows and private two-week plans through an actual pgmq/Node worker. Plans pin profile/evidence/job/dictionary/course/progress versions and respect prerequisites and weekly study/practice budgets. Independent step/course progress and private practice references never create capability evidence. [Setup, exact API, replacement boundaries and verification](../LEARNING_SETUP.md).
 
-## Target data and API
+The static six-link demo remains available when the catalog is disabled. Migrations publish no real course metadata; source rights, reviewed content population and editorial evaluation remain release gates.
+
+## Data and API
 
 `courses`, `course_versions`, `course_skill_links`, `course_prerequisites`, `learning_plans`, `learning_steps`, `learning_progress` and `practice_submissions`. Store official title/URL, provider, language, difficulty, format, official duration if known, availability and last review. Prices and access conditions are provider-controlled, time-sensitive metadata; unknown values are not described as free.
 

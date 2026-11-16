@@ -1,6 +1,6 @@
 # Production API contract
 
-**Mixed implementation status.** The identity endpoints under `/api/v1/identity` are implemented for configured server deployments; see [their exact API and setup](IDENTITY_SETUP.md). Profile/evidence endpoints are also implemented: see [their exact inputs, versions and pagination](PROFILE_SETUP.md). Published job/bookmark APIs and source/lifecycle administration are also implemented: see [catalog API](CATALOG_SETUP.md). Public/versioned skill reads and role-verified dictionary mutations are implemented: see [dictionary API](SKILL_DICTIONARY_SETUP.md). Private assessment/task APIs and question-bank administration are implemented: see [assessment API](ASSESSMENT_SETUP.md). Private versioned matching/report APIs are implemented: see [matching API](MATCHING_SETUP.md). Other resource contracts below remain planned. The public static demo excludes all dynamic identity handlers.
+**Mixed implementation status.** The identity endpoints under `/api/v1/identity` are implemented for configured server deployments; see [their exact API and setup](IDENTITY_SETUP.md). Profile/evidence endpoints are also implemented: see [their exact inputs, versions and pagination](PROFILE_SETUP.md). Published job/bookmark APIs and source/lifecycle administration are also implemented: see [catalog API](CATALOG_SETUP.md). Public/versioned skill reads and role-verified dictionary mutations are implemented: see [dictionary API](SKILL_DICTIONARY_SETUP.md). Private assessment/task APIs and question-bank administration are implemented: see [assessment API](ASSESSMENT_SETUP.md). Private versioned matching/report APIs are implemented: see [matching API](MATCHING_SETUP.md). Public reviewed course/private plan/progress and course administration APIs are implemented: see [exact learning API](LEARNING_SETUP.md). Other resource contracts below remain planned. The public static demo excludes all dynamic identity handlers.
 
 ## Conventions
 
@@ -36,9 +36,14 @@
 | GET `/matches` | History cursor | Owner report history |
 | GET `/matches/{id}` | Owner run ID, result cursor | Cited results/gaps, input versions, stale/availability flags |
 | GET `/courses` | Skill, difficulty, cursor | Published editorial metadata; public |
-| POST `/learning-plans` | Target job ID, weekly hours | Plan generation task |
+| POST `/learning-plans` | Target job ID, weekly hours, duration overrides and idempotency header | Private plan generation task |
+| GET `/learning-plans` | Optional history cursor | Owner plan history |
+| GET `/learning-progress` | None | Owner whole-course progress and revision |
+| PATCH `/learning-progress/courses/{id}` | Expected revision and completed flag | Owner progress; no ability promotion |
 | GET `/learning-plans/{id}` | Plan ID | Owner steps, resources, practice and versions |
 | PATCH `/learning-plans/{id}/steps/{stepId}` | User-reported progress | Updated step, without skill promotion |
+| POST `/learning-plans/{id}/steps/{stepId}/practice` | Expected revision, HTTPS URL and summary | Independent private practice reference |
+| DELETE `/learning-plans/{id}/practice/{submissionId}` | Expected revision | Owner reference removal, including invalidated plans |
 | POST `/resumes/upload-intents` | Filename, media type, byte count | Short-lived private upload intent |
 | POST `/resumes/{id}/parse` | Uploaded source version | Parsing task |
 | POST `/resumes/{id}/confirm` | Confirmed draft facts and version | New confirmed resume version |
