@@ -1,6 +1,6 @@
 # Production API contract
 
-**Mixed implementation status.** The identity endpoints under `/api/v1/identity` are implemented for configured server deployments; see [their exact API and setup](IDENTITY_SETUP.md). Profile/evidence endpoints are also implemented: see [their exact inputs, versions and pagination](PROFILE_SETUP.md). Published job/bookmark APIs and source/lifecycle administration are also implemented: see [catalog API](CATALOG_SETUP.md). Public/versioned skill reads and role-verified dictionary mutations are implemented: see [dictionary API](SKILL_DICTIONARY_SETUP.md). Private assessment/task APIs and question-bank administration are implemented: see [assessment API](ASSESSMENT_SETUP.md). Other resource contracts below remain planned. The public static demo excludes all dynamic identity handlers.
+**Mixed implementation status.** The identity endpoints under `/api/v1/identity` are implemented for configured server deployments; see [their exact API and setup](IDENTITY_SETUP.md). Profile/evidence endpoints are also implemented: see [their exact inputs, versions and pagination](PROFILE_SETUP.md). Published job/bookmark APIs and source/lifecycle administration are also implemented: see [catalog API](CATALOG_SETUP.md). Public/versioned skill reads and role-verified dictionary mutations are implemented: see [dictionary API](SKILL_DICTIONARY_SETUP.md). Private assessment/task APIs and question-bank administration are implemented: see [assessment API](ASSESSMENT_SETUP.md). Private versioned matching/report APIs are implemented: see [matching API](MATCHING_SETUP.md). Other resource contracts below remain planned. The public static demo excludes all dynamic identity handlers.
 
 ## Conventions
 
@@ -32,8 +32,9 @@
 | POST `/assessments/{id}/submit` | Expected revision, full answers and idempotency header | Fixed-choice grading task; no provider allowance |
 | POST `/assessments/{id}/retry` | Prior task ID and idempotency header | Retry exhausted infrastructure failure with sealed answers |
 | GET `/assessments/{id}` | Attempt ID | Owner attempt and published result |
-| POST `/matches` | Optional target job ID | Match refresh task |
-| GET `/matches` | Run ID, cursor | Owner results, reasons, gaps and input versions |
+| POST `/matches` | Target job ID or null, explicit constraints and idempotency header | Versioned private run and task |
+| GET `/matches` | History cursor | Owner report history |
+| GET `/matches/{id}` | Owner run ID, result cursor | Cited results/gaps, input versions, stale/availability flags |
 | GET `/courses` | Skill, difficulty, cursor | Published editorial metadata; public |
 | POST `/learning-plans` | Target job ID, weekly hours | Plan generation task |
 | GET `/learning-plans/{id}` | Plan ID | Owner steps, resources, practice and versions |

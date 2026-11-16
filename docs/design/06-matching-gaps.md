@@ -8,13 +8,11 @@ Help a job seeker prioritize opportunities and choose the next useful action. Re
 
 `matchJob` computes covered and missing canonical skills against self-report. `searchJobs` sorts by overlap with stable ID tie-breaking. Percentages mean required fixture skill coverage only. The UI exposes this limitation explicitly.
 
-## Implementation in progress
+## Current private implementation
 
-`src/modules/matching` now owns narrow input projections and a pure `rules-v1` engine. It distinguishes unknown/confirmed/conflicting conditions, keeps source and evidence-version citations, counts each canonical mandatory skill once, separates preferred skills and retains negative scenario feedback as practice gaps. Self-reports, resume claims and portfolio references remain explicitly unverified; coverage is not a competency level. A learning-only claim and an incorrect scenario do not cover a requirement.
+Configured deployments now expose `/matches/` and private APIs backed by immutable inputs/results, general tasks and a real `matches.refresh` worker handler. Explicit conditions, mandatory/preferred coverage, original requirement text and evidence-version citations remain visible. Profile/catalog/dictionary changes mark old reports stale and block pending publication. Evidence deletion atomically purges copied inputs/results/gaps and prevents late restoration. See [setup, exact API, lock order and verification](../MATCHING_SETUP.md).
 
-The engine accepts explicit experience years and owner confirmations for the exact job version's education/work-authorization text. It never infers these facts from skill overlap or free-text similarity. An adapter must construct scenario signals from trusted structured assessment observations, never by parsing feedback prose. Sorting uses explicit conflict count, confirmed conditions, mandatory coverage, preferred coverage and stable job IDs. Semantic/model ranking is unavailable in this initial rules recipe; adding it requires a versioned recipe and reviewed evaluation rather than silently changing old results.
-
-Eight unit tests cover the above rules. They do not prove persistence, authorization, input freshness, deletion or browser integration. Those pieces are still pending; the current live product continues to use local demo overlap until the complete private path is ready.
+The consuming module owns narrow source projections and the pure `rules-v1` engine. It counts canonical skills once, retains provenance, separates unknown conditions from conflicts and never infers education/work authorization. Self-reports and portfolio/resume references stay explicitly unverified. Incorrect scenarios suggest practice and do not count as positive support; learning-only claims do not cover requirements. Semantic/model ranking is unavailable in this first versioned recipe; adding it requires evaluation and a new recipe. Human relevance review remains a release gate.
 
 ## Target data and interface
 

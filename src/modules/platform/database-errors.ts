@@ -1,5 +1,9 @@
 import { ApplicationError } from "./errors";
 const failures = {
+  RF_MATCH_LIMIT: [
+    409,
+    "This analysis is too large. Choose one target role or reduce the profile evidence before refreshing.",
+  ],
   RF_NOT_READY: [409, "This track needs three reviewed questions before an assessment can start."],
   RF_STALE_INPUT: [409, "The task inputs changed. Start from the current version."],
   RF_UNAUTHORIZED: [401, "Sign in to continue."],

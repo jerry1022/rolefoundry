@@ -3,6 +3,8 @@ import { z } from "zod";
 import { TaskWorker } from "../../../src/modules/tasks/worker";
 import { SupabaseTaskQueue } from "../../../src/modules/tasks/adapters/supabase";
 import { SupabaseAssessmentGrader } from "../../../src/modules/assessment/adapters/supabase";
+import { MatchingHandler } from "../../../src/modules/matching/handler";
+import { SupabaseMatchingExecutionStore } from "../../../src/modules/matching/adapters/supabase";
 const config = z
   .object({
     url: z.url(),
@@ -41,7 +43,10 @@ const controller = new AbortController();
 for (const signal of ["SIGINT", "SIGTERM"] as const) process.on(signal, () => controller.abort());
 const worker = new TaskWorker(
   new SupabaseTaskQueue(client),
-  { "assessment.grade": new SupabaseAssessmentGrader(client) },
+  {
+    "assessment.grade": new SupabaseAssessmentGrader(client),
+    "matches.refresh": new MatchingHandler(new SupabaseMatchingExecutionStore(client)),
+  },
   {
     workerId: crypto.randomUUID(),
     leaseSeconds: config.data.seconds,

@@ -57,6 +57,8 @@ const adminActions = new Set([
   "catalog:write",
 ]);
 const ownerActions = new Set([
+  "matches:read",
+  "matches:write",
   "assessment:read",
   "assessment:write",
   "bookmark:read",

@@ -16,6 +16,7 @@ function job(overrides: Partial<MatchJobInput> = {}): MatchJobInput {
     company: "Fixture",
     track: "Engineering & data",
     workplace: null,
+    level: null,
     conditions: { workAuthorization: null, education: null, experienceYears: null },
     requirements: [{ text: "Build Python services", priority: "mandatory", skills: ["python"] }],
     ...overrides,
@@ -217,5 +218,96 @@ describe("source-grounded matching rules", () => {
         confirmations: [{ field: "education", answer: "confirmed" }],
       }).success,
     ).toBe(false);
+  });
+});
+
+describe("private matching use cases and worker ports", () => {
+  it("authorizes before accessing persisted report snapshots", async () => {
+    const { MatchingService } = await import("../../src/modules/matching/service");
+    const { vi } = await import("vitest");
+    const repository = { refresh: vi.fn(), find: vi.fn(), list: vi.fn() };
+    const service = new MatchingService(repository, {
+      authorize: async () => {
+        throw Error("Denied");
+      },
+    });
+    await expect(
+      service.refresh(
+        { userId: crypto.randomUUID(), role: "member" },
+        { jobId: null, constraints: { experienceYears: null, confirmations: [] } },
+        crypto.randomUUID(),
+      ),
+    ).rejects.toThrow("Denied");
+    expect(repository.refresh).not.toHaveBeenCalled();
+  });
+  it("computes through the injected execution store and stops before publication on cancellation", async () => {
+    const { MatchingHandler } = await import("../../src/modules/matching/handler");
+    const { vi } = await import("vitest");
+    const controller = new AbortController();
+    const store = { load: vi.fn(async () => snapshot()), publish: vi.fn(async () => {}) };
+    const lease = {
+      taskId: crypto.randomUUID(),
+      token: crypto.randomUUID(),
+      messageId: "1",
+      kind: "matches.refresh" as const,
+      leaseSeconds: 5,
+    };
+    await new MatchingHandler(store).execute(lease, controller.signal);
+    expect(store.publish).toHaveBeenCalledWith(
+      lease,
+      expect.arrayContaining([expect.objectContaining({ recipe: "rules-v1" })]),
+      controller.signal,
+    );
+    store.publish.mockClear();
+    store.load.mockImplementation(async () => {
+      controller.abort();
+      return snapshot();
+    });
+    await expect(
+      new MatchingHandler(store).execute(lease, controller.signal),
+    ).rejects.toMatchObject({ category: "canceled" });
+    expect(store.publish).not.toHaveBeenCalled();
+  });
+});
+
+describe("out-of-order report reads", () => {
+  it("never resurrects known deleted content or turns an old report current", async () => {
+    const { acceptMatchRead } = await import("../../src/modules/matching/report-state");
+    const { matchRunSchema } = await import("../../src/modules/matching/model");
+    const complete = matchRunSchema.parse({
+      id: crypto.randomUUID(),
+      taskId: crypto.randomUUID(),
+      targetJobId: null,
+      status: "succeeded",
+      profileRevision: 1,
+      catalogRevision: 1,
+      dictionaryVersion: 1,
+      recipe: "rules-v1",
+      createdAt: new Date().toISOString(),
+      finishedAt: new Date().toISOString(),
+      stale: false,
+      constraints: { experienceYears: null, confirmations: [] },
+      candidateCount: 1,
+      data: rankMatches(snapshot()).map((item) => ({
+        ...item,
+        available: true,
+        freshness: "current",
+      })),
+      nextCursor: null,
+    });
+    const deleted = {
+      ...complete,
+      status: "invalidated" as const,
+      stale: true,
+      data: [],
+      constraints: null,
+    };
+    expect(acceptMatchRead(deleted, complete)).toEqual(deleted);
+    expect(acceptMatchRead(complete, deleted, true)).toEqual(deleted);
+    expect(acceptMatchRead(complete, { ...complete, status: "queued", data: [] })).toEqual(
+      complete,
+    );
+    expect(acceptMatchRead({ ...complete, stale: true }, complete).stale).toBe(true);
+    expect(acceptMatchRead(complete, complete, true).data).toHaveLength(1);
   });
 });

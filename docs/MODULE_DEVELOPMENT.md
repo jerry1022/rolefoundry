@@ -13,13 +13,13 @@ See the [complete requirement audit](IMPLEMENTATION_AUDIT.md) before claiming th
 | 03 Jobs/search | Published catalog, source governance and private bookmarks implemented | Later dictionary/matching/ingestion/application integrations |
 | 04 Skill dictionary | Bilingual snapshots, aliases, DAGs, admin review, historical-safe merges and runtime IDs implemented | Human mapping review and later report/version integration |
 | 05 Assessment | Private immutable attempts/questions/rubrics, autosave and real deterministic grading/evidence implemented | Expert content review; short-answer AI calibration remains a future feature gate |
-| 06 Matching | In progress: source-grounded rules core and unit tests; live UI still uses local overlap | Versioned persisted inputs/results, task handler, conditions UI and stale/deletion guards |
+| 06 Matching | Versioned private reports, source-grounded rules, actual worker, conditions UI and atomic deletion purge implemented | Required semantic ranking integration with 11, plus human relevance/source review and recipe evaluation |
 | 07 Courses/learning | Editorial local demo only | Reviewed catalog, two-week plans, prerequisites and owner progress |
 | 08 Resume studio | Plain-text local demo only | Private sources, isolated parsing, confirmed facts and immutable exports |
 | 09 Tracking | Local board only | Private versioned applications, events and historical source snapshots |
 | 10 Ingestion | Planned | Authorized adapters, reviewable batches and publication provenance |
 | 11 AI Gateway | Port only | Replaceable adapters, bounded execution, output/reference validation and evaluation |
-| 12 Workers | Durable pgmq engine and assessment handler implemented early for 05 | Other domain handlers, provider reservations and invalidation outbox dispatch remain |
+| 12 Workers | Durable pgmq engine with assessment and matching handlers implemented | Other domain handlers, provider reservations and invalidation outbox dispatch remain |
 | 13 Operations | Identity admin controls only | Reviewed publication, recovery, deletion and telemetry |
 
 Work follows the document sequence, but dependencies are explicit. Modules 05–08 may establish producers and deterministic domain rules before 11/12. They cannot be described as running asynchronous AI features until the gateway/worker integration passes its own checks. Module 02 seeded the initial foreign-key registry; module 04 now adds versioned administration and runtime IDs. Keep each new module's review focused; use a stacked PR base if its predecessor is still open, without silently merging it.
@@ -52,7 +52,7 @@ flowchart LR
 - Cross-module mutations use public service ports or a deliberately granted database transaction boundary. Do not reach into another module's internal tables from presentation code.
 - Keep existing demo APIs as compatibility exports where necessary; new production modules must not depend on the demo workspace shape.
 
-`npm run architecture:check` enforces the profile/job/skill/assessment/task core and corresponding UI import boundaries with the TypeScript parser. Extend its coverage when adding modules. It supplements behavior tests; it does not prove runtime security or transactional correctness.
+`npm run architecture:check` enforces the profile/job/skill/assessment/task/matching core and corresponding UI import boundaries with the TypeScript parser. Extend its coverage when adding modules. It supplements behavior tests; it does not prove runtime security or transactional correctness.
 
 ## Dictionary concurrency and historical joins
 
@@ -62,6 +62,6 @@ Dictionary writes lock catalog, then dictionary exclusively. Link inserts use a 
 
 All module 02 mutations commit an aggregate revision with their change event under the same owner lock used by identity revocation/deactivation. Evidence edits append immutable versions. A write carries its last-read aggregate revision and, for evidence edits/deletion, the evidence version. Conflicts require a reload, never a silent overwrite.
 
-Future matching/learning/resume reports must store the profile revision and exact evidence version IDs used. Check current inputs at publication and at read time. A changed revision makes a result stale. An `evidence.deleted` event contains the removed version IDs so dependent modules can remove reports/embeddings without retaining deleted content. Those modules must implement their purge/read guard before exposing derived personal data; module 02 cannot delete stores that do not yet exist. The durable event remains available for module 12 dispatch/retry; it is not a running event bus today.
+Matching reports now store the profile revision and exact evidence versions, recheck source versions on publication/read and purge derived content atomically when a source evidence version is deleted. Future learning/resume reports must store the profile revision and exact evidence version IDs used. Check current inputs at publication and at read time. A changed revision makes a result stale. An `evidence.deleted` event contains the removed version IDs so dependent modules can remove reports/embeddings without retaining deleted content. Those modules must implement their purge/read guard before exposing derived personal data; module 02 cannot delete stores that do not yet exist. The durable event remains available for module 12 dispatch/retry; it is not a running event bus today.
 
 Use additive migrations first. Do not rename canonical IDs or remove historical versions during an adapter upgrade. Run the same behavior/authorization suite against each replacement adapter before switching the composition root. Keep provider credentials and deployment-specific configuration outside the domain and browser.

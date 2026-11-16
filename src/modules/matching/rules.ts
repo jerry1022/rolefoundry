@@ -33,6 +33,14 @@ function conditions(job: MatchJobInput, snapshot: MatchSnapshot): ConditionCheck
       : "unknown";
   return [
     {
+      field: "seniority",
+      status: "unknown",
+      requirement: job.level,
+      basis: "unknown",
+      reason:
+        "Seniority fit has not been established. Skill overlap and self-reported years do not determine it.",
+    },
+    {
       field: "workplace",
       status: workplace,
       requirement: job.workplace,

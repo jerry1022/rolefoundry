@@ -37,7 +37,7 @@ The integration suite runs against actual local GoTrue, PostgREST, PostgreSQL an
 ## 06 — Matching and gap analysis
 
 - Design: [06-matching-gaps.md](design/06-matching-gaps.md).
-- Status: In progress. Pure rule engine and eight unit tests are implemented; persisted snapshots, task execution, private APIs/UI and deletion/version integration are still pending. This is not a completed module.
+- Status: Deterministic private path implemented: sealed snapshots, real task execution, source-cited reports/API/UI, version guards and immediate deletion purge. See [setup and verification scope](MATCHING_SETUP.md). Required semantic ranking remains pending integration with module 11; rule-only fallback is implemented. Human relevance review and semantic/model recipe evaluation remain release gates.
 - Required acceptance scope: Test hard conflicts versus unknowns, mandatory versus preferred requirements, empty profiles, unrelated jobs, duplicate skills, stale versions and deterministic ordering. Human review must confirm that every reported strength or gap has supporting source data.
 
 ## 07 — Course catalog and learning plans
@@ -73,7 +73,7 @@ The integration suite runs against actual local GoTrue, PostgREST, PostgreSQL an
 ## 12 — Background worker and tasks
 
 - Design: [12-worker-tasks.md](design/12-worker-tasks.md).
-- Status: Durable pgmq engine, queue adapter and actual assessment handler implemented/verified with module 05. Remaining domain/provider handlers, invalidation dispatch and hosted telemetry integration are still pending; do not count the entire module complete.
+- Status: Durable pgmq engine, queue adapter and actual assessment and matching handlers implemented/verified with modules 05–06. Remaining domain/provider handlers, invalidation dispatch and hosted telemetry integration are still pending; do not count the entire module complete.
 - Required acceptance scope: Simulate duplicate delivery, lease expiry, crash before/after commit, provider timeout, poison payload, stale input, owner deletion and graceful shutdown. Verify that queue age, lease age, retries and terminal failures are observable.
 
 ## 13 — Administration and operations

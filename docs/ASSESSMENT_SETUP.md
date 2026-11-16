@@ -63,7 +63,7 @@ The grading transaction takes the shared dictionary lock, owner lock, task row a
 
 `TaskWorker` depends only on `TaskQueue` and a handler registry. `SupabaseTaskQueue` owns RPC transport; `SupabaseAssessmentGrader` owns the transactional grading adapter. `apps/worker/src/main.ts` is the environment/composition root. Domain services and UI components import narrow ports rather than concrete privileged clients. Run `npm run architecture:check` after replacing an adapter.
 
-Current production handler: `assessment.grade`. Other task kinds are reserved contracts, not working handlers. Identity analysis reservations and profile/dictionary invalidation outboxes still need module 12 dispatch integration. No AI request is executed by this worker.
+Current production handlers: `assessment.grade` and `matches.refresh`; the latter is documented in [matching setup](MATCHING_SETUP.md). Other task kinds remain reserved contracts, not working handlers. Identity analysis reservations and profile/dictionary invalidation outboxes still need module 12 dispatch integration. No AI request is executed by this worker.
 
 The authoritative task table controls state and retries. pgmq is only delivery. Leases are 5–300 seconds; concurrency is 1–8, default 2. Heartbeat runs at about one third of the lease. Three transient attempts use exponential backoff plus jitter. Validation, forbidden, stale and cancellation failures are terminal. Poison deliveries are archived with a safe code. Each acquisition scans at most 64 deliveries, one at a time, and claims no more than its concurrency budget. A crash before commit is reclaimed after expiry; a crash after commit is archived on redelivery without creating more evidence.
 
