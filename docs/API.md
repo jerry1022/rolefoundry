@@ -1,6 +1,6 @@
 # Production API contract
 
-**Mixed implementation status.** The identity endpoints under `/api/v1/identity` are implemented for configured server deployments; see [their exact API and setup](IDENTITY_SETUP.md). Profile/evidence endpoints are also implemented: see [their exact inputs, versions and pagination](PROFILE_SETUP.md). Published job/bookmark APIs and source/lifecycle administration are also implemented: see [catalog API](CATALOG_SETUP.md). Public/versioned skill reads and role-verified dictionary mutations are implemented: see [dictionary API](SKILL_DICTIONARY_SETUP.md). Private assessment/task APIs and question-bank administration are implemented: see [assessment API](ASSESSMENT_SETUP.md). Private versioned matching/report APIs are implemented: see [matching API](MATCHING_SETUP.md). Public reviewed course/private plan/progress and course administration APIs are implemented: see [exact learning API](LEARNING_SETUP.md). Other resource contracts below remain planned. The public static demo excludes all dynamic identity handlers.
+**Mixed implementation status.** The identity endpoints under `/api/v1/identity` are implemented for configured server deployments; see [their exact API and setup](IDENTITY_SETUP.md). Profile/evidence endpoints are also implemented: see [their exact inputs, versions and pagination](PROFILE_SETUP.md). Published job/bookmark APIs and source/lifecycle administration are also implemented: see [catalog API](CATALOG_SETUP.md). Public/versioned skill reads and role-verified dictionary mutations are implemented: see [dictionary API](SKILL_DICTIONARY_SETUP.md). Private assessment/task APIs and question-bank administration are implemented: see [assessment API](ASSESSMENT_SETUP.md). Private versioned matching/report APIs are implemented: see [matching API](MATCHING_SETUP.md). Public reviewed course/private plan/progress and course administration APIs are implemented: see [exact learning API](LEARNING_SETUP.md). Private resume/source/confirmation/proposal/export/download APIs are implemented: see [exact resume API](RESUME_SETUP.md). Other resource contracts below remain planned. The public static demo excludes all dynamic identity handlers.
 
 ## Conventions
 
@@ -45,11 +45,19 @@
 | POST `/learning-plans/{id}/steps/{stepId}/practice` | Expected revision, HTTPS URL and summary | Independent private practice reference |
 | DELETE `/learning-plans/{id}/practice/{submissionId}` | Expected revision | Owner reference removal, including invalidated plans |
 | POST `/resumes/upload-intents` | Filename, media type, byte count | Short-lived private upload intent |
-| POST `/resumes/{id}/parse` | Uploaded source version | Parsing task |
-| POST `/resumes/{id}/confirm` | Confirmed draft facts and version | New confirmed resume version |
-| POST `/resume-revisions` | Resume version and target job | Proposal generation task |
-| POST `/resume-revisions/{id}/accept` | Accepted change IDs and version | New immutable resume version |
-| POST `/resumes/{id}/exports` | Confirmed version, PDF format | Export task; private expiring result |
+| POST `/resumes/{id}/parse` | Exhausted prior task and idempotency header | New task for the same immutable source |
+| GET `/resumes` | Optional cursor | Owner source history |
+| POST `/resumes/paste` | Text and idempotency header | Separate private source and parse task |
+| PUT `/resumes/{id}/source` | Binary, exact content type and upload-token header | Verified private source; automatically enqueues parsing |
+| GET/DELETE `/resumes/{id}` | Owner ID; expected revision for deletion | Private source/versions or deletion/cleanup status |
+| POST `/resumes/{id}/confirm` | Expected document revision and confirmed fact/section content | New immutable version and unreviewed claims |
+| GET `/resume-versions/{id}` | Version ID | Exact owner source and dictionary history |
+| POST `/resumes/{id}/revisions` | Current version, target job, expected revision and idempotency header | Grounded order-proposal task |
+| GET `/resume-revisions/{id}` | Owner proposal ID | Versioned changes, stale state and accepted choices |
+| POST `/resume-revisions/{id}/accept` | Selected change IDs and expected document revision | New immutable version; identical repeated choices reuse it |
+| POST `/resumes/{id}/exports` | Selected confirmed version and idempotency header | Fixed-version PDF task |
+| POST `/resume-exports/{id}/download-intents` | Owner export ID | 60-second owner-bound permit |
+| GET `/resume-downloads/{id}` | Permit ID and owner session | Verified PDF attachment with no-store headers |
 | GET/POST `/applications` | Job ID, optional resume version | Owner tracker records |
 | PATCH `/applications/{id}` | Stage, note, next action and version | Updated record and event |
 | DELETE `/applications/{id}` | Record version | Owner deletion |

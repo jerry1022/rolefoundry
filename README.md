@@ -57,7 +57,7 @@ Changes stay in your browser. Reset them from **Catalog studio**.
 | **Skill check** | Private versioned attempts, autosaved answers, durable fixed-choice grading and scenario evidence when configured; twelve-question local demo retained |
 | **Matching & gaps** | Private versioned reports, explicit conditions, cited evidence, stale/deletion guards and durable rule-based ranking when configured; local demo retained |
 | **Learning path** | Optional reviewed database catalog, private two-week plans, prerequisites, practice references and owner progress; six-link local demo retained |
-| **Resume studio** | Local draft editor, fact-focused checklist and text export |
+| **Resume studio** | Optional private PDF/DOCX sources, confirmed facts/claim histories, grounded order proposals, individual acceptance and fixed-version PDF exports; local demo retained |
 | **Applications** | Manual stages, notes and persistent local state |
 | **Catalog studio** | Transparent fixture provenance and a confirmed local reset |
 | **Architecture** | An explorable overview of the planned service boundaries |
@@ -68,7 +68,7 @@ Changes stay in your browser. Reset them from **Catalog studio**.
 
 This is a **functional product scaffold**, not a live recruiting service. Employers, openings and salaries are fictional. Course summaries and skill mappings are independent editorial metadata; course availability and pricing belong to the provider. RoleFoundry is not affiliated with DeepLearning.AI.
 
-The public demo has no connected authentication or private backend. Configured server deployments now support [module 01 identity](docs/IDENTITY_SETUP.md) with Supabase Auth/PostgreSQL, invitations, consent and quotas. [Module 02](docs/PROFILE_SETUP.md) adds private profile/evidence persistence with explicit demo import. [Module 03](docs/CATALOG_SETUP.md) adds a published source-governed catalog and private bookmarks. [Module 04](docs/SKILL_DICTIONARY_SETUP.md) adds reviewed bilingual skill versions. [Module 05](docs/ASSESSMENT_SETUP.md) adds private assessments with a real pgmq/Node grading worker. [Module 06](docs/MATCHING_SETUP.md) adds versioned private matching and gap reports with deletion-safe citations. [Module 07](docs/LEARNING_SETUP.md) adds reviewed courses and private, budgeted learning plans with an actual worker. Live feed ingestion and persistence for remaining career modules, AI analysis, document upload/PDF export and application submission remain future work. The resume checklist and skill overlap are deterministic. Completing a course does **not** verify a skill; overlap does **not** predict hiring. Use sample information in the public demo.
+The public demo has no connected authentication or private backend. Configured server deployments now support [module 01 identity](docs/IDENTITY_SETUP.md) with Supabase Auth/PostgreSQL, invitations, consent and quotas. [Module 02](docs/PROFILE_SETUP.md) adds private profile/evidence persistence with explicit demo import. [Module 03](docs/CATALOG_SETUP.md) adds a published source-governed catalog and private bookmarks. [Module 04](docs/SKILL_DICTIONARY_SETUP.md) adds reviewed bilingual skill versions. [Module 05](docs/ASSESSMENT_SETUP.md) adds private assessments with a real pgmq/Node grading worker. [Module 06](docs/MATCHING_SETUP.md) adds versioned private matching and gap reports with deletion-safe citations. [Module 07](docs/LEARNING_SETUP.md) adds reviewed courses and private, budgeted learning plans with an actual worker. [Module 08](docs/RESUME_SETUP.md) adds private document workflows and fixed PDF exports with a real worker. Live ingestion, model-assisted wording/analysis, persistent tracking and application submission remain future work. The resume checklist and skill overlap are deterministic. Completing a course does **not** verify a skill; overlap does **not** predict hiring. Use sample information in the public demo.
 
 ### Run the identity foundation locally
 
@@ -85,7 +85,7 @@ Open `http://127.0.0.1:3200/account/`; receive your code in local Mailpit at por
 
 ### Continue module development
 
-Follow the [numbered delivery plan and dependency rules](docs/MODULE_DEVELOPMENT.md). Modules 01–07 implement identity, private profiles, published jobs, versioned bilingual skills, private fixed-choice assessments, source-grounded matching and reviewed learning plans. Module 08 (resume studio) is next; the [complete design audit](docs/IMPLEMENTATION_AUDIT.md) retains every remaining acceptance gate. Each step updates its design, README and executable acceptance tests. Open PRs remain separate review gates.
+Follow the [numbered delivery plan and dependency rules](docs/MODULE_DEVELOPMENT.md). Modules 01–08 implement identity, private profiles, published jobs, versioned bilingual skills, assessments, matching, reviewed learning and private resume workflows. Required semantic matching and model-assisted wording remain integration gates with module 11. Module 09 (application tracking) is next; the [complete design audit](docs/IMPLEMENTATION_AUDIT.md) retains every remaining acceptance gate. Each step updates its design, README and executable acceptance tests. Open PRs remain separate review gates.
 
 The local helper also enables the database catalog at `/jobs/`, initially empty. Follow [catalog setup](docs/CATALOG_SETUP.md) to review/publish permitted source records. With identity configured, sign in at `/account/` and visit `/skills/` for the private profile. Existing local data is imported only after preview and explicit approval. See [profile setup and API](docs/PROFILE_SETUP.md).
 
@@ -96,15 +96,15 @@ flowchart LR
     UI[Next.js workspace] --> D[Typed domain modules]
     D --> F[Fixture repositories — today]
     D --> Ports[Repository and authorization ports]
-    Ports --> DB[(Supabase identity, profile, catalog, assessment, matching and learning adapters)]
-    D --> Q[pgmq + independent Node grading/matching/learning worker]
+    Ports --> DB[(Supabase identity, profile, catalog, assessment, matching, learning and resume adapters)]
+    D --> Q[pgmq + independent Node grading/matching/learning/resume worker]
     Q -.-> AI[AI Gateway — planned]
     DB -.-> S[Jobs ↔ skills ↔ evidence ↔ courses]
 ```
 
 Today: **Next.js · React · TypeScript · Zod · Supabase Auth/PostgreSQL · CSS tokens · Lucide · Vitest · Playwright**.
 
-The independent worker now consumes pgmq and executes fixed-choice grading, matching and learning plans with leases, retries and atomic result publication. Run `npm run worker:local` alongside the configured web server; for assessment grading, author/review questions first using [assessment setup](docs/ASSESSMENT_SETUP.md). This scoring uses no external model or AI analysis allowance. Production extensions: **private Storage · pgvector · schema-validated AI adapters**. Identity provider reservations and profile invalidation outboxes still await broader dispatch integration. Core profile, catalog, dictionary, assessment, matching, learning and worker rules have no framework or database SDK dependency. The UI uses a replaceable client port, and request-scoped composition roots select adapters. [Architecture checks](scripts/check-boundaries.mjs) protect these boundaries. The architecture is a modular monolith, with explicit module ports rather than premature microservices.
+The independent worker now consumes pgmq and executes fixed-choice grading, matching, learning plans and isolated resume workflows with leases, retries and atomic result publication. Run `npm run worker:local` alongside the configured web server; for assessment grading, author/review questions first using [assessment setup](docs/ASSESSMENT_SETUP.md). This scoring uses no external model or AI analysis allowance. Production extensions: **pgvector · schema-validated AI adapters**. Identity provider reservations and profile invalidation outboxes still await broader dispatch integration. Core profile, catalog, dictionary, assessment, matching, learning, resume and worker rules have no framework or database SDK dependency. The UI uses a replaceable client port, and request-scoped composition roots select adapters. [Architecture checks](scripts/check-boundaries.mjs) protect these boundaries. The architecture is a modular monolith, with explicit module ports rather than premature microservices.
 
 ```text
 src/app/             Twelve pages, domain API routes and application layout
@@ -117,9 +117,10 @@ src/modules/jobs     Published catalog, source policies and private bookmark por
 src/modules/assessment Private attempts, reviewed immutable questions and grading adapters
 src/modules/matching Sealed inputs, source-grounded rules, private reports and deletion guards
 src/modules/learning Reviewed courses, budgeted planner, private progress and replaceable gap adapter
+src/modules/resume   Private sources, confirmed facts/claims, grounded revisions and fixed PDF exports
 src/modules/tasks    Queue/handler ports, lease-aware engine and Supabase adapter
 src/modules/platform Safe application errors and bounded HTTP helpers
-supabase/            Identity/profile/catalog/dictionary/assessment/matching/learning migrations, owner RLS and local OTP templates
+supabase/            Identity/profile/catalog/dictionary/assessment/matching/learning/resume migrations, owner RLS and local OTP templates
 apps/worker/         Independent queue consumer and explicit dry-run example
 docs/                HLD, 13 module designs, API, data model and deployment
 tests/               Domain tests and browser journeys
@@ -127,6 +128,8 @@ tests/               Domain tests and browser journeys
 ```
 
 ## Design documentation
+
+- [Configuration status, automatic local setup and hosted handoff](docs/CONFIGURATION.md)
 
 - [Original AI career classifications and learning pathways](docs/CAREER_PATHS.md)
 
@@ -140,6 +143,7 @@ tests/               Domain tests and browser journeys
 - [Private assessments and durable grading](docs/ASSESSMENT_SETUP.md)
 - [Private matching and gap reports](docs/MATCHING_SETUP.md)
 - [Reviewed courses, two-week plans and private progress](docs/LEARNING_SETUP.md)
+- [Private resume sources, claim histories and fixed PDF exports](docs/RESUME_SETUP.md)
 - [Complete design acceptance audit](docs/IMPLEMENTATION_AUDIT.md)
 - [Incremental development and replaceable service boundaries](docs/MODULE_DEVELOPMENT.md)
 - [Production API contract](docs/API.md) and [data model](docs/DATA_MODEL.md)
@@ -160,7 +164,7 @@ npm run test:e2e
 npm run worker:demo
 ```
 
-`worker:demo` validates only a dry-run contract. `npm run worker:local` consumes the real local queue; `npm run identity:test` verifies private assessment/matching/learning APIs, actual worker handlers, lease/retry recovery and owner isolation. Browser tests cover discovery, bookmarks, assessment evidence, learning progress, resume export, the tracker, reset and mobile navigation.
+`worker:demo` validates only a dry-run contract. `npm run worker:local` consumes the real local queue; `npm run identity:test` verifies private assessment/matching/learning/resume APIs, actual worker handlers, lease/retry recovery and owner isolation. Browser tests cover discovery, bookmarks, assessment evidence, learning progress, resume export, the tracker, reset and mobile navigation.
 
 ## Deploy your own
 
@@ -174,7 +178,7 @@ See [deployment details](docs/DEPLOYMENT.md). The long-running worker uses `Dock
 
 ## Build the next chapter with us
 
-The next milestones are authorized live source adapters, calibrated assessments, reviewed learning content and fact-preserving resume analysis. Contributions to accessibility, source quality, assessment calibration and Traditional Chinese localization are especially welcome.
+The next milestones are authorized live source adapters, calibrated assessments, reviewed learning content, persistent application tracking and model-assisted fact-preserving wording. Contributions to accessibility, source quality, assessment calibration and Traditional Chinese localization are especially welcome.
 
 Read [CONTRIBUTING](CONTRIBUTING.md), open a focused issue, or pick a clearly scoped improvement from the [roadmap](docs/ROADMAP.md). Please do not contribute scraped personal data, copied course content or fabricated job listings presented as live openings.
 

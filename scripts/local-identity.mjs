@@ -26,7 +26,7 @@ if (action === "start") {
   const result = await command(cli, [
     "start",
     "--exclude",
-    "realtime,storage-api,imgproxy,studio,edge-runtime,logflare,vector,supavisor,postgres-meta",
+    "realtime,imgproxy,studio,edge-runtime,logflare,vector,supavisor,postgres-meta",
     "--yes",
     "--agent",
     "no",

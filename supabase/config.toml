@@ -20,7 +20,8 @@ enabled = false
 enabled = true
 port = 54324
 [storage]
-enabled = false
+enabled = true
+file_size_limit = "5MiB"
 [realtime]
 enabled = false
 [analytics]

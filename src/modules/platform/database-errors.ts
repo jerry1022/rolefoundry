@@ -1,5 +1,7 @@
 import { ApplicationError } from "./errors";
 const failures = {
+  RF_RESUME_LIMIT: [409, "This resume operation exceeds the document, history or content limit."],
+  RF_IMMUTABLE: [409, "Historical versions cannot be overwritten. Create a new confirmed version."],
   RF_COURSE_CYCLE: [
     409,
     "Course prerequisites would form a cycle. Review the required foundations.",

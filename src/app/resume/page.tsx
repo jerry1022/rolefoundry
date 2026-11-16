@@ -1,3 +1,3 @@
-import { ResumeScreen } from "@/components/screens";
+import { ResumeWorkspace } from "@/components/resume/entry";
 export const metadata = { title: "Resume studio" };
-export default ResumeScreen;
+export default ResumeWorkspace;
