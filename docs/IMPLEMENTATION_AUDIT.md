@@ -55,7 +55,7 @@ The integration suite runs against actual local GoTrue, PostgREST, PostgreSQL an
 ## 09 — Application tracking
 
 - Design: [09-application-tracking.md](design/09-application-tracking.md).
-- Status: Pending implementation and verification.
+- Status: Private cycles, manual stages, notes, fixed resume references, UTC follow-ups, immutable events and historical snapshots implemented and locally verified. See [tracking setup](APPLICATIONS_SETUP.md). No external submission or messaging is performed.
 - Required acceptance scope: Test idempotent additions, stage transitions, notes across reload, source closure, duplicate cycles, unauthorized access and optimistic conflicts. Verify explicitly that bookmarking, exporting a resume and opening an external page cannot mark an application successful.
 
 ## 10 — Ingestion and source governance

@@ -24,6 +24,7 @@ for (const file of [
   ...(await files("src/modules/matching")),
   ...(await files("src/modules/learning")),
   ...(await files("src/modules/resume")),
+  ...(await files("src/modules/applications")),
   ...(await files("src/components/profile")),
   ...(await files("src/components/jobs")),
   ...(await files("src/components/skills")),
@@ -31,6 +32,7 @@ for (const file of [
   ...(await files("src/components/matching")),
   ...(await files("src/components/learning")),
   ...(await files("src/components/resume")),
+  ...(await files("src/components/applications")),
 ]) {
   if (!/\.tsx?$/.test(file)) continue;
   const source = ts.createSourceFile(
@@ -40,11 +42,13 @@ for (const file of [
     true,
   );
   const domain =
-    /src\/modules\/((?:profile|jobs|skills|assessment|tasks|matching|learning|resume)\/(model|ports|service|specializations|catalog|worker|rules|handler|report-state|planner|plan-state|document-state|cleanup))\.ts$/.test(
+    /src\/modules\/((?:profile|jobs|skills|assessment|tasks|matching|learning|resume|applications)\/(model|ports|service|specializations|catalog|worker|rules|handler|report-state|planner|plan-state|document-state|cleanup|record-state))\.ts$/.test(
       file,
     );
   const component =
-    /^src\/components\/(profile|jobs|skills|assessment|matching|learning|resume)\//.test(file);
+    /^src\/components\/(profile|jobs|skills|assessment|matching|learning|resume|applications)\//.test(
+      file,
+    );
   for (const statement of source.statements) {
     if (!ts.isImportDeclaration(statement) && !ts.isExportDeclaration(statement)) continue;
     const specifier = statement.moduleSpecifier?.text;
@@ -60,5 +64,5 @@ for (const file of [
 }
 if (violations.length) throw new Error(violations.join("\n"));
 console.log(
-  "Profile/job/skill/assessment/task/matching/learning/resume domain and UI dependency boundaries are valid.",
+  "Profile/job/skill/assessment/task/matching/learning/resume/applications domain and UI dependency boundaries are valid.",
 );

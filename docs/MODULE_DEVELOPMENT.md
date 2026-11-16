@@ -16,7 +16,7 @@ See the [complete requirement audit](IMPLEMENTATION_AUDIT.md) before claiming th
 | 06 Matching | Versioned private reports, source-grounded rules, actual worker, conditions UI and atomic deletion purge implemented | Required semantic ranking integration with 11, plus human relevance/source review and recipe evaluation |
 | 07 Courses/learning | Reviewed versioned catalog, private budgeted plans/prerequisites, actual worker and independent progress/practice implemented | Real authorized metadata population, editorial review and hosted operations |
 | 08 Resume studio | Private sources, immutable confirmation/claims, grounded order proposals, fixed exports, actual worker and deletion cleanup implemented | Required model-assisted wording integration with 11; hosted containment/recovery and content review |
-| 09 Tracking | Local board only | Private versioned applications, events and historical source snapshots |
+| 09 Tracking | Private versioned cycles, manual stages, immutable snapshots/events, fixed resume links and UTC follow-ups implemented | Hosted owner-isolation check; external submissions remain out of scope |
 | 10 Ingestion | Planned | Authorized adapters, reviewable batches and publication provenance |
 | 11 AI Gateway | Port only | Replaceable adapters, bounded execution, output/reference validation and evaluation |
 | 12 Workers | Durable pgmq engine with assessment, matching, learning and resume handlers implemented | Other domain handlers, provider reservations and invalidation outbox dispatch remain |
@@ -52,7 +52,7 @@ flowchart LR
 - Cross-module mutations use public service ports or a deliberately granted database transaction boundary. Do not reach into another module's internal tables from presentation code.
 - Keep existing demo APIs as compatibility exports where necessary; new production modules must not depend on the demo workspace shape.
 
-`npm run architecture:check` enforces the profile/job/skill/assessment/task/matching/learning/resume core and corresponding UI import boundaries with the TypeScript parser. Extend its coverage when adding modules. It supplements behavior tests; it does not prove runtime security or transactional correctness.
+`npm run architecture:check` enforces the profile/job/skill/assessment/task/matching/learning/resume/applications core and corresponding UI import boundaries with the TypeScript parser. Extend its coverage when adding modules. It supplements behavior tests; it does not prove runtime security or transactional correctness.
 
 ## Dictionary concurrency and historical joins
 
