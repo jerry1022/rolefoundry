@@ -23,7 +23,7 @@ The repository contains a Next.js App Router application with twelve navigable p
 | Assessment | Optional private immutable attempts, autosave, reviewed bank and actual durable fixed-choice grading; static demo retained |
 | Matching | Private versioned reports with explicit conditions, cited evidence, freshness/deletion guards and durable rule-based ranking; local demo retained |
 | Learning | Optional reviewed catalog, private budgeted plans/prerequisites/practice/progress and durable planning; six-link local demo retained |
-| Resume | Local text editing, deterministic checklist, text export |
+| Resume | Local editor/checklist/text export; isolated parsing/confirmed-fact/PDF core implemented, private-service integration pending |
 | Applications | Local manual board, stages and notes |
 | Administration | Server-authorized source/publication, dictionary, course and question-bank review; local provenance inspector/reset retained |
 | Identity/database | Configurable Supabase Auth/PostgreSQL, email OTP, invitations, roles, consent, quotas and audit |

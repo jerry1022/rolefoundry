@@ -4,9 +4,11 @@
 
 Help users express real experience in relation to a target role. Preserve source facts, reviewable changes and version history. Planned capabilities are upload/parse, evidence-based proposals and PDF export.
 
-## Current scaffold
+## Current implementation status
 
 A local plain-text editor supports persistence, a deterministic role checklist, clipboard copy and `.txt` download. It does not upload files, invoke AI, provide ATS scores or export PDF. Missing keywords trigger questions about evidence, not invented claims.
+
+The isolated processing core is now implemented: bounded PDF/DOCX extraction with source spans, strict owner-confirmable fact/section models, source-preserving order proposals and independently verified bilingual PDF rendering. Parser/reviser/renderer/execution-store ports support replacement. Private storage/database, APIs, durable task adapters and the connected UI are still pending. See [setup, limits, actual-process verification and remaining work](../RESUME_SETUP.md). The deterministic proposal fallback is not model-assisted wording; required gateway integration remains explicit with module 11.
 
 ## Target data and contracts
 

@@ -85,7 +85,7 @@ Open `http://127.0.0.1:3200/account/`; receive your code in local Mailpit at por
 
 ### Continue module development
 
-Follow the [numbered delivery plan and dependency rules](docs/MODULE_DEVELOPMENT.md). Modules 01–07 implement identity, private profiles, published jobs, versioned bilingual skills, private fixed-choice assessments, source-grounded matching and reviewed learning plans. Module 08 (resume studio) is next; the [complete design audit](docs/IMPLEMENTATION_AUDIT.md) retains every remaining acceptance gate. Each step updates its design, README and executable acceptance tests. Open PRs remain separate review gates.
+Follow the [numbered delivery plan and dependency rules](docs/MODULE_DEVELOPMENT.md). Modules 01–07 implement identity, private profiles, published jobs, versioned bilingual skills, private fixed-choice assessments, source-grounded matching and reviewed learning plans. Module 08 (resume studio) is in progress: [isolated parsing, confirmed-fact rules and PDF processing](docs/RESUME_SETUP.md) are implemented and tested; private persistence/API/UI integration remains; the [complete design audit](docs/IMPLEMENTATION_AUDIT.md) retains every remaining acceptance gate. Each step updates its design, README and executable acceptance tests. Open PRs remain separate review gates.
 
 The local helper also enables the database catalog at `/jobs/`, initially empty. Follow [catalog setup](docs/CATALOG_SETUP.md) to review/publish permitted source records. With identity configured, sign in at `/account/` and visit `/skills/` for the private profile. Existing local data is imported only after preview and explicit approval. See [profile setup and API](docs/PROFILE_SETUP.md).
 
@@ -117,6 +117,7 @@ src/modules/jobs     Published catalog, source policies and private bookmark por
 src/modules/assessment Private attempts, reviewed immutable questions and grading adapters
 src/modules/matching Sealed inputs, source-grounded rules, private reports and deletion guards
 src/modules/learning Reviewed courses, budgeted planner, private progress and replaceable gap adapter
+src/modules/resume   Isolated document processing and fact-preserving rules; private integration pending
 src/modules/tasks    Queue/handler ports, lease-aware engine and Supabase adapter
 src/modules/platform Safe application errors and bounded HTTP helpers
 supabase/            Identity/profile/catalog/dictionary/assessment/matching/learning migrations, owner RLS and local OTP templates
@@ -140,6 +141,7 @@ tests/               Domain tests and browser journeys
 - [Private assessments and durable grading](docs/ASSESSMENT_SETUP.md)
 - [Private matching and gap reports](docs/MATCHING_SETUP.md)
 - [Reviewed courses, two-week plans and private progress](docs/LEARNING_SETUP.md)
+- [Resume processing core and remaining integration](docs/RESUME_SETUP.md)
 - [Complete design acceptance audit](docs/IMPLEMENTATION_AUDIT.md)
 - [Incremental development and replaceable service boundaries](docs/MODULE_DEVELOPMENT.md)
 - [Production API contract](docs/API.md) and [data model](docs/DATA_MODEL.md)

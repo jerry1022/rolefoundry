@@ -23,6 +23,7 @@ for (const file of [
   ...(await files("src/modules/tasks")),
   ...(await files("src/modules/matching")),
   ...(await files("src/modules/learning")),
+  ...(await files("src/modules/resume")),
   ...(await files("src/components/profile")),
   ...(await files("src/components/jobs")),
   ...(await files("src/components/skills")),
@@ -38,7 +39,7 @@ for (const file of [
     true,
   );
   const domain =
-    /src\/modules\/((?:profile|jobs|skills|assessment|tasks|matching|learning)\/(model|ports|service|specializations|catalog|worker|rules|handler|report-state|planner|plan-state))\.ts$/.test(
+    /src\/modules\/((?:profile|jobs|skills|assessment|tasks|matching|learning|resume)\/(model|ports|service|specializations|catalog|worker|rules|handler|report-state|planner|plan-state))\.ts$/.test(
       file,
     );
   const component = /^src\/components\/(profile|jobs|skills|assessment|matching|learning)\//.test(
@@ -59,5 +60,5 @@ for (const file of [
 }
 if (violations.length) throw new Error(violations.join("\n"));
 console.log(
-  "Profile/job/skill/assessment/task/matching/learning domain and UI dependency boundaries are valid.",
+  "Profile/job/skill/assessment/task/matching/learning/resume domain and UI dependency boundaries are valid.",
 );

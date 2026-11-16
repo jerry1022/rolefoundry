@@ -15,7 +15,7 @@ See the [complete requirement audit](IMPLEMENTATION_AUDIT.md) before claiming th
 | 05 Assessment | Private immutable attempts/questions/rubrics, autosave and real deterministic grading/evidence implemented | Expert content review; short-answer AI calibration remains a future feature gate |
 | 06 Matching | Versioned private reports, source-grounded rules, actual worker, conditions UI and atomic deletion purge implemented | Required semantic ranking integration with 11, plus human relevance/source review and recipe evaluation |
 | 07 Courses/learning | Reviewed versioned catalog, private budgeted plans/prerequisites, actual worker and independent progress/practice implemented | Real authorized metadata population, editorial review and hosted operations |
-| 08 Resume studio | Plain-text local demo only | Private sources, isolated parsing, confirmed facts and immutable exports |
+| 08 Resume studio | Isolated parser/export core, confirmed-fact rules and execution ports implemented; UI remains local | Private storage/RPC/task adapters, connected UI and full integration verification |
 | 09 Tracking | Local board only | Private versioned applications, events and historical source snapshots |
 | 10 Ingestion | Planned | Authorized adapters, reviewable batches and publication provenance |
 | 11 AI Gateway | Port only | Replaceable adapters, bounded execution, output/reference validation and evaluation |
@@ -65,3 +65,7 @@ All module 02 mutations commit an aggregate revision with their change event und
 Matching reports now store the profile revision and exact evidence versions, recheck source versions on publication/read and purge derived content atomically when a source evidence version is deleted. Learning plans also bind exact evidence/resource versions and atomically purge derived content on evidence deletion while retaining independent owner practice references. Future resume reports must store the profile revision and exact evidence version IDs used. Check current inputs at publication and at read time. A changed revision makes a result stale. An `evidence.deleted` event contains the removed version IDs so dependent modules can remove reports/embeddings without retaining deleted content. Those modules must implement their purge/read guard before exposing derived personal data; module 02 cannot delete stores that do not yet exist. The durable event remains available for module 12 dispatch/retry; it is not a running event bus today.
 
 Use additive migrations first. Do not rename canonical IDs or remove historical versions during an adapter upgrade. Run the same behavior/authorization suite against each replacement adapter before switching the composition root. Keep provider credentials and deployment-specific configuration outside the domain and browser.
+
+## Configuration delivery
+
+Configure and verify the settings that the available environment and authorized accounts support. For each remaining account-bound setting, document its exact location, purpose, required value or safe secret source, and a concrete verification step. Distinguish local configuration from hosted deployment evidence. Never describe an unapplied migration, disabled service, fixture or unconfigured provider as ready. Keep secrets out of tracked documentation and browser variables.

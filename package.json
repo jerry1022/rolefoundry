@@ -22,30 +22,41 @@
     "identity:test": "node scripts/test-identity.mjs",
     "architecture:check": "node scripts/check-boundaries.mjs",
     "worker:start": "node --conditions=react-server --import tsx apps/worker/src/main.ts",
-    "worker:local": "node scripts/local-worker.mjs"
+    "worker:local": "node scripts/local-worker.mjs",
+    "resume:test": "vitest run --config vitest.resume.config.ts"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.7",
     "@supabase/supabase-js": "^2.119.0",
+    "fontkit": "2.0.4",
     "lucide-react": "^0.577.0",
+    "mammoth": "1.13.0",
     "next": "16.4.6",
+    "pdfjs-dist": "6.5.438",
+    "pdfkit": "0.20.2",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "server-only": "^0.0.1",
-    "zod": "^4.3.0",
-    "tsx": "^4.21.0"
+    "tsx": "^4.21.0",
+    "yauzl": "3.4.0",
+    "zod": "^4.3.0"
   },
   "devDependencies": {
     "@playwright/test": "^1.58.0",
+    "@types/fontkit": "2.0.9",
     "@types/node": "^24.0.0",
+    "@types/pdfkit": "0.17.7",
     "@types/pg": "^8.23.1",
     "@types/react": "^19.2.0",
     "@types/react-dom": "^19.2.0",
+    "@types/yauzl": "3.4.0",
+    "@types/yazl": "3.3.1",
     "pg": "^8.23.1",
     "prettier": "^3.10.1",
     "supabase": "^3.1.0",
     "typescript": "^5.9.0",
-    "vitest": "^4.0.0"
+    "vitest": "^4.0.0",
+    "yazl": "3.3.1"
   },
   "engines": {
     "node": ">=24"

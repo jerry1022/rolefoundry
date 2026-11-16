@@ -49,7 +49,7 @@ The integration suite runs against actual local GoTrue, PostgREST, PostgreSQL an
 ## 08 — Resume studio
 
 - Design: [08-resume-studio.md](design/08-resume-studio.md).
-- Status: Pending implementation and verification.
+- Status: Processing core implemented/verified; private persistence, task adapters, API/UI and full-stack verification remain pending. See [resume setup](RESUME_SETUP.md). Model-assisted wording remains a gateway integration gate.
 - Required acceptance scope: Test text PDF/DOCX, scanned/empty/oversized documents, malformed content, stale proposals, partial acceptance, fact preservation and private export access. Check that exported content exactly matches the accepted version and that failures never overwrite the source.
 
 ## 09 — Application tracking
