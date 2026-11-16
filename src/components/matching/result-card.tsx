@@ -104,6 +104,11 @@ export function MatchingResultCard({
           ))}
         </section>
       ))}
+      {result.available && (
+        <Link className="button secondary" href={`/learning/?job=${result.jobId}`}>
+          Plan learning for this role
+        </Link>
+      )}
       <h4>Useful next actions</h4>
       <ul>
         {result.gaps.length ? (

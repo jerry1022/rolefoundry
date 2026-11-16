@@ -30,7 +30,7 @@ npm run worker:demo
 
 Browser tests start their own server on port 3100, avoiding unrelated development services on port 3000. Set `E2E_PORT` to choose another test port. An occupied test port is an error; the suite never silently reuses an unknown server.
 
-For optional invitation-only authentication, local Supabase setup, runtime secrets and hosted configuration, follow [Identity setup](IDENTITY_SETUP.md). See [Profile setup](PROFILE_SETUP.md) for module 02 private preferences/evidence. Module 03 adds the [published catalog and bookmarks](CATALOG_SETUP.md) behind `ROLEFOUNDRY_CATALOG_ENABLED`; public reads need no service key. The [versioned skill dictionary](SKILL_DICTIONARY_SETUP.md) uses the same configuration and adds `/dictionary/`. Other career data remains browser-local.
+For optional invitation-only authentication, local Supabase setup, runtime secrets and hosted configuration, follow [Identity setup](IDENTITY_SETUP.md). See [Profile setup](PROFILE_SETUP.md) for module 02 private preferences/evidence. Module 03 adds the [published catalog and bookmarks](CATALOG_SETUP.md) behind `ROLEFOUNDRY_CATALOG_ENABLED`; public reads need no service key. The [versioned skill dictionary](SKILL_DICTIONARY_SETUP.md) uses the same configuration and adds `/dictionary/`. [Reviewed courses and private learning plans](LEARNING_SETUP.md) use the same catalog/identity configuration and require the independent worker for plan generation. Source metadata must be reviewed and published separately; migrations seed no courses. Remaining career data stays browser-local.
 
 ## Vercel
 
@@ -38,7 +38,7 @@ Import `jerry1022/rolefoundry` into Vercel, select Next.js, keep the repository 
 
 Vercel Hobby is free within its quotas for personal/non-commercial usage. A commercial career platform must use a suitable plan. Fees for a future database, worker or model provider are separate. See [Hobby](https://vercel.com/docs/plans/hobby) and [function limitations](https://vercel.com/docs/functions/limitations).
 
-The long-lived Node grading/matching worker is hosted separately using `Dockerfile.worker` or Node 24. Do not keep a Vercel request open indefinitely as a queue consumer. An API request should persist a task and return its identifier.
+The long-lived Node grading/matching/learning worker is hosted separately using `Dockerfile.worker` or Node 24. Do not keep a Vercel request open indefinitely as a queue consumer. An API request should persist a task and return its identifier.
 
 ## Static export / GitHub Pages
 

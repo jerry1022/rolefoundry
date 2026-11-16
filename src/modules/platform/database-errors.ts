@@ -1,5 +1,13 @@
 import { ApplicationError } from "./errors";
 const failures = {
+  RF_COURSE_CYCLE: [
+    409,
+    "Course prerequisites would form a cycle. Review the required foundations.",
+  ],
+  RF_LEARNING_LIMIT: [
+    409,
+    "This learning request exceeds the initial planning or reference limit.",
+  ],
   RF_MATCH_LIMIT: [
     409,
     "This analysis is too large. Choose one target role or reduce the profile evidence before refreshing.",

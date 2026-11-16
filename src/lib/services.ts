@@ -1,12 +1,4 @@
-import type {
-  AIProvider,
-  Course,
-  CourseRepository,
-  Job,
-  JobRepository,
-  Stage,
-  Task,
-} from "./domain";
+import type { AIProvider, CourseRepository, Job, JobRepository, Stage, Task } from "./domain";
 import { courses, jobs } from "./fixtures";
 
 export class FixtureJobRepository implements JobRepository {
@@ -38,10 +30,8 @@ export type { AssessmentService } from "../modules/assessment/service";
 export type { AssessmentRepository, AssessmentClient } from "../modules/assessment/ports";
 export type { MatchingService } from "../modules/matching/service";
 export type { MatchingRepository, MatchingClient } from "../modules/matching/ports";
-export interface LearningService {
-  plan(actor: Actor, jobId: string, weeklyHours: number): Promise<Task>;
-  markComplete(actor: Actor, courseId: Course["id"]): Promise<void>;
-}
+export type { LearningService, CourseCatalogService } from "../modules/learning/service";
+export type { CourseCatalog, LearningRepository, LearningClient } from "../modules/learning/ports";
 export interface ResumeService {
   parse(actor: Actor, fileId: string): Promise<Task>;
   revise(actor: Actor, resumeVersionId: string, jobId: string): Promise<Task>;

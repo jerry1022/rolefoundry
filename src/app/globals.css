@@ -3228,3 +3228,55 @@ tr:last-child td {
   justify-content: space-between;
   flex-wrap: wrap;
 }
+
+.learning-course-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px;
+  margin: 20px 0;
+}
+.learning-card {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.learning-card h3 {
+  margin-bottom: 12px;
+}
+.learning-card details {
+  margin: 14px 0;
+}
+.learning-card summary {
+  cursor: pointer;
+}
+.learning-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 16px;
+}
+.learning-filter-row {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.learning-filter-row label {
+  min-width: 180px;
+  flex: 1;
+}
+.learning-plan-steps {
+  display: grid;
+  gap: 20px;
+}
+.learning-reference {
+  border-top: 1px solid var(--line);
+  padding: 16px 0;
+  overflow-wrap: anywhere;
+}
+.learning-multiselect {
+  min-height: 110px;
+}
+@media (max-width: 760px) {
+  .learning-course-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

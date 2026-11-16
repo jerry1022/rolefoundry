@@ -1,3 +1,3 @@
-import { LearningScreen } from "@/components/screens";
+import { LearningWorkspace } from "@/components/learning/entry";
 export const metadata = { title: "Learning path" };
-export default LearningScreen;
+export default LearningWorkspace;
