@@ -38,7 +38,7 @@ Import `jerry1022/rolefoundry` into Vercel, select Next.js, keep the repository 
 
 Vercel Hobby is free within its quotas for personal/non-commercial usage. A commercial career platform must use a suitable plan. Fees for a future database, worker or model provider are separate. See [Hobby](https://vercel.com/docs/plans/hobby) and [function limitations](https://vercel.com/docs/functions/limitations).
 
-The long-lived Node grading worker is hosted separately using `Dockerfile.worker` or Node 24. Do not keep a Vercel request open indefinitely as a queue consumer. An API request should persist a task and return its identifier.
+The long-lived Node grading/matching worker is hosted separately using `Dockerfile.worker` or Node 24. Do not keep a Vercel request open indefinitely as a queue consumer. An API request should persist a task and return its identifier.
 
 ## Static export / GitHub Pages
 
@@ -46,7 +46,7 @@ The long-lived Node grading worker is hosted separately using `Dockerfile.worker
 NEXT_PUBLIC_BASE_PATH=/rolefoundry npm run build:pages
 ```
 
-The output is `out/`. All eleven routes are pre-rendered; interactions execute locally after hydration. The base path is needed for project-hosted GitHub Pages, but should be empty for a custom domain/root site. GitHub Actions builds and publishes the export when Pages is configured to use Actions. Static hosting excludes all dynamic handlers and cannot supply authorization or a worker.
+The output is `out/`. All twelve routes are pre-rendered; interactions execute locally after hydration. The base path is needed for project-hosted GitHub Pages, but should be empty for a custom domain/root site. GitHub Actions builds and publishes the export when Pages is configured to use Actions. Static hosting excludes all dynamic handlers and cannot supply authorization or a worker.
 
 ## Docker
 

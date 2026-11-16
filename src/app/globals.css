@@ -3189,3 +3189,42 @@ tr:last-child td {
     grid-template-columns: 1fr;
   }
 }
+
+.matching-results {
+  display: grid;
+  gap: 24px;
+}
+.matching-result {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.matching-result h4 {
+  margin-top: 24px;
+}
+.matching-requirement {
+  border-top: 1px solid var(--line);
+  margin-top: 16px;
+  padding-top: 12px;
+}
+.matching-reference {
+  margin: 10px 0;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+}
+.matching-reference summary {
+  cursor: pointer;
+}
+.matching-conditions {
+  padding-left: 20px;
+}
+.matching-conditions .pill {
+  margin-right: 6px;
+}
+.matching-report-heading {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+}

@@ -1,6 +1,6 @@
 # Data model
 
-**Status:** module 01 has an executable Supabase migration for identity, consent, quota policy, reservation/task outbox and audit records. Module 02 adds executable profile/evidence/version/link/claim/portfolio/outbox tables and a minimal canonical skill registry; module 03 adds sources, companies, canonical jobs/versions, source/requirement/skill links, catalog revisions/audit and private bookmark revisions/snapshots. Module 04 adds bilingual concepts, aliases, DAG relations, track mappings, dictionary snapshots/audit/outbox and historical-safe canonical projections. Module 05 adds immutable question/rubric versions, separate review publications, owner attempts/items/responses/results, general tasks/events and assessment audit with transactional pgmq dispatch. Other career-domain tables below remain design only. See [profile setup](PROFILE_SETUP.md). See [identity setup](IDENTITY_SETUP.md); no hosted Supabase project is configured automatically.
+**Status:** module 01 has an executable Supabase migration for identity, consent, quota policy, reservation/task outbox and audit records. Module 02 adds executable profile/evidence/version/link/claim/portfolio/outbox tables and a minimal canonical skill registry; module 03 adds sources, companies, canonical jobs/versions, source/requirement/skill links, catalog revisions/audit and private bookmark revisions/snapshots. Module 04 adds bilingual concepts, aliases, DAG relations, track mappings, dictionary snapshots/audit/outbox and historical-safe canonical projections. Module 05 adds immutable question/rubric versions, separate review publications, owner attempts/items/responses/results, general tasks/events and assessment audit with transactional pgmq dispatch. Module 06 adds immutable matching input snapshots, ranked results/gaps, evidence-version reference links and audit, with atomic deletion purge and freshness-checked RPC reads. Other career-domain tables below remain design only. See [profile setup](PROFILE_SETUP.md). See [identity setup](IDENTITY_SETUP.md); no hosted Supabase project is configured automatically.
 
 ## Ownership and groups
 
@@ -14,7 +14,7 @@
 | Assessments | question_versions, question_publications, rubric_versions, assessment_audit, assessment_attempts, attempt_items, responses, assessment_results | Questions server-owned; attempts owner-scoped |
 | Learning | courses, course_versions, course_skill_links, course_prerequisites, learning_plans, learning_steps, learning_progress, practice_submissions | Published courses; owner plans/progress |
 | Resumes | resume_documents, resume_versions, revision_proposals, resume_exports | Owner only; private storage references |
-| Recommendations | match_runs, match_results, gap_items | Owner only; versioned inputs |
+| Recommendations | match_runs, match_run_evidence, match_results, gap_items, match_audit | Owner only; versioned inputs |
 | Tracking | bookmarks, applications, application_events, follow_up_tasks | Owner only |
 | Operations | sources, import_batches, source_records, review_items, tasks, audit_events, ai_requests | Restricted service/admin access |
 
@@ -66,3 +66,7 @@ Create migrations only when production persistence begins. Start with owner-scop
 Question content and grading rubrics are immutable; review status is a separate record that only affects future selection. Attempt items retain their exact question/rubric/dictionary versions. Draft writes use the attempt revision. Submit seals answers and creates the task plus task-ID-only message in the same transaction. General `tasks` are independent of the earlier identity provider reservation ledger; fixed-choice grading consumes no provider reservation.
 
 The grading transaction locks dictionary, owner, task and attempt, validates active ownership and sealed input, and rechecks the lease before publishing. Scenario evidence, result and terminal task state commit atomically. Archive follows commit, so redelivery can safely observe success. Member table grants exclude bank content and lease tokens. See [assessment storage and worker contracts](ASSESSMENT_SETUP.md).
+
+## Matching derived-content deletion
+
+`match_run_evidence` references the exact source `evidence_versions` with cascading deletion. A matching-owned link-deletion trigger erases the run input and results/gaps and cancels pending work in the same transaction. Ordinary version edits preserve historical reports but mark them stale. Session roles have no raw matching-table read grants: owner RPCs recheck ownership, freshness and source availability before returning report pages. Lock order and source-projection boundaries are documented in [matching setup](MATCHING_SETUP.md).
