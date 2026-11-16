@@ -6,11 +6,11 @@ Help users express real experience in relation to a target role. Preserve source
 
 ## Current implementation status
 
-A local plain-text editor supports persistence, a deterministic role checklist, clipboard copy and `.txt` download. It does not upload files, invoke AI, provide ATS scores or export PDF. Missing keywords trigger questions about evidence, not invented claims.
+Configured deployments implement private file/paste sources, bounded isolated PDF/DOCX parsing, owner-reviewed immutable facts and unreviewed claim histories, source-grounded order proposals, individual acceptance and verified bilingual fixed-version PDF exports. Actual pgmq/Node handlers enforce owner/input/lease guards; a service-only Storage janitor reclaims abandoned writes and deleted sources. [Setup, exact API, configuration and verification](../RESUME_SETUP.md).
 
-The isolated processing core is now implemented: bounded PDF/DOCX extraction with source spans, strict owner-confirmable fact/section models, source-preserving order proposals and independently verified bilingual PDF rendering. Parser/reviser/renderer/execution-store ports support replacement. Private storage/database, APIs, durable task adapters and the connected UI are still pending. See [setup, limits, actual-process verification and remaining work](../RESUME_SETUP.md). The deterministic proposal fallback is not model-assisted wording; required gateway integration remains explicit with module 11.
+The public/static mode retains its local plain-text editor/checklist/export without automatic import. The deterministic order fallback is not model-assisted rewriting or an ATS score. Required gateway wording/evaluation remains pending with module 11; hosted containment/recovery and human review remain release gates.
 
-## Target data and contracts
+## Data and contracts
 
 `resume_documents` owns a private file reference. `resume_versions` stores immutable structured sections and confirmed fact references. `revision_proposals` contains per-section before/after text, reason and supporting fact IDs. `resume_exports` links an accepted version to an expiring private download. Service operations `parse`, `revise` and `export` return tasks.
 
@@ -20,10 +20,10 @@ The isolated processing core is now implemented: bounded PDF/DOCX extraction wit
 2. Store the original in a private bucket and enqueue isolated parsing.
 3. Extract text with PDF.js or Mammoth; reject empty/scanned content with a paste-text fallback.
 4. Convert to a schema-validated draft, preserving the source span where possible.
-5. Ask the owner to confirm extracted facts.
+5. Ask the owner to confirm extracted facts and linked skills; publish only unreviewed, source-bound resume claims, never verified ability.
 6. Produce job-specific change proposals using confirmed facts only.
 7. Accept or reject changes individually; acceptance creates a new version.
-8. Render a controlled template to PDF and return an authorized, expiring link.
+8. Render a controlled template to PDF and return an owner-bound, expiring application download permit.
 
 No unmeasured metrics, invented credentials or completed-project claims may be added. Current projects remain labeled in progress. A learning goal is not a skill claim. Export refers to a fixed accepted version, so later edits cannot silently alter an existing export.
 

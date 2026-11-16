@@ -3280,3 +3280,97 @@ tr:last-child td {
     grid-template-columns: minmax(0, 1fr);
   }
 }
+
+/* Private resume sources, fact review and immutable change comparisons. */
+.resume-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: center;
+  margin: 1rem 0;
+}
+.resume-source-text {
+  display: block;
+  width: 100%;
+  min-height: 10rem;
+  margin: 0.75rem 0;
+}
+.resume-editor-fields {
+  border: 0;
+  margin: 0;
+  padding: 0;
+  min-width: 0;
+}
+.resume-edit-section {
+  margin: 1.25rem 0 2rem;
+}
+.resume-edit-section > label {
+  display: grid;
+  gap: 0.5rem;
+}
+.resume-fact-card,
+.resume-change-card {
+  border: 1px solid var(--line);
+  border-radius: 0.9rem;
+  padding: 1.1rem;
+  margin: 1rem 0;
+  min-width: 0;
+}
+.resume-fact-card label {
+  display: grid;
+  gap: 0.45rem;
+}
+.resume-statement {
+  width: 100%;
+  min-height: 7rem;
+  resize: vertical;
+}
+.resume-field-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+  margin: 1rem 0;
+}
+.resume-skill-select {
+  min-height: 8rem;
+}
+.resume-preserve-text {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.resume-change-select {
+  display: flex;
+  gap: 0.6rem;
+  align-items: center;
+}
+.resume-diff {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1.25rem;
+}
+.resume-diff > section {
+  background: var(--surface);
+  padding: 0.85rem;
+  border-radius: 0.7rem;
+  min-width: 0;
+}
+.resume-version-statement {
+  margin: 1rem 0 1.5rem;
+}
+@media (max-width: 700px) {
+  .resume-field-grid,
+  .resume-diff {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .resume-actions .button {
+    max-width: 100%;
+    white-space: normal;
+  }
+  .resume-fact-card {
+    padding: 0.85rem;
+  }
+}
+
+.resume-file-title {
+  overflow-wrap: anywhere;
+}

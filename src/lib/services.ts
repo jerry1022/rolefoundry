@@ -32,11 +32,14 @@ export type { MatchingService } from "../modules/matching/service";
 export type { MatchingRepository, MatchingClient } from "../modules/matching/ports";
 export type { LearningService, CourseCatalogService } from "../modules/learning/service";
 export type { CourseCatalog, LearningRepository, LearningClient } from "../modules/learning/ports";
-export interface ResumeService {
-  parse(actor: Actor, fileId: string): Promise<Task>;
-  revise(actor: Actor, resumeVersionId: string, jobId: string): Promise<Task>;
-  export(actor: Actor, resumeVersionId: string): Promise<Task>;
-}
+export type { ResumeService } from "../modules/resume/service";
+export type {
+  ResumeRepository,
+  ResumeClient,
+  ResumeParser,
+  ResumeRenderer,
+  ResumeReviser,
+} from "../modules/resume/ports";
 export interface ApplicationService {
   track(actor: Actor, jobId: string): Promise<string>;
   move(actor: Actor, applicationId: string, stage: Stage): Promise<void>;

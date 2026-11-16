@@ -67,12 +67,18 @@ export function proposeResumeOrder(
   id: () => string,
 ): ResumeRevisionOutput {
   input = revisionInputSchema.parse(input);
+  const canonical = (skill: string) =>
+    input.canonicalSkillIds && Object.hasOwn(input.canonicalSkillIds, skill)
+      ? input.canonicalSkillIds[skill]
+      : skill;
   const target = new Set(input.target.skillIds),
     content = input.version.content;
   const facts = new Map(content.facts.map((fact) => [fact.id, fact]));
   // Learning goals are not evidence of a completed skill/project.
   const coverage = new Set(
-    content.facts.filter((fact) => fact.state !== "learning").flatMap((fact) => fact.skillIds),
+    content.facts
+      .filter((fact) => fact.state !== "learning")
+      .flatMap((fact) => fact.skillIds.map(canonical)),
   );
   const changes: ResumeRevisionOutput["changes"] = [];
   for (const section of content.sections) {
@@ -80,7 +86,7 @@ export function proposeResumeOrder(
       const fact = facts.get(factId)!;
       return fact.state === "learning"
         ? 0
-        : fact.skillIds.filter((skill) => target.has(skill)).length;
+        : fact.skillIds.filter((skill) => target.has(canonical(skill))).length;
     };
     const order = section.factIds
       .map((id, index) => ({ id, index }))

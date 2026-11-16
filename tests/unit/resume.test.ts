@@ -210,11 +210,13 @@ describe("replaceable resume execution ports", () => {
       new ResumeParseHandler(
         {
           load: async () => ({
+            sourceKind: "file",
             mediaType: "application/pdf",
             byteCount: 2,
             bytes: new Uint8Array([1]),
           }),
           publish,
+          failed: async () => {},
         },
         { parse },
       ).execute(lease, new AbortController().signal),
@@ -223,11 +225,13 @@ describe("replaceable resume execution ports", () => {
     expect(publish).not.toHaveBeenCalled();
     const valid = {
       load: async () => ({
+        sourceKind: "file" as const,
         mediaType: "application/pdf" as const,
         byteCount: 1,
         bytes: new Uint8Array([1]),
       }),
       publish,
+      failed: async () => {},
     };
     await new ResumeParseHandler(valid, { parse }).execute(lease, new AbortController().signal);
     expect(publish).toHaveBeenCalledWith(lease, draft, expect.any(AbortSignal));
@@ -276,7 +280,7 @@ describe("replaceable resume execution ports", () => {
       publish = vi.fn(),
       bytes = new TextEncoder().encode("%PDF-fake");
     const render = { render: async () => bytes },
-      store = { load: async () => version, publish };
+      store = { load: async () => version, publish, failed: async () => {} };
     const correct = extractedText([{ text: resumeText(version.content), page: 1 }], id);
     await new ResumeExportHandler(store, render, { parse: async () => correct }).execute(
       { ...lease, kind: "resume.export" },
@@ -298,5 +302,83 @@ describe("replaceable resume execution ports", () => {
     expect(publish).not.toHaveBeenCalled();
     expect(resumeContentTokens("now here")).not.toEqual(resumeContentTokens("nowhere"));
     expect(resumeContentTokens("繁體中文")).toEqual(resumeContentTokens("繁 體 中 文"));
+  });
+});
+
+describe("resume upgrade and delayed-read contracts", () => {
+  it("resolves canonical skill projections without changing a pinned source version", () => {
+    const source = input(),
+      original = structuredClone(source.version);
+    source.version.content.facts[1].skillIds = ["legacy-rag"];
+    source.canonicalSkillIds = { "legacy-rag": "rag" };
+    source.dictionaryVersion = 3;
+    const pinned = structuredClone(source.version),
+      proposal = proposeResumeOrder(source, id);
+    expect(proposal.changes[0].factIds[0]).toBe(source.version.content.facts[1].id);
+    expect(source.version).toEqual(pinned);
+    expect(proposal.changes[0].afterText).toContain(original.content.facts[1].text);
+  });
+  it("cannot undo known versions, accepted changes or completed exports with delayed responses", async () => {
+    const { acceptResumeRead } = await import("../../src/modules/resume/document-state");
+    const { resumeDocumentSchema } = await import("../../src/modules/resume/model");
+    const source = input(),
+      runId = id(),
+      exportId = id(),
+      taskId = id(),
+      acceptedId = id();
+    const current = resumeDocumentSchema.parse({
+      id: source.version.documentId,
+      filename: "Source",
+      revision: 3,
+      status: "confirmed",
+      createdAt: "now",
+      sourceKind: "text",
+      confirmedClaimCount: 0,
+      taskId: null,
+      taskErrorCode: null,
+      processingError: null,
+      draft: null,
+      currentVersion: source.version,
+      versions: [{ id: source.version.id, version: 1, createdAt: "now" }],
+      proposals: [
+        {
+          id: runId,
+          versionId: source.version.id,
+          jobId: source.target.jobId,
+          taskId,
+          status: "accepted",
+          stale: true,
+          acceptedVersionId: acceptedId,
+          createdAt: "now",
+        },
+      ],
+      exports: [
+        {
+          id: exportId,
+          versionId: source.version.id,
+          taskId,
+          status: "succeeded",
+          processingError: null,
+          createdAt: "now",
+        },
+      ],
+    });
+    const older = structuredClone(current);
+    older.revision = 2;
+    older.currentVersion = null;
+    expect(acceptResumeRead(current, older)).toEqual(current);
+    const delayed = structuredClone(current);
+    delayed.proposals[0].status = "succeeded";
+    delayed.proposals[0].stale = false;
+    delayed.proposals[0].acceptedVersionId = null;
+    delayed.exports[0].status = "queued";
+    const guarded = acceptResumeRead(current, delayed);
+    expect(guarded.proposals[0].status).toBe("accepted");
+    expect(guarded.proposals[0].stale).toBe(true);
+    expect(guarded.exports[0].status).toBe("succeeded");
+    delayed.proposals = [];
+    delayed.exports = [];
+    expect(acceptResumeRead(current, delayed).proposals).toHaveLength(1);
+    expect(acceptResumeRead(current, delayed).exports).toHaveLength(1);
   });
 });

@@ -30,6 +30,7 @@ for (const file of [
   ...(await files("src/components/assessment")),
   ...(await files("src/components/matching")),
   ...(await files("src/components/learning")),
+  ...(await files("src/components/resume")),
 ]) {
   if (!/\.tsx?$/.test(file)) continue;
   const source = ts.createSourceFile(
@@ -39,12 +40,11 @@ for (const file of [
     true,
   );
   const domain =
-    /src\/modules\/((?:profile|jobs|skills|assessment|tasks|matching|learning|resume)\/(model|ports|service|specializations|catalog|worker|rules|handler|report-state|planner|plan-state))\.ts$/.test(
+    /src\/modules\/((?:profile|jobs|skills|assessment|tasks|matching|learning|resume)\/(model|ports|service|specializations|catalog|worker|rules|handler|report-state|planner|plan-state|document-state|cleanup))\.ts$/.test(
       file,
     );
-  const component = /^src\/components\/(profile|jobs|skills|assessment|matching|learning)\//.test(
-    file,
-  );
+  const component =
+    /^src\/components\/(profile|jobs|skills|assessment|matching|learning|resume)\//.test(file);
   for (const statement of source.statements) {
     if (!ts.isImportDeclaration(statement) && !ts.isExportDeclaration(statement)) continue;
     const specifier = statement.moduleSpecifier?.text;

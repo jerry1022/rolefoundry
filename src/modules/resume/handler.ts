@@ -3,7 +3,7 @@ import type { TaskHandler } from "../tasks/ports";
 import { TaskFailure } from "../tasks/model";
 import {
   resumeLimits,
-  resumeMediaSchema,
+  parseSourceSchema,
   extractedResumeSchema,
   ResumeProcessingError,
   revisionInputSchema,
@@ -17,15 +17,7 @@ import type {
   ResumeReviser,
   ResumeRevisionStore,
 } from "./ports";
-import { validateResumeRevision, resumeText, resumeContentTokens } from "./rules";
-const parseInput = z
-  .object({
-    mediaType: resumeMediaSchema,
-    byteCount: z.number().int().positive().max(resumeLimits.sourceBytes),
-    bytes: z.instanceof(Uint8Array),
-  })
-  .strict()
-  .refine((value) => value.bytes.length === value.byteCount);
+import { validateResumeRevision, resumeText, resumeContentTokens, extractedText } from "./rules";
 function check(signal: AbortSignal) {
   if (signal.aborted) throw new TaskFailure("canceled");
 }
@@ -48,6 +40,20 @@ async function execute(signal: AbortSignal, work: () => Promise<void>) {
     throw error;
   }
 }
+async function processing<T>(
+  store: Pick<ResumeParseStore, "failed">,
+  lease: Parameters<TaskHandler["execute"]>[0],
+  signal: AbortSignal,
+  work: () => Promise<T>,
+): Promise<T> {
+  try {
+    return await work();
+  } catch (error) {
+    if (error instanceof ResumeProcessingError && !signal.aborted)
+      await store.failed(lease, error.code, signal);
+    throw error;
+  }
+}
 export class ResumeParseHandler implements TaskHandler {
   constructor(
     private readonly store: ResumeParseStore,
@@ -55,10 +61,14 @@ export class ResumeParseHandler implements TaskHandler {
   ) {}
   async execute(lease: Parameters<TaskHandler["execute"]>[0], signal: AbortSignal) {
     await execute(signal, async () => {
-      const input = parseInput.parse(await this.store.load(lease, signal));
+      const input = parseSourceSchema.parse(await this.store.load(lease, signal));
       check(signal);
       const draft = extractedResumeSchema.parse(
-        await this.parser.parse(input.bytes, input.mediaType, signal),
+        await processing(this.store, lease, signal, async () =>
+          input.sourceKind === "text"
+            ? extractedText([{ text: input.text, page: null }], () => crypto.randomUUID())
+            : await this.parser.parse(input.bytes, input.mediaType, signal),
+        ),
       );
       check(signal);
       await this.store.publish(lease, draft, signal);
@@ -90,7 +100,9 @@ export class ResumeExportHandler implements TaskHandler {
     await execute(signal, async () => {
       const version = resumeVersionSchema.parse(await this.store.load(lease, signal));
       check(signal);
-      const bytes = await this.renderer.render(version.content, signal);
+      const bytes = await processing(this.store, lease, signal, () =>
+        this.renderer.render(version.content, signal),
+      );
       check(signal);
       if (
         bytes.length > resumeLimits.exportBytes ||
@@ -98,7 +110,9 @@ export class ResumeExportHandler implements TaskHandler {
       )
         throw new TaskFailure("validation");
       const rendered = extractedResumeSchema.parse(
-        await this.verifier.parse(bytes, "application/pdf", signal),
+        await processing(this.store, lease, signal, () =>
+          this.verifier.parse(bytes, "application/pdf", signal),
+        ),
       );
       check(signal);
       if (

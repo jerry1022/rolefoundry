@@ -132,6 +132,7 @@ export const resumeVersionSchema = z
   .object({
     id: uuid,
     documentId: uuid,
+    dictionaryVersion: z.number().int().positive().optional(),
     version: z.number().int().positive(),
     createdAt: z.string(),
     content: confirmedResumeSchema,
@@ -141,6 +142,8 @@ export type ResumeVersion = z.infer<typeof resumeVersionSchema>;
 export const revisionInputSchema = z
   .object({
     version: resumeVersionSchema,
+    dictionaryVersion: z.number().int().positive().optional(),
+    canonicalSkillIds: z.record(skillIdSchema, skillIdSchema).optional(),
     target: z
       .object({ jobId: uuid, jobVersionId: uuid, skillIds: z.array(skillIdSchema).max(200) })
       .strict(),
@@ -185,3 +188,106 @@ export class ResumeProcessingError extends Error {
     super(`Resume processing failed: ${code}`);
   }
 }
+
+export const resumeStatusSchema = z.enum([
+  "awaiting-upload",
+  "uploading",
+  "queued",
+  "running",
+  "failed",
+  "parsed",
+  "confirmed",
+]);
+export const resumeTaskStatusSchema = z.enum(["queued", "running", "succeeded", "failed"]);
+export const resumeSummarySchema = z.object({
+  id: uuid,
+  filename: z.string(),
+  revision: z.number().int().positive(),
+  status: resumeStatusSchema,
+  createdAt: z.string(),
+});
+export const resumeListSchema = z.object({
+  data: z.array(resumeSummarySchema),
+  nextCursor: z.string().nullable(),
+});
+export const proposalSummarySchema = z.object({
+  id: uuid,
+  versionId: uuid,
+  jobId: uuid,
+  taskId: uuid.nullable(),
+  status: z.enum(["queued", "running", "failed", "succeeded", "accepted"]),
+  stale: z.boolean(),
+  acceptedVersionId: uuid.nullable(),
+  createdAt: z.string(),
+});
+export const resumeDocumentSchema = resumeSummarySchema.extend({
+  sourceKind: z.enum(["file", "text"]),
+  confirmedClaimCount: z.number().int().nonnegative(),
+  taskErrorCode: z.string().nullable(),
+  taskId: uuid.nullable(),
+  draft: extractedResumeSchema.nullable(),
+  processingError: z.enum(processingCodes).nullable(),
+  currentVersion: resumeVersionSchema.nullable(),
+  versions: z
+    .array(z.object({ id: uuid, version: z.number().int().positive(), createdAt: z.string() }))
+    .max(100),
+  proposals: z.array(proposalSummarySchema).max(100),
+  exports: z
+    .array(
+      z.object({
+        id: uuid,
+        versionId: uuid,
+        taskId: uuid.nullable(),
+        status: resumeTaskStatusSchema,
+        processingError: z.enum(processingCodes).nullable(),
+        createdAt: z.string(),
+      }),
+    )
+    .max(100),
+});
+export type ResumeDocument = z.infer<typeof resumeDocumentSchema>;
+export const proposalSchema = proposalSummarySchema.omit({ createdAt: true }).extend({
+  documentId: uuid,
+  output: revisionOutputSchema.nullable(),
+  acceptedIds: z.array(uuid).nullable(),
+});
+export type ResumeProposal = z.infer<typeof proposalSchema>;
+export const resumeTaskReplySchema = z.object({
+  id: uuid,
+  taskId: uuid,
+  status: resumeTaskStatusSchema,
+});
+export const resumeDocumentTaskSchema = z.object({
+  documentId: uuid,
+  taskId: uuid,
+  status: resumeTaskStatusSchema,
+});
+export const resumeUploadSchema = z.object({
+  documentId: uuid,
+  uploadToken: uuid,
+  expiresAt: z.string(),
+});
+export const downloadIntentSchema = z.object({ id: uuid, expiresAt: z.string() });
+export const deletionSchema = z.object({ deleted: z.literal(true), cleanupPending: z.boolean() });
+export const parseSourceSchema = z.discriminatedUnion("sourceKind", [
+  z
+    .object({
+      sourceKind: z.literal("file"),
+      mediaType: resumeMediaSchema,
+      byteCount: z.number().int().positive().max(resumeLimits.sourceBytes),
+      bytes: z.instanceof(Uint8Array),
+    })
+    .strict()
+    .refine((value) => value.bytes.length === value.byteCount),
+  z
+    .object({ sourceKind: z.literal("text"), text: plainText(resumeLimits.textCharacters) })
+    .strict(),
+]);
+export type ResumeParseSource = z.infer<typeof parseSourceSchema>;
+export type ResumeUploadInput = z.infer<typeof uploadIntentSchema>;
+export type ResumeHistory = z.infer<typeof resumeListSchema>;
+export type ResumeUploadAuthority = z.infer<typeof resumeUploadSchema>;
+export type ResumeTaskReply = z.infer<typeof resumeTaskReplySchema>;
+export type ResumeTaskReference = z.infer<typeof resumeDocumentTaskSchema>;
+export type ResumeDownloadAuthority = z.infer<typeof downloadIntentSchema>;
+export type ResumeDeletion = z.infer<typeof deletionSchema>;

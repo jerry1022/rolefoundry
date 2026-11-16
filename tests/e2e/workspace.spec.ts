@@ -215,6 +215,16 @@ test("public demo labels identity as unavailable and fails closed", async ({ pag
   expect((await request.get("/api/v1/courses")).status()).toBe(503);
   expect((await request.get("/api/v1/learning-plans")).status()).toBe(503);
   expect((await request.get("/api/v1/learning-progress")).status()).toBe(503);
+  const unavailableId = crypto.randomUUID();
+  for (const [route, method] of [
+    ["resumes", "GET"],
+    [`resume-versions/${unavailableId}`, "GET"],
+    [`resume-revisions/${unavailableId}`, "GET"],
+    [`resume-exports/${unavailableId}/download-intents`, "POST"],
+    [`resume-downloads/${unavailableId}`, "GET"],
+  ]) {
+    expect((await request.fetch(`/api/v1/${route}`, { method })).status()).toBe(503);
+  }
   expect((await request.get("/api/v1/admin/assessments")).status()).toBe(503);
   expect((await request.get(`/api/v1/tasks/${crypto.randomUUID()}`)).status()).toBe(503);
 });

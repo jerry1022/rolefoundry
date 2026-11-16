@@ -1,6 +1,6 @@
 # RoleFoundry — High-Level Design
 
-**Version:** 0.8 reviewed courses and private learning plans · **Status:** career scaffold, server identity, private profile, catalog, dictionary and fixed-choice assessments, matching and learning implemented; remaining production modules planned
+**Version:** 0.9 private resume sources and fixed exports · **Status:** career scaffold, server identity, private profile, catalog, dictionary and fixed-choice assessments, matching, learning and resume workflows implemented; remaining production modules planned
 
 ## 1. Purpose and scope
 
@@ -14,7 +14,7 @@ Job discovery must work before account creation or assessment. Completing a cour
 
 ## 2. Current executable system
 
-The repository contains a Next.js App Router application with twelve navigable pages, a shared shell, typed career fixtures and browser-local persistence. Module 01 adds real Supabase identity APIs, a database migration, consent and quota transactions, and worker guards. Module 02 adds private preferences, immutable evidence and reference-only invalidations through replaceable ports/adapters. Module 03 adds anonymous/SSR published job browsing, source governance and private bookmarks. Module 04 adds the bilingual versioned dictionary, reviewed aliases/relationships/merges and historical-safe canonical projections. Module 05 adds private assessment APIs/UI and reviewed immutable questions. An independent pgmq/Node worker grades fixed answers and publishes scenario evidence atomically. Module 06 adds versioned private matching inputs/reports, explicit condition checks, evidence citations, atomic deletion purge and an actual worker handler. Module 07 adds source-governed reviewed course versions, private two-week plans, prerequisites, independent progress/practice references and an actual worker handler. The remaining domain ports are contracts; no external AI provider runs yet.
+The repository contains a Next.js App Router application with twelve navigable pages, a shared shell, typed career fixtures and browser-local persistence. Module 01 adds real Supabase identity APIs, a database migration, consent and quota transactions, and worker guards. Module 02 adds private preferences, immutable evidence and reference-only invalidations through replaceable ports/adapters. Module 03 adds anonymous/SSR published job browsing, source governance and private bookmarks. Module 04 adds the bilingual versioned dictionary, reviewed aliases/relationships/merges and historical-safe canonical projections. Module 05 adds private assessment APIs/UI and reviewed immutable questions. An independent pgmq/Node worker grades fixed answers and publishes scenario evidence atomically. Module 06 adds versioned private matching inputs/reports, explicit condition checks, evidence citations, atomic deletion purge and an actual worker handler. Module 07 adds source-governed reviewed course versions, private two-week plans, prerequisites, independent progress/practice references and an actual worker handler. Module 08 adds private Storage, isolated parsing, owner-confirmed immutable facts/claims, grounded order proposals and independently checked PDF exports with real handlers and deletion cleanup. Required model-assisted wording remains pending module 11. The remaining domain ports are contracts; no external AI provider runs yet.
 
 | Capability | Current state |
 | --- | --- |
@@ -23,7 +23,7 @@ The repository contains a Next.js App Router application with twelve navigable p
 | Assessment | Optional private immutable attempts, autosave, reviewed bank and actual durable fixed-choice grading; static demo retained |
 | Matching | Private versioned reports with explicit conditions, cited evidence, freshness/deletion guards and durable rule-based ranking; local demo retained |
 | Learning | Optional reviewed catalog, private budgeted plans/prerequisites/practice/progress and durable planning; six-link local demo retained |
-| Resume | Local editor/checklist/text export; isolated parsing/confirmed-fact/PDF core implemented, private-service integration pending |
+| Resume | Private PDF/DOCX/paste sources, confirmation/claim history, grounded order proposals, individual acceptance, fixed PDF exports and deletion cleanup; local demo retained |
 | Applications | Local manual board, stages and notes |
 | Administration | Server-authorized source/publication, dictionary, course and question-bank review; local provenance inspector/reset retained |
 | Identity/database | Configurable Supabase Auth/PostgreSQL, email OTP, invitations, roles, consent, quotas and audit |
@@ -85,12 +85,12 @@ See [module designs](design/README.md) for interfaces and failure semantics.
 | Web | Next.js App Router, React | Server-render public catalog; private authenticated workspace |
 | Styling | CSS tokens and responsive components, Lucide icons | Keep the existing design system; add localization without replacing components |
 | Validation | Zod | Validate requests, persisted records and AI outputs |
-| Storage | Browser-local demo; Supabase identity, profile and published catalog records | Extend PostgreSQL and private Storage to the other domains |
-| Search | Deterministic in-memory filters | SQL predicates, skill aliases and pgvector reranking |
-| Tasks | Supabase Queues/pgmq, lease-aware Node worker with assessment/matching/learning handlers | Add provider/resume/catalog handlers and invalidation consumers |
+| Storage | Browser-local demo; private PostgreSQL records and resume Storage; published job/course catalogs | Extend persistence to remaining domains |
+| Search | Local demo filters; published SQL catalog and skill aliases | Add evaluated pgvector reranking |
+| Tasks | Supabase Queues/pgmq, lease-aware Node worker with assessment/matching/learning/resume handlers | Add provider/catalog handlers and invalidation consumers |
 | AI | No provider connected | Gateway adapter selected through a fixed evaluation set |
-| Documents | Plain-text draft/export | Isolated PDF.js/Mammoth parsing and controlled PDF rendering |
-| Checks | TypeScript, Vitest, Playwright | Add database authorization, contract and integration tests |
+| Documents | Private Storage, isolated PDF.js/Mammoth parsing and controlled PDFKit export | Add evaluated model-assisted wording through the gateway |
+| Checks | TypeScript, Vitest, Playwright, actual database authorization/integration and Linux processor checks | Add provider evaluations and operational recovery rehearsals |
 | Build | npm lockfile, Node 24, Next.js | Reproducible CI; standard Next deployment or Docker |
 
 The scaffold intentionally uses npm and CSS rather than adding a monorepo orchestrator or a utility-CSS framework before they are needed. The target service boundaries remain unchanged.
@@ -99,7 +99,7 @@ The scaffold intentionally uses npm and CSS rather than adding a monorepo orches
 
 ### Resume to evidence
 
-Validate upload intent → store privately → create version and task atomically → parse in an isolated worker → extract a schema-constrained draft → ask the owner to confirm → publish confirmed claims. An extraction never silently replaces confirmed facts. Scanned PDFs receive a clear unsupported-format path in the first production release.
+Validate upload intent → register and store privately → verify stored bytes → atomically mark the source ready and enqueue parsing → parse in an isolated worker → extract a schema-constrained draft → ask the owner to confirm → publish confirmed claims. Storage writes have a durable cleanup registry; they are not part of the PostgreSQL transaction. An extraction never silently replaces confirmed facts. Scanned/empty PDFs retain the original and offer a separate pasted-text source. Accepted revisions and downloaded PDFs refer to immutable versions.
 
 ### Assessment to recommendation
 
@@ -115,7 +115,7 @@ Confirm source usage rights → normalize a batch → deduplicate by source ID a
 
 ## 7. API and task boundaries
 
-Production REST endpoints use `/api/v1`. Implemented identity endpoints use `/api/v1/identity`; profile/evidence, public catalog and private bookmark APIs are also implemented; dictionary APIs and versioned administration are also implemented; private assessment/task and bank administration APIs are also implemented; versioned private matching/report APIs and public course/private learning APIs are also implemented; other domain APIs remain planned. Provider analysis reservations atomically create an identity task and durable outbox row. Task states are `queued`, `running`, `succeeded` and `failed`; the identity task resource is owner-scoped. The assessment path already uses general tasks and pgmq without provider allowance; module 12 still must connect provider reservations and invalidation outboxes to their consumers.
+Production REST endpoints use `/api/v1`. Implemented identity endpoints use `/api/v1/identity`; profile/evidence, public catalog and private bookmark APIs are also implemented; dictionary APIs and versioned administration are also implemented; private assessment/task and bank administration APIs are also implemented; versioned matching, course/learning and private resume APIs are also implemented; other domain APIs remain planned. Provider analysis reservations atomically create an identity task and durable outbox row. Task states are `queued`, `running`, `succeeded` and `failed`; the identity task resource is owner-scoped. The assessment path already uses general tasks and pgmq without provider allowance; module 12 still must connect provider reservations and invalidation outboxes to their consumers.
 
 Persist the business record and queued message in one database transaction. Worker results use an idempotency key derived from owner, task type and input version. Visibility leases can expire, so handlers must tolerate redelivery. A provider request can be repeated after a crash; do not describe queue delivery as end-to-end exactly-once AI execution.
 
