@@ -1,3 +1,3 @@
-import { ApplicationsScreen } from "@/components/screens";
+import { ApplicationsWorkspace } from "@/components/applications/entry";
 export const metadata = { title: "Applications" };
-export default ApplicationsScreen;
+export default ApplicationsWorkspace;

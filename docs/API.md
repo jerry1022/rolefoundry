@@ -1,6 +1,6 @@
 # Production API contract
 
-**Mixed implementation status.** The identity endpoints under `/api/v1/identity` are implemented for configured server deployments; see [their exact API and setup](IDENTITY_SETUP.md). Profile/evidence endpoints are also implemented: see [their exact inputs, versions and pagination](PROFILE_SETUP.md). Published job/bookmark APIs and source/lifecycle administration are also implemented: see [catalog API](CATALOG_SETUP.md). Public/versioned skill reads and role-verified dictionary mutations are implemented: see [dictionary API](SKILL_DICTIONARY_SETUP.md). Private assessment/task APIs and question-bank administration are implemented: see [assessment API](ASSESSMENT_SETUP.md). Private versioned matching/report APIs are implemented: see [matching API](MATCHING_SETUP.md). Public reviewed course/private plan/progress and course administration APIs are implemented: see [exact learning API](LEARNING_SETUP.md). Private resume/source/confirmation/proposal/export/download APIs are implemented: see [exact resume API](RESUME_SETUP.md). Other resource contracts below remain planned. The public static demo excludes all dynamic identity handlers.
+**Mixed implementation status.** The identity endpoints under `/api/v1/identity` are implemented for configured server deployments; see [their exact API and setup](IDENTITY_SETUP.md). Profile/evidence endpoints are also implemented: see [their exact inputs, versions and pagination](PROFILE_SETUP.md). Published job/bookmark APIs and source/lifecycle administration are also implemented: see [catalog API](CATALOG_SETUP.md). Public/versioned skill reads and role-verified dictionary mutations are implemented: see [dictionary API](SKILL_DICTIONARY_SETUP.md). Private assessment/task APIs and question-bank administration are implemented: see [assessment API](ASSESSMENT_SETUP.md). Private versioned matching/report APIs are implemented: see [matching API](MATCHING_SETUP.md). Public reviewed course/private plan/progress and course administration APIs are implemented: see [exact learning API](LEARNING_SETUP.md). Private resume/source/confirmation/proposal/export/download APIs are implemented: see [exact resume API](RESUME_SETUP.md). Private application tracking APIs are implemented: see [exact cycle/history/follow-up API](APPLICATIONS_SETUP.md). Other resource contracts below remain planned. The public static demo excludes all dynamic identity handlers.
 
 ## Conventions
 
@@ -58,9 +58,14 @@
 | POST `/resumes/{id}/exports` | Selected confirmed version and idempotency header | Fixed-version PDF task |
 | POST `/resume-exports/{id}/download-intents` | Owner export ID | 60-second owner-bound permit |
 | GET `/resume-downloads/{id}` | Permit ID and owner session | Verified PDF attachment with no-store headers |
-| GET/POST `/applications` | Job ID, optional resume version | Owner tracker records |
-| PATCH `/applications/{id}` | Stage, note, next action and version | Updated record and event |
-| DELETE `/applications/{id}` | Record version | Owner deletion |
+| GET/POST `/applications` | Cursor for reads; `{jobId}` and idempotency header for creation | Owner cycle history or Saved/existing cycle |
+| GET/PATCH `/applications/{id}` | Full stage/note/resume/reference fields and expected revision for writes | Owner snapshot, fixed version reference, follow-ups and updated event |
+| POST `/applications/{id}/new-cycle` | Expected revision and idempotency header | Explicit new Saved cycle for an available role after closure |
+| GET `/applications/{id}/events` | Optional cursor | Owner immutable event history |
+| GET `/applications/resume-choices` | Optional cursor | Minimal owner confirmed-version references |
+| POST `/applications/{id}/follow-ups` | Expected revision, title, UTC/offset due time and idempotency header | Owner next-action creation |
+| PATCH/DELETE `/applications/{id}/follow-ups/{taskId}` | Expected revision; title/due time/completed flag for edit | Updated record |
+| DELETE `/applications/{id}` | Expected revision | Owner cycle, note, event and follow-up deletion |
 | GET `/tasks/{id}` | Task ID | Owner status, safe error, result reference |
 | POST `/admin/imports` | Source, kind, batch reference | Admin-only import task |
 | POST `/admin/reviews/{id}/publish` | Reviewed version | Admin-only publication |
