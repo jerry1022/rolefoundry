@@ -26,8 +26,15 @@ import {
   ResumeExportHandler,
 } from "../../../src/modules/resume/handler";
 import { ResumeStorageJanitor } from "../../../src/modules/resume/cleanup";
+import { FeedImportHandler, FeedScheduler } from "../../../src/modules/ingestion/feed-handler";
+import { SafeFeedReader } from "../../../src/modules/ingestion/adapters/safe-feed";
+import { deploymentFeedRegistry } from "../../../src/modules/ingestion/adapters/feed-config";
+import { SupabaseFeedExecutionStore } from "../../../src/modules/ingestion/adapters/feed-store";
 import { ImportHandler } from "../../../src/modules/ingestion/handler";
-import { Sha256ImportKey } from "../../../src/modules/ingestion/adapters/identity";
+import {
+  Sha256ImportKey,
+  Sha256ImportDigest,
+} from "../../../src/modules/ingestion/adapters/identity";
 import { SupabaseImportExecutionStore } from "../../../src/modules/ingestion/adapters/supabase";
 const config = z
   .object({
@@ -72,9 +79,19 @@ const resumeJanitor = new ResumeStorageJanitor(
 );
 const controller = new AbortController();
 for (const signal of ["SIGINT", "SIGTERM"] as const) process.on(signal, () => controller.abort());
+const feedRegistry = deploymentFeedRegistry(),
+  feedStore = new SupabaseFeedExecutionStore(client),
+  feedScheduler = new FeedScheduler(feedStore, feedRegistry);
+let nextFeedScheduleAt = 0;
 const worker = new TaskWorker(
   new SupabaseTaskQueue(client),
   {
+    "catalog.fetch": new FeedImportHandler(
+      feedStore,
+      feedRegistry,
+      new SafeFeedReader(),
+      new Sha256ImportDigest(),
+    ),
     "catalog.import": new ImportHandler(
       new SupabaseImportExecutionStore(client),
       new Sha256ImportKey(),
@@ -111,6 +128,18 @@ const once = process.argv.includes("--once"),
 let batches = 0;
 while (!controller.signal.aborted) {
   try {
+    if (Date.now() >= nextFeedScheduleAt) {
+      nextFeedScheduleAt = Date.now() + 60000;
+      try {
+        const queued = await feedScheduler.tick(controller.signal);
+        if (queued) console.log(JSON.stringify({ event: "feed.scheduled", queued }));
+      } catch {
+        if (!controller.signal.aborted)
+          console.error(
+            JSON.stringify({ event: "feed.schedule_unavailable", code: "RF_UNAVAILABLE" }),
+          );
+      }
+    }
     try {
       const removed = await resumeJanitor.tick(controller.signal);
       if (removed) console.log(JSON.stringify({ event: "resume.cleanup", removed }));

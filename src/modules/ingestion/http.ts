@@ -19,7 +19,7 @@ export async function ingestionHttp(request: Request, action: string[]) {
       )
     )
       throw new ApplicationError("RF_INVALID_INPUT", 400, "The query is invalid.");
-    const { actor, config, submission, admin, review } = await ingestionContext();
+    const { actor, config, submission, admin, review, feeds } = await ingestionContext();
     requireSameOrigin(request, config.appOrigin);
     if (!action.length && request.method === "GET")
       return Response.json(await admin.list(actor, query.get("cursor") ?? undefined), { headers });
@@ -32,6 +32,28 @@ export async function ingestionHttp(request: Request, action: string[]) {
         ),
         202,
       );
+    if (action.join("/") === "feeds" && request.method === "GET")
+      return send(await feeds.settings(actor));
+    if (action.join("/") === "feed-runs" && request.method === "GET")
+      return send(await feeds.list(actor));
+    if (action.length === 2 && action[0] === "feeds" && request.method === "PATCH")
+      return send(
+        await feeds.configure(actor, action[1], await readJsonBody(request, z.unknown(), 8192)),
+      );
+    if (
+      action.length === 3 &&
+      action[0] === "feeds" &&
+      action[2] === "fetch" &&
+      request.method === "POST"
+    ) {
+      await readJsonBody(request, z.object({}).strict(), 1024);
+      return send(
+        await feeds.request(actor, action[1], request.headers.get("idempotency-key")),
+        202,
+      );
+    }
+    if (action.length === 2 && action[0] === "feed-runs" && request.method === "GET")
+      return send(await feeds.find(actor, action[1]));
     if (action.join("/") === "sources" && request.method === "GET")
       return send(await admin.settings(actor));
     if (action.length === 2 && action[0] === "sources" && request.method === "PATCH")

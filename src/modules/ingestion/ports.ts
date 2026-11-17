@@ -22,6 +22,7 @@ export interface ApprovedFeed {
 }
 /** Deployment-owned definitions, never an administrator supplied worker URL. */
 export interface FeedRegistry {
+  list(): readonly ApprovedFeed[];
   find(id: string, kind: ImportKind): ApprovedFeed | null;
 }
 export interface FeedReader {
@@ -121,4 +122,55 @@ export interface ImportAdminClient {
     },
     key: string,
   ): Promise<import("./model").ImportReceipt>;
+}
+
+export interface FeedAdministrationStore {
+  source(id: string): Promise<ImportSource>;
+  feedSettings(): Promise<import("./model").FeedSetting[]>;
+  configureFeed(
+    id: string,
+    input: import("./model").FeedConfiguration,
+    revision: string,
+  ): Promise<import("./model").FeedSetting>;
+  requestFeed(id: string, key: string): Promise<import("./model").FeedRun>;
+  feedRun(id: string): Promise<import("./model").FeedRun>;
+  feedRuns(): Promise<import("./model").FeedRun[]>;
+}
+export interface FeedExecutionStore {
+  load(
+    lease: TaskLease,
+    signal: AbortSignal,
+  ): Promise<{ source: ImportSource; feedId: string; feedRevision: string; waitSeconds: number }>;
+  prepare(
+    lease: TaskLease,
+    content: SanitizedImport,
+    rawHash: string,
+    signal: AbortSignal,
+  ): Promise<string>;
+  failure(
+    lease: TaskLease,
+    code: string,
+    providerWait: string | null,
+    manual: boolean,
+    signal: AbortSignal,
+  ): Promise<void>;
+}
+export interface FeedScheduleStore {
+  due(
+    definitions: readonly import("./model").ApprovedFeedOption[],
+    signal: AbortSignal,
+  ): Promise<number>;
+}
+export interface FeedAdminClient {
+  settings(): Promise<{
+    settings: import("./model").FeedSetting[];
+    definitions: import("./model").ApprovedFeedOption[];
+  }>;
+  configure(
+    id: string,
+    input: import("./model").FeedConfiguration,
+  ): Promise<import("./model").FeedSetting>;
+  request(id: string, key: string): Promise<import("./model").FeedRun>;
+  find(id: string): Promise<import("./model").FeedRun>;
+  list(): Promise<import("./model").FeedRun[]>;
 }

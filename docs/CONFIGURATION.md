@@ -1,6 +1,6 @@
 # Configuration status and handoff
 
-This guide distinguishes settings applied by the project from account-bound hosted setup. It is updated with each module. Current complete module coverage is 01–09, with the module 10 upload/review workflow in progress; the [complete audit](IMPLEMENTATION_AUDIT.md) retains remaining implementation, provider, operations and release gates.
+This guide distinguishes settings applied by the project from account-bound hosted setup. It is updated with each module. Current implemented module coverage is 01–10; the [complete audit](IMPLEMENTATION_AUDIT.md) retains remaining implementation, provider, operations and release gates.
 
 ## Configured and verified locally
 
@@ -13,8 +13,8 @@ This guide distinguishes settings applied by the project from account-bound host
 | Private resume bucket/policies | `rolefoundry-resumes`, created by migration 08 | Bucket stays private; member SDK/public-object downloads fail |
 | Local web identity/catalog settings | `scripts/dev-identity.mjs`, ignored `.local/identity-env.json` | `npm run identity:dev`; browse jobs and private workspace at port 3200 |
 | Durable queue and registered handlers | pgmq migrations, `apps/worker/src/main.ts` | `npm run worker:local`; complete assessment/matching/learning/resume and catalog review-planning tasks |
-| Authorized import workflow | Migrations `20261114101000_ingestion_batches.sql` and `20261114102000_ingestion_reviews.sql` | Real upload/worker/review/publication APIs and administrator browser journeys pass; source uploads default disabled and require explicit administrator configuration |
-| Durable provider retry delay | Migration `20261114100000_ingestion_retry_authority.sql` | Real queue tests verify stored delay/visibility and lease rejection; approved remote execution remains pending |
+| Authorized import workflow | Migrations `20261114101000_ingestion_batches.sql`, `20261114102000_ingestion_reviews.sql` and `20261114103000_ingestion_feeds.sql` | Real upload/feed/scheduler/worker/review/publication APIs and administrator browser journeys pass; capabilities default disabled and the deployment feed registry defaults empty |
+| Durable provider retry delay | Migration `20261114100000_ingestion_retry_authority.sql` | Real queue tests verify stored delay/visibility and lease rejection; integrated feed handling also rechecks persisted waits before network access |
 | Private application tracking | Migration 09, existing identity/catalog settings | Track/reload a manual cycle, select an owner version and verify UTC follow-up/conflict/deletion behavior |
 | Private object cleanup | Resume registry and service-only janitor | Delete a synthetic source; verify download denial and drained cleanup rows |
 | Processor/font runtime | `Dockerfile.worker`, isolated processor and pinned font assets | Build the image; run `scripts/check-resume-worker-image.mjs` |
@@ -72,7 +72,13 @@ No new model key is needed for current fixed-choice scoring, rule-based matching
 - [Reviewed courses and private learning plans](LEARNING_SETUP.md)
 - [Resume storage, permits, facts, exports and cleanup](RESUME_SETUP.md)
 - [Manual application cycles, history and UTC follow-ups](APPLICATIONS_SETUP.md)
-- [Ingestion backend, retry authority and remaining configuration/integration](INGESTION_SETUP.md)
+- [Ingestion feeds, schedules, review and deployment configuration](INGESTION_SETUP.md)
 - [Web/static/container deployment](DEPLOYMENT.md)
 
 Configuration that can be completed with the available project/account authority is applied and tested as work proceeds. Unavailable account-bound steps remain explicit here with their purpose and verification. Hosted setup is not claimed complete from local tests or an unconfigured preview.
+
+## Approved feed deployment settings
+
+`ROLEFOUNDRY_APPROVED_FEEDS` is server/worker only and defaults to `[]`. Set the identical bounded definition JSON on the web host and independent worker, then restart/redeploy both. It selects exact HTTPS URLs/hosts by ID and revision; administrators can select IDs but cannot supply worker URLs. [The ingestion guide](INGESTION_SETUP.md) gives the template, setup locations and verification steps. `identity:dev` uses Next environment loading; `worker:local` inherits the shell environment, so configuring only `.env.local` is insufficient for that process.
+
+No real feed or schedule has been enabled automatically because no publisher authorization/feed definition has been supplied. Local migrations, queue execution, administrator forms and synthetic fixture verification are applied; source permission, real metadata and a hosted end-to-end run remain operator/editorial gates. The test server's authored `.invalid` definitions are confined to `scripts/test-identity.mjs` and do not configure the demo or deployed worker.

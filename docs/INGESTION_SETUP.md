@@ -1,10 +1,10 @@
-# Authorized ingestion — upload and review workflow
+# Authorized ingestion — sources, feeds and reviewed publication
 
-Module 10 is still in progress. Its configured backend now accepts authorized JSON/CSV uploads, creates durable `catalog.import` tasks, runs the actual Node worker, preserves immutable review previews and publishes explicitly reviewed job/course versions with origin/reviewer records. Deployment-approved feed networking and provider retry authority are implemented as cores. The administrator browser workflow is connected. Remote feed execution and source scheduling remain required; there is no live scheduled feed on this checkpoint.
+Module 10 implements authorized upload and remote ingestion with explicit human review. Its configured backend accepts authorized JSON/CSV uploads, creates durable `catalog.import` tasks, runs the actual Node worker, preserves immutable review previews and publishes explicitly reviewed job/course versions with origin/reviewer records. The administrator browser workflow, approved feed execution and source-specific scheduling are connected to the actual worker. The default deployment has an empty feed registry; no live source, redistribution permission or hosted scheduled operation is implied by implementation tests.
 
 ## Local setup and authority
 
-The existing project identity/catalog/worker settings are sufficient. Local migrations through `20261114102000_ingestion_reviews.sql` are applied. No new credential or provider key is needed:
+The existing project identity/catalog/worker settings are sufficient. Local migrations through `20261114103000_ingestion_feeds.sql` are applied. No new credential or provider key is needed:
 
 ```bash
 npm run identity:start
@@ -54,7 +54,7 @@ The injected `ImportAdminClient` owns browser operations. Only its HTTP adapter 
 
 A JSON file has `{records: [{externalId, url, state, fields}]}`. `state` is `active` or `closed`; `fields` is a partial metadata object. CSV uses `externalId,url`, optional `state` and the same metadata field names as headers. Nested arrays/objects use JSON; durations accept minute counts or supported explicit units. [CSV quoting](https://www.rfc-editor.org/rfc/rfc4180) supports doubled quotes and embedded line breaks. Malformed headers/quoting fail safely; bad individual records do not discard valid rows. Formulas stay literal text and are never executed or exported to a spreadsheet.
 
-Limits: 2 MiB input, 100 rows, 64 KiB per row, nesting depth 16, 8 MiB planning context and 4 MiB planned output. The HTTP upload envelope is separately bounded to allow JSON escaping. Each source retains at most 200 batches; each review retains at most 20 preview versions. Forbidden fields reject the row without retaining their values. Rejected rows store bounded identity/issue metadata only. The submission use case authorizes before source reads/parsing/persistence; database RPCs independently validate the permitted field names, identities, URL scope, positions and bounds.
+Limits: 2 MiB input, 100 rows, 64 KiB per row, nesting depth 16, 8 MiB planning context and 4 MiB planned output. The HTTP upload envelope is separately bounded to allow JSON escaping. An empty JSON records array or header-only CSV produces an empty review batch and never closes earlier records. Each source retains at most 200 batches; each review retains at most 20 preview versions. Forbidden fields reject the row without retaining their values. Rejected rows store bounded identity/issue metadata only. The submission use case authorizes before source reads/parsing/persistence; database RPCs independently validate the permitted field names, identities, URL scope, positions and bounds.
 
 An absent field or empty CSV cell retains approved curation. Explicit JSON null or literal CSV `null` clears it; clearing required metadata remains a blocking issue until the reviewer supplies valid metadata. Partial salary/condition/practice objects preserve omitted curated members. No salary/currency, duration, skill, level or track is invented. New optional values remain unknown. Explicit numeric/work-mode/duration units normalize without currency conversion or assumed work hours.
 
@@ -74,27 +74,56 @@ Producer-owned read/link contracts expose current job/course drafts and reviewed
 
 ## Approved-feed core and retry authority
 
-`StaticFeedRegistry` accepts deployment-owned definitions: ID, kind, format, exact initial HTTPS URL and exact redirect-host allowlist. Definitions are immutable and have a SHA-256 configuration revision. The eventual API selects an ID; it must not accept arbitrary worker URLs, proxy options, headers, TLS overrides or paths. No live registry or automatic retrieval is configured yet.
+`StaticFeedRegistry` accepts deployment-owned definitions: ID, kind, format, exact initial HTTPS URL and exact redirect-host allowlist. Definitions are immutable and have a SHA-256 configuration revision. The API selects an ID and never accepts arbitrary worker URLs, proxy options, headers, TLS overrides or paths. Define the same server-only `ROLEFOUNDRY_APPROVED_FEEDS` JSON value on the web deployment and independent worker. An absent value or `[]` disables available feed choices. Invalid definitions fail closed without printing URLs or credentials. The entire value is bounded to 64 KiB and fifty definitions.
+
+This example is a structure template, not a verified public source or copying agreement:
+
+```json
+[
+  {
+    "id": "authorized-job-metadata",
+    "kind": "jobs",
+    "format": "json",
+    "url": "https://feed.publisher.example/authorized-jobs.json",
+    "allowedHosts": ["feed.publisher.example"]
+  }
+]
+```
+
+Use `kind: "courses"` and `format: "csv"` for an authorized course CSV feed. Original record URLs must independently pass the selected source/provider policy. A distribution feed host may differ from original publisher URLs, so review that mapping explicitly. The current network adapter supports public HTTPS JSON/CSV feeds without authentication headers; private-provider authentication needs a separately reviewed reader adapter. No provider website is converted into a feed automatically. DeepLearning.AI resources can continue to use independently authored, reviewed metadata and original links; this configuration does not assert that the provider offers this feed format or grants copying rights.
+
+In a local shell, export the approved value before starting **both** helpers, or use a protected process environment file loaded by both processes. Next loads `.env.local`, while `npm run worker:local` inherits its shell environment; a Next environment file alone does not configure the worker. On Vercel set the server variable in the intended deployment environment and redeploy. Set the identical value on the separately hosted worker and restart it. Keep service credentials server/worker only. Local helpers already configure the local database credentials; no new API key is needed for public authorized feeds.
+
+On `/admin/`, expand **Approved remote feeds and schedules**, refresh settings after registering a source, select an approved ID, set a 15–10,080 minute interval and enable retrieval. Saving assigns the schedule to the verified administrator; an inactive/deleted/non-admin owner is skipped. Upload permission is independent: a feed-only source cannot accept a manual upload. Saving either capability changes its policy authority, requiring old previews to be reviewed/rebased deliberately. Use **Fetch approved feed** to request a run, inspect its status and open its resulting batch. Browser polling stops after sixty checks. The saved runs remain available after reload. [Actual mobile flow](assets/ingestion-feed-mobile.png).
 
 `SafeFeedReader` uses [Node HTTPS request options](https://nodejs.org/api/https.html) with an explicit pinned socket lookup. It checks HTTPS/host membership, credentials/ports/fragments, redirects/loops, each-hop DNS and all resolved addresses. Private/reserved or mixed answers fail closed. It sends no service cookies/keys; it retains the original TLS host/certificate check and never checks one address then re-resolves a different one. Media/identity encoding/UTF-8/header/body/deadline/cancellation bounds exclude arbitrary HTML/login scraping or compressed archives.
 
-At most three short attempts are made; a valid longer `Retry-After` is returned as structured metadata. A delay beyond one day requires a manual pause, not a shortened one-day retry. Service-only `task_fail_after` releases the task lease and persists supported waits in both `tasks.next_run_at` and actual pgmq visibility. Stale/expired leases cannot reschedule work, and visibility does not shorten existing backoff. The integrated remote execution/scheduler must consume this authority before being described as live.
+At most three short attempts are made; a valid longer `Retry-After` is returned as structured metadata. A delay beyond one day requires a manual pause, not a shortened one-day retry. Service-only `task_fail_after` releases the task lease and persists supported waits in both `tasks.next_run_at` and actual pgmq visibility. Stale/expired leases cannot reschedule work, and visibility does not shorten existing backoff. The integrated `catalog.fetch` handler consumes this authority. It loads current source/owner/lease/configuration before retrieval, validates the deployment definition revision, filters the input and atomically seals a new immutable feed-origin batch plus a `catalog.import` task. Only after that transaction commits does the fetch task succeed. Retries cannot replace or refetch a previously sealed input. Both tasks use ID-only messages. Old upload batches cannot be relabelled as feed input or use feed-only permissions to rebase.
 
-## Remaining module 10 delivery gates
+Every worker process checks due schedules at startup and at most once per minute thereafter. The service-only scheduler atomically queues at most ten sources per tick, binds a source/configuration/window, and serializes concurrent scheduling. Pending work for the same configuration blocks overlapping windows. Only definitions present with the exact revision on that worker can be scheduled. No external cron or Vercel request loop is needed; a continuously running worker is required. `--once`/`--drain` are bounded development/test modes rather than hosted schedulers.
 
-- Connect approved registry IDs/revisions to feed-capable source settings, the actual worker and sealed-once remote input. Never refetch changed bytes under a previously sealed attempt.
-- Add idempotent source-specific due scheduling, bounded provider waits/manual pauses, freshness uncertainty and explicit closure handling. Network failure must preserve prior metadata and never infer closure.
-- Verify the complete upload and remote/scheduled browser/worker paths, malformed/stale/revoked/redirect/private-network/rate-limit cases and every publication's origin before opening the completed module PR.
+Failures record bounded issue codes, retain published metadata/versions and mark the affected producer's availability uncertain. Closed job links and retired courses stay closed/retired. Missing rows, including an empty valid feed, never imply closure. Successful retrieval only creates review proposals; human confirmation/publication is what restores confirmed availability.
+
+Short provider waits are persisted in source settings and queue visibility. On redelivery the handler reads the persisted wait before any network access, including a crash between recording a provider reply and writing queue backoff. Longer-than-one-day waits pause automatic retrieval, retain the reported delay and become terminal task failures. An explicit resume is rejected before the stored provider deadline, even after interval or approved-definition changes. Unbounded/unrepresentable waits use an indefinite pause; an operator must resolve the provider policy rather than force a shortened retry. Disabling and re-enabling retrieval does not erase a wait. Source configuration/revocation, owner deletion or lease expiry prevents sealing and failure-side effects from committing under stale authority.
+
+## Deployment and editorial gates
+
+- Supply real authorized metadata and document publisher permission, permitted fields, feed/original-host mapping, refresh interval and closure policy. The empty default registry remains intentional until these are available.
+- Apply reviewed migrations to the hosted database, configure matching web/worker definitions, deploy the independent worker and verify an owned end-to-end run before enabling a production schedule.
+- Review duplicate targets, unmapped skills, proposed changes, freshness and each publication's origin. The API validates controlled identities and versions; it cannot establish the truth of externally supplied metadata or a copying agreement.
+- Hosted worker monitoring, recovery, source retention/limits and broader administration continue under modules 12/13. Each source is bounded to 500 fetch runs and 200 import batches, and one administrator to twenty queued/running tasks; reaching a bound stops new work instead of deleting review/audit history silently.
 
 ## Verification
 
-The processing core has nineteen tests covering JSON/CSV/permission erasure/bounds/partial patches/normalization/dictionary ambiguity/duplicates/provider paths/closure and approved-feed DNS/redirect/media/body/retry/cancellation decisions. A worker test covers persisted-delay handoff. Three actual database/queue cases cover backoff visibility and lease/service authority. Seventeen new real-stack cases cover configured administrator APIs, actual Node job/course/CSV processing, ID-only dispatch, source revoke/reactivate, source/target/lease guards, immutable inputs/previews, reviewed publication/provenance/idempotence, current-policy rebase, different-source duplicates, course closure and superseded source rows; real mobile/desktop browsers additionally register sources, upload files, retain editorial edits on conflicts, rebuild previews, publish job/course corrections, reload decisions, save source settings and deny anonymous/member controls. Actual screenshots: [mobile](assets/ingestion-mobile.png), [desktop](assets/ingestion-desktop.png). The worker Docker image builds and resolves the new handler imports; missing configuration fails closed.
+The processing core has twenty tests covering JSON/CSV/permission erasure/bounds/partial patches/normalization/dictionary ambiguity/duplicates/provider paths/closure and approved-feed DNS/redirect/media/body/retry/cancellation decisions. The additional comparison case distinguishes JSON object key ordering from meaningful array changes. A worker test covers persisted-delay handoff. Three actual database/queue cases cover backoff visibility and lease/service authority. Seventeen new real-stack cases cover configured administrator APIs, actual Node job/course/CSV processing, ID-only dispatch, source revoke/reactivate, source/target/lease guards, immutable inputs/previews, reviewed publication/provenance/idempotence, current-policy rebase, different-source duplicates, course closure and superseded source rows; real mobile/desktop browsers additionally register sources, upload files, retain editorial edits on conflicts, rebuild previews, publish job/course corrections, reload decisions, save source settings and deny anonymous/member controls. Actual screenshots: [mobile](assets/ingestion-mobile.png), [desktop](assets/ingestion-desktop.png). Twelve additional feed integration cases cover approved-ID selection, feed-only permissions, concurrent manual requests and schedules, pinned redirect decisions with real queue/database execution, sealed input retention, actual Node DNS/network failure, provider delay/visibility, crash-before-backoff redelivery, long manual pauses and early-resume rejection, revoked/different definitions, mid-commit lease rollback, malformed input, empty feeds, provider CSV/course publication/failure/closure, browser configuration/fetch/review/reload, and raw/worker-helper access denial. The successful remote responses and DNS are injected through `SafeFeedReader`'s network port while task/PGMQ/PostgreSQL/Next/browser operations are real. The actual Node HTTPS adapter's fail-closed address checks are separately tested; successful external TLS/provider retrieval is an explicit deployment gate rather than a fixture claim.
+
+The worker Docker image builds and resolves the new handler imports; missing configuration fails closed.
 
 ```bash
 npm run typecheck
 npm test
 npm run architecture:check
-npm run identity:test -- tests/identity/ingestion-batches.integration.test.ts
+npm run identity:test -- tests/identity/ingestion-batches.integration.test.ts tests/identity/ingestion-feeds.integration.test.ts
 npm run identity:test
 ```
 

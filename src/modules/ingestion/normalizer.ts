@@ -106,6 +106,23 @@ function skillResolver(dictionary: SkillDictionary) {
       ? { ids: canonical(term) ? [canonical(term)!] : [], exact: true }
       : { ids: [...(terms.get(normalizeSkillTerm(term)) ?? [])].sort(), exact: false };
 }
+/** JSON objects have no key order; array order remains part of the reviewed value. */
+function equalJson(left: unknown, right: unknown): boolean {
+  if (left === right) return true;
+  if (Array.isArray(left) || Array.isArray(right))
+    return (
+      Array.isArray(left) &&
+      Array.isArray(right) &&
+      left.length === right.length &&
+      left.every((value, index) => equalJson(value, right[index]))
+    );
+  if (!object(left) || !object(right)) return false;
+  const keys = Object.keys(left);
+  return (
+    keys.length === Object.keys(right).length &&
+    keys.every((key) => own(right, key) && equalJson(left[key], right[key]))
+  );
+}
 function normalizeRow(
   row: ImportRow,
   context: ImportContext,
@@ -226,11 +243,11 @@ function normalizeRow(
   Object.assign(candidate, jsonCandidate);
   const changes: NormalizedRow["changes"] = [];
   if (source.kind === "courses" && existing && base.sourceId !== source.id)
-    changes.push({field:"sourceId",operation:"set",before:base.sourceId,after:source.id});
+    changes.push({ field: "sourceId", operation: "set", before: base.sourceId, after: source.id });
   if (source.kind === "jobs" && binding && binding.url !== row.url)
     changes.push({ field: "sourceUrl", operation: "set", before: binding.url, after: row.url });
   for (const field of [...Object.keys(row.fields), ...(source.kind === "courses" ? ["url"] : [])]) {
-    if (JSON.stringify(base[field]) !== JSON.stringify(candidate[field]))
+    if (!equalJson(base[field], candidate[field]))
       changes.push({
         field,
         operation: row.fields[field] === null ? "clear" : "set",

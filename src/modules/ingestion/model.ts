@@ -87,7 +87,7 @@ export const sanitizedImportSchema = z
   .object({
     rows: z.array(acceptedRowSchema).max(ingestionLimits.rows),
     rejected: z.array(rejectedRowSchema).max(ingestionLimits.rows),
-    total: z.number().int().min(1).max(ingestionLimits.rows),
+    total: z.number().int().min(0).max(ingestionLimits.rows),
   })
   .strict()
   .refine((value) => value.rows.length + value.rejected.length === value.total);
@@ -173,7 +173,7 @@ export const importOutputSchema = z
     recipe: z.literal("import-normalize-v1"),
     sourceFingerprint: z.string(),
     dictionaryVersion: z.number().int().positive(),
-    total: z.number().int().positive().max(ingestionLimits.rows),
+    total: z.number().int().nonnegative().max(ingestionLimits.rows),
     rows: z.array(normalizedRowSchema).max(ingestionLimits.rows),
     rejected: z.array(rejectedRowSchema).max(ingestionLimits.rows),
   })
@@ -292,3 +292,51 @@ export type ImportReview = z.infer<typeof importReviewSchema>;
 export type ImportReviewPreparation = z.infer<typeof importReviewPreparationSchema>;
 export type ImportReceipt = z.infer<typeof importReceiptSchema>;
 export type ImportTaskReply = z.infer<typeof importTaskReplySchema>;
+
+export const feedSettingSchema = z.object({
+  sourceId: z.uuid(),
+  name: z.string(),
+  kind: importKindSchema,
+  sourceStatus: z.enum(["active", "revoked"]),
+  revision: z.number().int().nonnegative(),
+  feedId: z.string().nullable(),
+  feedRevision: z.string().nullable(),
+  enabled: z.boolean(),
+  intervalMinutes: z.number().int().min(15).max(10080),
+  ownerId: z.uuid().nullable(),
+  nextFetchAt: z.string().nullable(),
+  manualPause: z.boolean(),
+  pauseUntil: z.string().nullable(),
+  providerWait: z.string().nullable(),
+  lastError: z.string().nullable(),
+});
+export type FeedSetting = z.infer<typeof feedSettingSchema>;
+export const feedRunSchema = z.object({
+  id: z.uuid(),
+  sourceId: z.uuid(),
+  feedId: z.string(),
+  feedRevision: z.string(),
+  taskId: z.uuid().nullable(),
+  batchId: z.uuid().nullable(),
+  status: z.enum(["queued", "running", "succeeded", "failed"]),
+  errorCode: z.string().nullable(),
+  createdAt: z.string(),
+});
+export type FeedRun = z.infer<typeof feedRunSchema>;
+export const approvedFeedOptionSchema = z.object({
+  id: z.string(),
+  kind: importKindSchema,
+  format: importFormatSchema,
+  revision: z.string(),
+});
+export type ApprovedFeedOption = z.infer<typeof approvedFeedOptionSchema>;
+export const feedConfigurationSchema = z
+  .object({
+    expectedRevision: z.number().int().nonnegative(),
+    feedId: ingestionText(64),
+    enabled: z.boolean(),
+    intervalMinutes: z.number().int().min(15).max(10080),
+    resume: z.boolean(),
+  })
+  .strict();
+export type FeedConfiguration = z.infer<typeof feedConfigurationSchema>;

@@ -4,13 +4,15 @@
 
 Turn authorized job/course inputs into reviewable catalog records. Preserve provenance, source usage scope and update history. No public-website availability is treated as blanket permission to copy or redistribute content.
 
-## Current scaffold
+## Implemented delivery
 
-Fixtures are authored locally. Job data is entirely fictional. Courses link to official provider pages and contain independent editorial summaries. The inspector shows provenance; the configured server now has an administrator-only upload/review/publication backend and actual worker; an administrator browser flow is connected, while remote execution and source scheduling remain pending. A bounded parsing/normalization core, deployment-approved feed network boundary and durable provider-delay extension are implemented and tested; [current scope and remaining integration](../INGESTION_SETUP.md) explicitly retain approved remote execution and source scheduling while recording verified batch/review persistence, actual upload execution/API and publication provenance. The module is not complete.
+The configured server implements authorized JSON/CSV uploads, deployment-approved remote retrieval, source-specific schedules and administrator review/publication. Actual workers use ID-only tasks, source/owner/lease checks and immutable sealed input. Separate upload/feed capabilities, reviewed duplicate targets, partial record failures, canonical skill mapping, source/dictionary/target conflicts and explicit closure retain their producer/version contracts. Network failures preserve prior versions and mark availability uncertain; provider delays survive queue redelivery and a crash before backoff publication. Long/unknown waits pause retrieval and cannot be cleared by an early resume or a definition/interval change.
+
+[Ingestion setup](../INGESTION_SETUP.md) documents the API/browser flow, empty default registry, configuration, boundaries and verification scope. Successful feed responses/DNS in local integration are injected; database/PGMQ/worker engine/Next/browser behavior is real, and the actual Node adapter's network-failure path is exercised. Real source permission/metadata, matching hosted web/worker definitions and an owned successful deployment run remain explicit release gates. The public demo remains authored fixtures and original provider links.
 
 ## Target data and contracts
 
-`sources` contains kind, publisher, authorization basis, permitted fields, refresh policy and active status. `import_batches` contains source, batch ID, state and counts. `source_records` stores external IDs and permitted snapshots; `review_items` stores normalization/mapping issues. `import(actor, { sourceId, kind, batchId })` is admin-only and enqueues a task.
+`sources` contains kind, publisher, authorization basis, permitted fields, refresh policy and active status. `import_batches` contains source, input origin, batch ID, immutable input, state and counts. `ingestion_feed_settings` binds a deployment definition/revision, schedule owner, due time and provider wait/pause. `ingestion_feed_runs` binds each exact retrieval task to its sealed batch. `source_records` stores external IDs and permitted snapshots; `review_items` stores normalization/mapping issues. `import(actor, { sourceId, kind, batchId })` is admin-only and enqueues a task.
 
 ## Pipeline
 

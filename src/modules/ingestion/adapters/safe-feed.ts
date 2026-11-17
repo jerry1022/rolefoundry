@@ -112,6 +112,9 @@ export class StaticFeedRegistry implements FeedRegistry {
       );
     }
   }
+  list() {
+    return [...this.feeds.values()];
+  }
   find(id: string, kind: Parameters<FeedRegistry["find"]>[1]) {
     const feed = this.feeds.get(id);
     return feed?.kind === kind ? feed : null;

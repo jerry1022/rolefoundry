@@ -2,8 +2,10 @@
 import { AdminScreen } from "../screens";
 import { createBrowserTransport } from "@/modules/platform/browser-http";
 import { createImportAdminClient } from "@/modules/ingestion/adapters/http-client";
+import { createFeedAdminClient } from "@/modules/ingestion/adapters/feed-client";
 import { ImportAdministration } from "./administration";
 const client = createImportAdminClient(),
+  feedClient = createFeedAdminClient(),
   request = createBrowserTransport();
 async function isAdmin() {
   try {
@@ -17,7 +19,7 @@ export function AdminWorkspace() {
     <>
       <AdminScreen />
       {process.env.NEXT_PUBLIC_IDENTITY_ENABLED === "true" && (
-        <ImportAdministration client={client} isAdmin={isAdmin} />
+        <ImportAdministration client={client} feedClient={feedClient} isAdmin={isAdmin} />
       )}
     </>
   );

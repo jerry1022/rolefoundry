@@ -7,6 +7,7 @@ export const taskKinds = [
   "resume.revise",
   "resume.export",
   "catalog.import",
+  "catalog.fetch",
   "account.delete",
 ] as const;
 export const taskKindSchema = z.enum(taskKinds);

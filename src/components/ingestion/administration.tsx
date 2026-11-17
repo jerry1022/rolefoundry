@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import type { ImportAdminClient } from "@/modules/ingestion/ports";
+import type { ImportAdminClient, FeedAdminClient } from "@/modules/ingestion/ports";
 import {
   ingestionLimits,
   type ImportBatch,
@@ -11,6 +11,7 @@ import {
   type ImportSetting,
 } from "@/modules/ingestion/model";
 import { ApplicationError } from "@/modules/platform/errors";
+import { FeedAdministration } from "./feed-administration";
 import { JobSourceRegistration } from "./source-registration";
 import { ImportReviewPanel } from "./review-panel";
 function SourceSettings({
@@ -65,9 +66,11 @@ function SourceSettings({
 }
 export function ImportAdministration({
   client,
+  feedClient,
   isAdmin,
 }: {
   client: ImportAdminClient;
+  feedClient: FeedAdminClient;
   isAdmin: () => Promise<boolean>;
 }) {
   const [access, setAccess] = useState<"checking" | "allowed" | "denied">("checking"),
@@ -227,6 +230,12 @@ export function ImportAdministration({
       )}
       {access === "allowed" && (
         <>
+          <FeedAdministration
+            client={feedClient}
+            onDenied={denied}
+            onOpenBatch={(id) => perform(() => open(id))}
+            onSettingsChanged={async () => setSources(await client.settings())}
+          />
           <JobSourceRegistration
             busy={busy}
             register={(policy) =>

@@ -61,7 +61,7 @@ The integration suite runs against actual local GoTrue, PostgREST, PostgreSQL an
 ## 10 — Ingestion and source governance
 
 - Design: [10-ingestion.md](design/10-ingestion.md).
-- Status: Upload/review/publication backend and administrator browser workflow, real worker, immutable previews/origin records, administrator APIs and processing/network/retry cores implemented/verified; actual approved remote execution and source scheduling remain pending. See [current scope and required integration](INGESTION_SETUP.md). No live feed or complete import service is claimed.
+- Status: Authorized uploads, deployment-approved remote retrieval, source schedules, administrator browser review, immutable previews/origins and publication implemented and locally verified. See [ingestion setup and deployment gates](INGESTION_SETUP.md). No live source rights, hosted schedule or successful external-provider retrieval is claimed by injected feed responses.
 - Required acceptance scope: Exercise duplicate batches, cross-source duplicates, partial failures, malformed CSV, undisclosed salary, stale records, revoked source rights, redirects, private-network URLs and explicit closure. Audit every publication back to its batch and reviewer.
 
 ## 11 — AI Gateway
@@ -73,7 +73,7 @@ The integration suite runs against actual local GoTrue, PostgREST, PostgreSQL an
 ## 12 — Background worker and tasks
 
 - Design: [12-worker-tasks.md](design/12-worker-tasks.md).
-- Status: Durable pgmq engine, queue adapter and actual assessment, matching, learning and resume handlers plus a resumable Storage janitor implemented/verified with modules 05–08. Remaining domain/provider handlers, invalidation dispatch and hosted telemetry integration are still pending; do not count the entire module complete.
+- Status: Durable pgmq engine, queue adapter and actual assessment, matching, learning, resume and ingestion handlers plus a resumable Storage janitor implemented/verified with modules 05–10. Remaining domain/provider handlers, invalidation dispatch and hosted telemetry integration are still pending; do not count the entire module complete.
 - Required acceptance scope: Simulate duplicate delivery, lease expiry, crash before/after commit, provider timeout, poison payload, stale input, owner deletion and graceful shutdown. Verify that queue age, lease age, retries and terminal failures are observable.
 
 ## 13 — Administration and operations

@@ -19,7 +19,7 @@ import {
   type ImportContext,
   type SkillDictionary,
 } from "../../src/modules/ingestion/model";
-import { publicationFields } from "../../src/modules/jobs/model";
+import { publicationFields, jobDraftSchema } from "../../src/modules/jobs/model";
 import { courseFields } from "../../src/modules/learning/model";
 import type { ImportSubmissionStore } from "../../src/modules/ingestion/ports";
 import type { Actor } from "../../src/modules/identity/core";
@@ -210,6 +210,29 @@ describe("authorized import parsing and review plans", () => {
     for (const invalidText of ["\u0000", "\ud800", "\udfff"]) {
       expect(() => input([row({ summary: invalidText })])).toThrow();
     }
+  });
+  it("treats reordered persisted JSON object keys as unchanged while preserving meaningful array order", () => {
+    const snapshot = context(),
+      draft = jobDraftSchema.parse({ ...job, canonicalKey: keys.key(source, "job-1") });
+    draft.requirements = [{ skills: ["python"], priority: "mandatory", text: "Build with Python" }];
+    draft.conditions = { experienceYears: null, education: null, workAuthorization: null };
+    snapshot.existing = [
+      {
+        externalId: "job-1",
+        url: row().url,
+        target: { kind: "jobs", id: id(), versionId: id(), revision: 1, draft },
+      },
+    ];
+    const same = planImport(input([row()]), snapshot, keys).rows[0];
+    expect(same.changes).toEqual([]);
+    expect(same.disposition).toBe("unchanged");
+    draft.responsibilities = ["Maintain a prototype", "Measure its results"];
+    const reordered = planImport(
+      input([row({ ...job, responsibilities: ["Measure its results", "Maintain a prototype"] })]),
+      snapshot,
+      keys,
+    ).rows[0];
+    expect(reordered.changes.map((change) => change.field)).toEqual(["responsibilities"]);
   });
   it("normalizes salary and work-mode units without inventing missing or undisclosed values", () => {
     expect(

@@ -191,13 +191,13 @@ export function sanitizeImport(
     }
     boundedObject(parsed);
     const envelope = z
-      .object({ records: z.array(z.unknown()).min(1).max(ingestionLimits.rows) })
+      .object({ records: z.array(z.unknown()).max(ingestionLimits.rows) })
       .strict()
       .safeParse(parsed);
     if (!envelope.success) throw new ImportFailure("invalid-envelope");
     raw = envelope.data.records;
   }
-  if (!raw.length || raw.length > ingestionLimits.rows) throw new ImportFailure("invalid-envelope");
+  if (raw.length > ingestionLimits.rows) throw new ImportFailure("invalid-envelope");
   const rows: ImportRow[] = [],
     rejected: SanitizedImport["rejected"] = [],
     seen = new Set<string>();
