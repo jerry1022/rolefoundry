@@ -59,7 +59,7 @@ Changes stay in your browser. Reset them from **Catalog studio**.
 | **Learning path** | Optional reviewed database catalog, private two-week plans, prerequisites, practice references and owner progress; six-link local demo retained |
 | **Resume studio** | Optional private PDF/DOCX sources, confirmed facts/claim histories, grounded order proposals, individual acceptance and fixed-version PDF exports; local demo retained |
 | **Applications** | Optional private cycles, manual stages, fixed resume references, notes, UTC follow-ups and event history; local board retained |
-| **Catalog studio** | Transparent fixture provenance and a confirmed local reset |
+| **Catalog studio** | Optional administrator source/upload/feed/schedule/diff/publication workflows; fixture inspector and local reset retained |
 | **Architecture** | An explorable overview of the planned service boundaries |
 | **Skill dictionary** | Optional bilingual concepts, exact aliases, immutable snapshots, reviewed relations/merges and runtime skill choices |
 | **Account & privacy** | Optional server-backed email OTP, invitations, consent, weekly allowance and admin controls; static demo stays local |
