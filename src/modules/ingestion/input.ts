@@ -70,6 +70,12 @@ export function boundedObject(value: unknown, maximum = ingestionLimits.bytes) {
   while (pending.length) {
     const [item, depth] = pending.pop()!;
     if (depth > ingestionLimits.depth) throw new ImportFailure("invalid-envelope");
+    if (
+      typeof item === "string" &&
+      (item.includes("\0") ||
+        /[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?<![\uD800-\uDBFF])[\uDC00-\uDFFF]/.test(item))
+    )
+      throw new ImportFailure("invalid-envelope");
     if (typeof item === "number" && !Number.isFinite(item))
       throw new ImportFailure("invalid-envelope");
     if (["undefined", "function", "bigint", "symbol"].includes(typeof item))

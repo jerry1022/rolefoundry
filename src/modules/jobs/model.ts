@@ -98,6 +98,7 @@ export const sourcePolicySchema = z
     isDemo: z.boolean(),
   })
   .strict();
+export type SourcePolicy = z.infer<typeof sourcePolicySchema>;
 export const sourceLinkSchema = z
   .object({ sourceId: z.uuid(), externalId: catalogText(200).min(1), url: catalogUrl })
   .strict();

@@ -26,6 +26,9 @@ import {
   ResumeExportHandler,
 } from "../../../src/modules/resume/handler";
 import { ResumeStorageJanitor } from "../../../src/modules/resume/cleanup";
+import { ImportHandler } from "../../../src/modules/ingestion/handler";
+import { Sha256ImportKey } from "../../../src/modules/ingestion/adapters/identity";
+import { SupabaseImportExecutionStore } from "../../../src/modules/ingestion/adapters/supabase";
 const config = z
   .object({
     url: z.url(),
@@ -72,6 +75,10 @@ for (const signal of ["SIGINT", "SIGTERM"] as const) process.on(signal, () => co
 const worker = new TaskWorker(
   new SupabaseTaskQueue(client),
   {
+    "catalog.import": new ImportHandler(
+      new SupabaseImportExecutionStore(client),
+      new Sha256ImportKey(),
+    ),
     "resume.parse": new ResumeParseHandler(
       new SupabaseResumeParseStore(client, resumeStorage, resumeDigest),
       resumeProcessor,

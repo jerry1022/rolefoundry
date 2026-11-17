@@ -17,7 +17,7 @@ See the [complete requirement audit](IMPLEMENTATION_AUDIT.md) before claiming th
 | 07 Courses/learning | Reviewed versioned catalog, private budgeted plans/prerequisites, actual worker and independent progress/practice implemented | Real authorized metadata population, editorial review and hosted operations |
 | 08 Resume studio | Private sources, immutable confirmation/claims, grounded order proposals, fixed exports, actual worker and deletion cleanup implemented | Required model-assisted wording integration with 11; hosted containment/recovery and content review |
 | 09 Tracking | Private versioned cycles, manual stages, immutable snapshots/events, fixed resume links and UTC follow-ups implemented | Hosted owner-isolation check; external submissions remain out of scope |
-| 10 Ingestion | Bounded parsing/normalization, approved-feed network boundary and durable retry authority implemented | Batch persistence, review/publication, actual worker/API/UI and source scheduling integration remain |
+| 10 Ingestion | Authorized upload/review/publication API and browser workflow, actual worker, immutable previews/origins and processing/network/retry cores implemented | Approved remote execution and source scheduling integration remain |
 | 11 AI Gateway | Port only | Replaceable adapters, bounded execution, output/reference validation and evaluation |
 | 12 Workers | Durable pgmq engine with assessment, matching, learning and resume handlers implemented | Other domain handlers, provider reservations and invalidation outbox dispatch remain |
 | 13 Operations | Identity admin controls only | Reviewed publication, recovery, deletion and telemetry |

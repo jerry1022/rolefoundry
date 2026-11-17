@@ -2,7 +2,7 @@ import { describe, it, expect } from "vitest";
 import { sanitizeImport, normalizeSourceUrl } from "../../src/modules/ingestion/input";
 import { parseCsv } from "../../src/modules/ingestion/csv";
 import { planImport, durationMinutes } from "../../src/modules/ingestion/normalizer";
-import { Sha256ImportKey } from "../../src/modules/ingestion/adapters/identity";
+import { Sha256ImportKey, Sha256ImportDigest } from "../../src/modules/ingestion/adapters/identity";
 import { ImportSubmissionService } from "../../src/modules/ingestion/service";
 import {
   StaticFeedRegistry,
@@ -207,6 +207,9 @@ describe("authorized import parsing and review plans", () => {
       ),
     ).toThrow();
     expect(({} as Record<string, unknown>).polluted).toBeUndefined();
+    for (const invalidText of ["\u0000", "\ud800", "\udfff"]) {
+      expect(() => input([row({ summary: invalidText })])).toThrow();
+    }
   });
   it("normalizes salary and work-mode units without inventing missing or undisclosed values", () => {
     expect(
@@ -480,14 +483,22 @@ describe("authorized import parsing and review plans", () => {
         },
       } as ImportSubmissionStore,
       actor = { userId: id(), role: "member" } as Actor;
-    const denied = new ImportSubmissionService(store, {
-      authorize: async () => {
-        throw Error("Denied");
+    const denied = new ImportSubmissionService(
+      store,
+      {
+        authorize: async () => {
+          throw Error("Denied");
+        },
       },
-    });
+      new Sha256ImportDigest(),
+    );
     await expect(denied.submit(actor, {}, "authored-key")).rejects.toThrow("Denied");
     expect(calls).toBe(0);
-    const allowed = new ImportSubmissionService(store, { authorize: async () => {} });
+    const allowed = new ImportSubmissionService(
+      store,
+      { authorize: async () => {} },
+      new Sha256ImportDigest(),
+    );
     await allowed.submit(
       actor,
       {

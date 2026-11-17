@@ -212,13 +212,21 @@ function normalizeRow(
     return clean(value);
   }
   for (const [field, value] of Object.entries(row.fields)) candidate[field] = normal(field, value);
-  if (source.kind === "courses") candidate.url = row.url;
+  if (source.kind === "courses") {
+    if (existing?.kind === "courses" && existing.draft.providerId !== source.provider?.id)
+      throw new ImportFailure("invalid-context");
+    candidate.url = row.url;
+    candidate.sourceId = source.id;
+    candidate.providerId = source.provider?.id;
+  }
   // Missing nested values remain missing in the JSON preview, rather than turning
   // one invalid record into a batch-level serialization failure.
   const jsonCandidate = JSON.parse(JSON.stringify(candidate)) as Record<string, unknown>;
   for (const key of Object.keys(candidate)) delete candidate[key];
   Object.assign(candidate, jsonCandidate);
   const changes: NormalizedRow["changes"] = [];
+  if (source.kind === "courses" && existing && base.sourceId !== source.id)
+    changes.push({field:"sourceId",operation:"set",before:base.sourceId,after:source.id});
   if (source.kind === "jobs" && binding && binding.url !== row.url)
     changes.push({ field: "sourceUrl", operation: "set", before: binding.url, after: row.url });
   for (const field of [...Object.keys(row.fields), ...(source.kind === "courses" ? ["url"] : [])]) {

@@ -1,6 +1,6 @@
 # Production API contract
 
-**Mixed implementation status.** The identity endpoints under `/api/v1/identity` are implemented for configured server deployments; see [their exact API and setup](IDENTITY_SETUP.md). Profile/evidence endpoints are also implemented: see [their exact inputs, versions and pagination](PROFILE_SETUP.md). Published job/bookmark APIs and source/lifecycle administration are also implemented: see [catalog API](CATALOG_SETUP.md). Public/versioned skill reads and role-verified dictionary mutations are implemented: see [dictionary API](SKILL_DICTIONARY_SETUP.md). Private assessment/task APIs and question-bank administration are implemented: see [assessment API](ASSESSMENT_SETUP.md). Private versioned matching/report APIs are implemented: see [matching API](MATCHING_SETUP.md). Public reviewed course/private plan/progress and course administration APIs are implemented: see [exact learning API](LEARNING_SETUP.md). Private resume/source/confirmation/proposal/export/download APIs are implemented: see [exact resume API](RESUME_SETUP.md). Private application tracking APIs are implemented: see [exact cycle/history/follow-up API](APPLICATIONS_SETUP.md). Other resource contracts below remain planned. The public static demo excludes all dynamic identity handlers.
+**Mixed implementation status.** The identity endpoints under `/api/v1/identity` are implemented for configured server deployments; see [their exact API and setup](IDENTITY_SETUP.md). Profile/evidence endpoints are also implemented: see [their exact inputs, versions and pagination](PROFILE_SETUP.md). Published job/bookmark APIs and source/lifecycle administration are also implemented: see [catalog API](CATALOG_SETUP.md). Public/versioned skill reads and role-verified dictionary mutations are implemented: see [dictionary API](SKILL_DICTIONARY_SETUP.md). Private assessment/task APIs and question-bank administration are implemented: see [assessment API](ASSESSMENT_SETUP.md). Private versioned matching/report APIs are implemented: see [matching API](MATCHING_SETUP.md). Public reviewed course/private plan/progress and course administration APIs are implemented: see [exact learning API](LEARNING_SETUP.md). Private resume/source/confirmation/proposal/export/download APIs are implemented: see [exact resume API](RESUME_SETUP.md). Private application tracking APIs are implemented: see [exact cycle/history/follow-up API](APPLICATIONS_SETUP.md). Administrator upload/import/review/publication APIs are implemented: see [the exact backend contract and remaining integration](INGESTION_SETUP.md). Other resource contracts below remain planned. The public static demo excludes all dynamic identity handlers.
 
 ## Conventions
 
@@ -67,7 +67,12 @@
 | PATCH/DELETE `/applications/{id}/follow-ups/{taskId}` | Expected revision; title/due time/completed flag for edit | Updated record |
 | DELETE `/applications/{id}` | Expected revision | Owner cycle, note, event and follow-up deletion |
 | GET `/tasks/{id}` | Task ID | Owner status, safe error, result reference |
-| POST `/admin/imports` | Source, kind, batch reference | Admin-only import task |
+| GET/POST `/admin/imports` | History cursor, or source/batch/format/content and idempotency header | Administrator-only batch history or review-planning task |
+| PATCH `/admin/imports/sources/{id}` | See exact source settings contract | Source import authority; collection GET is `/admin/imports/sources` |
+| GET `/admin/imports/{id}` | Batch UUID | Bounded issues and latest immutable previews |
+| GET `/admin/imports/reviews/{id}` | Review UUID | Preview, scope/freshness and publication reference |
+| POST `/admin/imports/reviews/{id}/rebase` | Expected revision and selected target | New immutable preview against current authority/curation |
+| POST `/admin/imports/reviews/{id}/decide` | Reviewed decision/metadata/reason and idempotency header | Audited publication/closure/confirmation/rejection receipt |
 | POST `/admin/reviews/{id}/publish` | Reviewed version | Admin-only publication |
 | POST `/account/deletion` | Explicit confirmed request | Deletion workflow reference |
 

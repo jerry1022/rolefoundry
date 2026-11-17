@@ -16,7 +16,7 @@ The local development helper enables identity and the catalog. `/jobs/` now read
 
 For a hosted Next deployment, apply `20261114030000_job_catalog.sql` after modules 01–02 and set `ROLEFOUNDRY_CATALOG_ENABLED=true` at build/runtime. Public reads need only `SUPABASE_URL` and `SUPABASE_ANON_KEY`; they work with identity disabled and without a service key. Private bookmarks and administration additionally use the existing identity configuration and verified session. Rebuild after changing feature flags. Static export forces both live features off and excludes their handlers.
 
-Sources, drafts and permission documents are not anonymous-readable tables. Public RPCs return only published records and allowed source metadata. No cloud migration, live source agreement or external fetch is executed automatically. Reviewed job ingestion is developed in module 10 and the full admin UI in module 13; the admin API below is executable now.
+Sources, drafts and permission documents are not anonymous-readable tables. Public RPCs return only published records and allowed source metadata. No cloud migration, live source agreement or external fetch is executed automatically. The [module 10 upload/review backend](INGESTION_SETUP.md) now connects source-governed inputs to reviewed publication; remote scheduling/import UI and the full module 13 admin controls remain; the admin API below is executable now.
 
 ## Public API
 

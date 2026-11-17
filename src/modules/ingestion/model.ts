@@ -212,3 +212,83 @@ export class FeedFailure extends Error {
     super(`Feed retrieval failed: ${code}`);
   }
 }
+export const importTaskReplySchema = z.object({
+  id: z.uuid(),
+  taskId: z.uuid().nullable(),
+  status: z.string(),
+});
+export const importSettingSchema = importSourceSchema.extend({
+  name: z.string(),
+  sourceStatus: z.enum(["active", "revoked"]),
+  revision: z.number().int().nonnegative(),
+  uploadsEnabled: z.boolean(),
+});
+export const importBatchSchema = z.object({
+  id: z.uuid(),
+  sourceId: z.uuid(),
+  batchId: z.string(),
+  revision: z.number().int().positive(),
+  stage: z.enum(["queued", "review"]),
+  status: z.enum(["queued", "running", "succeeded", "failed"]),
+  errorCode: z.string().nullable(),
+  taskId: z.uuid().nullable(),
+  createdAt: z.string(),
+  sourceCurrent: z.boolean(),
+  total: z.number().int(),
+  rejected: z.array(rejectedRowSchema),
+  items: z
+    .array(
+      z.object({
+        id: z.uuid(),
+        revision: z.number().int().positive(),
+        state: z.enum(["pending", "unchanged", "published", "rejected"]),
+        normalized: normalizedRowSchema,
+      }),
+    )
+    .max(100),
+});
+export type ImportBatch = z.infer<typeof importBatchSchema>;
+export type ImportSetting = z.infer<typeof importSettingSchema>;
+export const importBatchSummarySchema = importBatchSchema
+  .omit({ items: true, rejected: true })
+  .extend({ rejectedCount: z.number().int().nonnegative() });
+export type ImportBatchSummary = z.infer<typeof importBatchSummarySchema>;
+export const importReviewSchema = z.object({
+  id: z.uuid(),
+  revision: z.number().int().positive(),
+  state: z.enum(["pending", "unchanged", "published", "rejected"]),
+  normalized: normalizedRowSchema,
+  previewId: z.uuid(),
+  previewVersion: z.number().int().positive(),
+  sourceId: z.uuid(),
+  kind: importKindSchema,
+  sourceCurrent: z.boolean(),
+  dictionaryCurrent: z.boolean(),
+  sourceLatest: z.boolean(),
+  targetCurrent: z.boolean(),
+  publication: z
+    .object({
+      id: z.uuid(),
+      decision: z.string(),
+      resourceId: z.uuid().nullable(),
+      versionId: z.uuid().nullable(),
+      createdAt: z.string(),
+    })
+    .nullable(),
+});
+export const importReviewPreparationSchema = z.object({
+  content: sanitizedImportSchema,
+  context: importContextSchema,
+  position: z.number().int().min(1).max(100),
+});
+export const importReceiptSchema = z.object({
+  id: z.uuid(),
+  reviewId: z.uuid(),
+  decision: z.enum(["publish", "reject", "close", "confirm"]),
+  resourceId: z.uuid().nullable(),
+  versionId: z.uuid().nullable(),
+});
+export type ImportReview = z.infer<typeof importReviewSchema>;
+export type ImportReviewPreparation = z.infer<typeof importReviewPreparationSchema>;
+export type ImportReceipt = z.infer<typeof importReceiptSchema>;
+export type ImportTaskReply = z.infer<typeof importTaskReplySchema>;

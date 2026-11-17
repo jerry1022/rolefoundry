@@ -8,7 +8,12 @@ import {
   importSourceSchema,
   ImportFailure,
 } from "./model";
-import type { ImportAuthorization, ImportSubmissionStore } from "./ports";
+import type {
+  ImportAuthorization,
+  ImportSubmissionStore,
+  ImportDigest,
+  ImportAdministrationStore,
+} from "./ports";
 import { sanitizeImport } from "./input";
 const uploadSchema = z
   .object({
@@ -22,6 +27,7 @@ export class ImportSubmissionService {
   constructor(
     private readonly store: ImportSubmissionStore,
     private readonly auth: ImportAuthorization,
+    private readonly digest: ImportDigest,
   ) {}
   async submit(actor: Actor, input: unknown, key: unknown) {
     await this.auth.authorize(actor, "catalog:write");
@@ -51,6 +57,7 @@ export class ImportSubmissionService {
           batchId: parsed.data.batchId,
           sourceFingerprint: source.fingerprint,
           content,
+          rawHash: this.digest.sha256(parsed.data.content),
         },
         requestKey.data,
       );
@@ -67,5 +74,54 @@ export class ImportSubmissionService {
         );
       throw error;
     }
+  }
+}
+export class ImportAdministrationService {
+  constructor(
+    private readonly store: ImportAdministrationStore,
+    private readonly auth: ImportAuthorization,
+  ) {}
+  private parse<T>(schema: z.ZodType<T>, value: unknown): T {
+    const result = schema.safeParse(value);
+    if (!result.success)
+      throw new ApplicationError(
+        "RF_INVALID_INPUT",
+        400,
+        "Check the import settings or resource identifier.",
+      );
+    return result.data;
+  }
+  async settings(actor: Actor) {
+    await this.auth.authorize(actor, "catalog:write");
+    return this.store.settings();
+  }
+  async configure(actor: Actor, id: unknown, input: unknown) {
+    await this.auth.authorize(actor, "catalog:write");
+    const value = this.parse(
+      z
+        .object({
+          expectedRevision: z.number().int().nonnegative(),
+          uploadsEnabled: z.boolean(),
+          allowClosure: z.boolean(),
+        })
+        .strict(),
+      input,
+    );
+    return this.store.configure(
+      this.parse(z.uuid(), id),
+      value.expectedRevision,
+      value.uploadsEnabled,
+      value.allowClosure,
+    );
+  }
+  async find(actor: Actor, id: unknown) {
+    await this.auth.authorize(actor, "catalog:write");
+    return this.store.find(this.parse(z.uuid(), id));
+  }
+  async list(actor: Actor, cursor?: unknown) {
+    await this.auth.authorize(actor, "catalog:write");
+    return this.store.list(
+      cursor === undefined ? undefined : this.parse(z.string().min(1).max(256), cursor),
+    );
   }
 }

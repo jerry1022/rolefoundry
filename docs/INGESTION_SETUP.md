@@ -1,58 +1,101 @@
-# Authorized ingestion — implementation in progress
+# Authorized ingestion — upload and review workflow
 
-Module 10 is not complete. The repository now implements a tested parsing/normalization core, an approved-feed network boundary and a durable provider-delay extension. The batch/review database, production import execution store, routes, administrator UI, publication provenance and source scheduler still need integration and real-stack acceptance. There is no running catalog import endpoint or scheduled external feed on this checkpoint. This guide tracks that full remaining scope rather than treating a core interface as a finished service.
+Module 10 is still in progress. Its configured backend now accepts authorized JSON/CSV uploads, creates durable `catalog.import` tasks, runs the actual Node worker, preserves immutable review previews and publishes explicitly reviewed job/course versions with origin/reviewer records. Deployment-approved feed networking and provider retry authority are implemented as cores. The administrator browser workflow is connected. Remote feed execution and source scheduling remain required; there is no live scheduled feed on this checkpoint.
 
-## Implemented core
+## Local setup and authority
 
-`src/modules/ingestion` owns source/snapshot/output schemas, submission/authorization/execution ports, a bounded JSON/CSV parser, permission filtering, pure review planning and stable source/external identity keys. Domain code has no database, Next, document-library or provider SDK dependency. The consuming module owns its ports; concrete hashing/network adapters remain outside the core.
+The existing project identity/catalog/worker settings are sufficient. Local migrations through `20261114102000_ingestion_reviews.sql` are applied. No new credential or provider key is needed:
 
-A JSON file has `{records: [{externalId, url, state, fields}]}`. `state` is `active` or `closed`; `fields` is a partial metadata object. CSV uses `externalId,url`, optional `state`, and the same field names as headers. Nested arrays/objects use JSON; durations accept minute counts or explicit supported units. A quoted CSV cell supports doubled quotes and embedded line breaks, following the [CSV quoting format](https://www.rfc-editor.org/rfc/rfc4180). A malformed header/quoting envelope fails safely; invalid individual rows do not discard valid rows. CSV formulas remain literal strings; nothing is evaluated or exported to a spreadsheet.
+```bash
+npm run identity:start
+npx supabase migration up
+npm run identity:dev
+# Separate terminal:
+npm run worker:local
+```
 
-Limits are centralized: 2 MiB input, 100 rows, 64 KiB per row, nesting depth 16, 8 MiB context and 4 MiB planned output. Unknown or unpermitted fields reject the row without retaining their values in the sanitized result. The submission use case authorizes before reading source configuration or parsing/persisting input. Replaced execution stores must revalidate this authority under their own transaction locks.
+Use a verified administrator account and an existing source from [job catalog administration](CATALOG_SETUP.md) or [course administration](LEARNING_SETUP.md). Import uploads default to disabled. Explicitly enable uploads and, separately, closure handling for the intended source using its current settings revision. No sample source is left enabled by the tests, and no agreement, hosted migration or real external retrieval is implied by local setup.
 
-An absent JSON field or empty CSV cell means **retain the curated value**. Explicit JSON null or the literal CSV cell `null` means clear that field; non-nullable cleared values remain blocking review issues. No salary/currency, duration, skill, level or track is invented. Salary intervals and explicit numeric/duration units normalize without currency conversion or assumed working hours. New optional values can remain unknown. Required metadata missing from a new record becomes a review issue.
+Source permission/provider settings have a monotonic policy revision. A revoke/reactivate cycle or changed import settings invalidates previous authority. Every upload, task load/result commit, preview rebase and publication checks the current source policy. Queue execution additionally checks that its original owner is still an active administrator and that its exact task/input/lease remains valid. Other members cannot read batches, configure sources, inspect raw tables or invoke worker helpers.
 
-Explicit canonical IDs or reviewed bilingual aliases resolve against a pinned dictionary snapshot. Ambiguous/unmapped terms remain visible in the permitted source fields and issue list; they do not become new canonical concepts automatically. Cross-source suggestions are separate candidate IDs and require review. A source/external ID is stable across batches; a similar title does not authorize an automatic merge. Existing target version/revision and original source URL are retained so changed links/content produce a diff rather than silently replacing curated values. Missing records never imply closure. An explicit closure requires the source's closure capability.
+## Implemented administrator API
 
-## Approved-feed boundary
+Paths below are under `/api/v1/admin/imports`. Mutations require JSON and the configured same origin. Every endpoint derives administrator authority from the verified session. All responses are private/no-store. Dynamic APIs are excluded from static export.
 
-`StaticFeedRegistry` is constructed from deployment-owned definitions containing an ID, kind, format, exact initial HTTPS URL and exact redirect-host allowlist. It produces immutable definitions with a SHA-256 configuration revision. The future administrator API selects an ID; it must never accept an administrator-provided worker URL, proxy option, header, TLS override or filesystem path. No live feed is configured by these classes alone.
+| Method/path | Input | Result |
+| --- | --- | --- |
+| GET `/sources` | None | `{data: sourceSettings[]}` with source name/status, effective policy, import revision and enabled flags |
+| PATCH `/sources/{sourceId}` | `{expectedRevision, uploadsEnabled, allowClosure}` | Updated effective source policy |
+| GET `/` | Optional cursor | `{data, nextCursor}`; 20 bounded batch summaries without full previews/source payloads |
+| POST `/` | `{sourceId, batchId, format, content}` and `Idempotency-Key` | `202 {data: {id, taskId, status}}` |
+| GET `/{batchId}` | Batch UUID | Full bounded issues/latest previews, task status and source authority flag |
+| GET `/reviews/{reviewId}` | Review UUID | Immutable current preview, source/dictionary/target freshness, source-row recency and publication reference |
+| POST `/reviews/{reviewId}/rebase` | `{expectedRevision, targetId: UUID or null}` | New preview version against current permitted source, dictionary and curation |
+| POST `/reviews/{reviewId}/decide` | `{expectedRevision, decision, draft, reason, allowNewDuplicate}` and idempotency header | Stable publication/decision receipt |
 
-`SafeFeedReader` and the Node HTTPS transport implement:
+Decision is `publish`, `reject`, `close` or `confirm`. `publish` takes a complete job/course draft using the existing producer schema; identity/source/key/URL values remain bound to the reviewed source/target. Other decisions require `draft: null`. Reasons are 1–1,000 characters. `allowNewDuplicate` is an explicit acknowledgement when creating a separate record despite duplicate suggestions; it cannot bypass the course provider's unique URL identity rule. Linking to a suggested canonical record requires a rebase selecting that candidate first. An existing source/external binding cannot silently be reassigned.
 
-- HTTPS, exact host membership, no credentials/custom ports/fragments, and bounded redirects with loop detection.
-- Every-hop DNS resolution, rejection of mixed public/private answers and non-global/reserved address ranges, and passing the validated address to the actual socket lookup. The transport retains the original host/TLS server name and certificate verification; checking an address and then resolving it again is not the contract.
-- No service cookies/keys or browser headers; no shared credentialed fetch client; no automatically followed redirect outside this boundary.
-- Identity encoding, supported JSON/CSV media, strict UTF-8, header/body bounds, socket timeout, overall deadline and cancellation. It does not decompress arbitrary remote archives or scrape HTML/login pages.
-- At most three attempts with bounded short waits. Longer valid `Retry-After` values are returned as structured delay metadata instead of sleeping under a worker lease. Values exceeding one day require manual retry/pause handling; they must not be shortened into an automatic one-day retry.
+A repeated source/batch ID or actor/request key returns the prior batch only for the same source fingerprint, sanitized content and SHA-256 fingerprint of the original text. Changed forbidden values or file bytes cannot masquerade as an identical request, while forbidden raw values are never stored. A repeated decision key returns its original receipt, including after an uncertain HTTP response; it cannot publish another version. Conflicts require refreshing/reviewing the current state.
 
-The Node adapter uses [HTTPS request options](https://nodejs.org/api/https.html) and an explicit pinned lookup. The tests inject DNS/transport responses to exercise decision boundaries and also reject a private address at the raw transport entry. They do not establish that a particular live source permits copying, that a live offering exists, or that a production network sandbox is configured.
+## Administrator browser workflow
 
-## Configured retry foundation
+Open `/admin/` on the configured local server. The public demo inspector remains clearly labelled; the separate **Source imports and publication review** section checks the verified session before loading private import data. Anonymous and member sessions cannot use its controls or read batch contents. Static/demo deployments retain their original inspector without import controls.
 
-Migration `20261114100000_ingestion_retry_authority.sql` adds service-only `task_fail_after`. It preserves the existing task failure/attempt limit and owner/lease checks, releases the lease, and persists the requested bounded wait in both `tasks.next_run_at` and the actual pgmq message visibility. A stale/expired lease cannot extend or shorten a newer retry. Queue visibility does not shorten the original exponential backoff. Existing handlers keep their original `task_fail` path when no provider delay is supplied.
+1. Register a job source using the publisher, private authorization basis, public rights summary, lowercase allowed hostnames and explicitly permitted metadata fields. Mark synthetic metadata as demonstration content. Registration calls the existing job producer contract and leaves uploads disabled. For course sources, open **Course administration** on `/learning/` and choose the provider there.
+2. Expand **Authorized source settings**. Enable uploads for that source; enable explicit closure separately only when intended. Revoked sources cannot accept uploads. Save settings against the displayed revision; a conflict requires reloading current settings.
+3. Choose the source, enter a stable batch identifier and upload a JSON/CSV file or paste its content. The browser checks the 2 MiB limit; the server independently checks all limits and rights. Queue the batch and run the independent worker. Status polling stops after 60 checks; **Refresh selected batch** resumes it.
+4. Open a batch and **Review row**. Rejected rows show bounded issues separately. Compare previous values with the source proposal and inspect the original source link. For a duplicate suggestion, choose a catalog target and explicitly rebuild the preview before deciding. Candidate UUIDs are stable catalog identities; suggestions never merge automatically.
+5. Correct publication metadata in structured fields. Canonical identity, provider, source and original URL remain bound to the reviewed source. Skill inputs accept canonical IDs; inspect `/dictionary/` for reviewed concepts. No raw JSON replacement is needed for editorial review. Unknown values remain empty. The server independently validates complete producer drafts.
+6. Explain the decision and publish, reject, confirm unchanged metadata or confirm an explicit source closure. Creating a separate record despite duplicate suggestions requires explicit acknowledgement. A conflict preserves unsaved editorial input. **Rebuild preview** and **Reload review** explicitly discard those edits; a superseded row cannot be rebased or published. Completed decisions show their saved publication reference and remain available after reload.
 
-The local project stack has this migration applied. No hosted database was changed. Apply reviewed migrations to the intended hosted project through the established deployment workflow; previews do not migrate production implicitly. No new credential is needed for the processing core or retry authority.
+The injected `ImportAdminClient` owns browser operations. Only its HTTP adapter chooses routes; screens do not import a database client or privileged credentials. File contents and editorial drafts stay in component memory rather than browser storage. Retried identical submissions/decisions reuse their request key until acknowledged.
 
-## Required integration still to implement
+## Input, normalization and review
 
-1. Add source import settings with explicit upload/fetch/closure capabilities, reviewed policy revisions, refresh intervals and approved feed IDs. A revoke/reactivate cycle must invalidate old import authority. Preserve the existing job/course source permissions and provider URL rules.
-2. Persist sanitized `import_batches`, source/external `source_records`, versioned `review_items` and publication-origin/audit records. Repeated source/batch IDs and actor/request keys must return the original result or reject changed content. Never persist forbidden raw file fields or put payloads in queue messages.
-3. Connect `catalog.import` to the actual independent worker. Load and recheck active administrator/source authority, seal parsed feed input once, retrieve producer-owned current drafts/cross-source suggestions and a dictionary snapshot, then publish bounded review results under the task lease. A replaced adapter must not publish forged/foreign target references.
-4. Implement per-record review/rebase/rejection and existing job/course producer publication contracts. Compare the exact target revision and source/dictionary authority again. New/changed metadata requires explicit review; a stale diff must not overwrite newer curation. Every published version must link to its batch, source record and reviewer. Historical course plans and application snapshots remain unchanged.
-5. Add source-specific due scheduling with idempotent window IDs, bounded retries and explicit closure handling. Network errors mark prior known records uncertain, not closed; missing rows never retire records. Long provider waits persist in the queue. A wait beyond the supported retry bound pauses automatic retrieval until an operator acts.
-6. Add bounded administrator routes and forms for source settings, JSON/CSV uploads, batch counts/issues/diffs, duplicate decisions, stale rebase and publication. Non-admin/anonymous/raw-table access must fail closed. Keep the existing public provenance inspector/local reset clearly separate.
-7. Exercise actual Auth/PostgREST/PostgreSQL/pgmq/Node/browser behavior, source revocation during execution, lease loss during publication, retries, partial failures, duplicate batches/cross-source records, missing versus removed fields, malformed CSV, undisclosed salary, explicit closure, stale records and publication provenance. Update README/API/data/HLD/configuration guides and open the complete module PR only after that path is verified.
+A JSON file has `{records: [{externalId, url, state, fields}]}`. `state` is `active` or `closed`; `fields` is a partial metadata object. CSV uses `externalId,url`, optional `state` and the same metadata field names as headers. Nested arrays/objects use JSON; durations accept minute counts or supported explicit units. [CSV quoting](https://www.rfc-editor.org/rfc/rfc4180) supports doubled quotes and embedded line breaks. Malformed headers/quoting fail safely; bad individual records do not discard valid rows. Formulas stay literal text and are never executed or exported to a spreadsheet.
 
-## Verification at this checkpoint
+Limits: 2 MiB input, 100 rows, 64 KiB per row, nesting depth 16, 8 MiB planning context and 4 MiB planned output. The HTTP upload envelope is separately bounded to allow JSON escaping. Each source retains at most 200 batches; each review retains at most 20 preview versions. Forbidden fields reject the row without retaining their values. Rejected rows store bounded identity/issue metadata only. The submission use case authorizes before source reads/parsing/persistence; database RPCs independently validate the permitted field names, identities, URL scope, positions and bounds.
 
-Nineteen new core cases cover JSON/CSV partial failures, quoted content, forbidden-field erasure, bounds/prototype keys, salary/work-mode normalization, partial curated updates and changed URLs, bilingual/ambiguous skills, cross-source suggestions, course duration/provider paths, closure capability and authorization-before-persistence; approved feed IDs, non-global/mixed DNS, pinned address flow, redirects, media/UTF-8/compression/body limits, bounded retries/long waits and cancellation. An additional worker test proves delay handoff without sleeping under the lease. Three real database/queue cases verify persisted delay/visibility, expired/foreign/duplicate lease behavior and service-only authority.
+An absent field or empty CSV cell retains approved curation. Explicit JSON null or literal CSV `null` clears it; clearing required metadata remains a blocking issue until the reviewer supplies valid metadata. Partial salary/condition/practice objects preserve omitted curated members. No salary/currency, duration, skill, level or track is invented. New optional values remain unknown. Explicit numeric/work-mode/duration units normalize without currency conversion or assumed work hours.
+
+Explicit canonical IDs and reviewed bilingual aliases resolve against a pinned dictionary. Ambiguous/unmapped terms remain visible in the permitted source fields and issues, without creating concepts automatically. Cross-source suggestions are candidate IDs rather than automatic merges. Missing feed rows never imply closure; an explicit closure needs the source's closure capability. Unknown closed IDs cannot create fake catalog entries.
+
+The actual `catalog.import` handler loads a sealed source/dictionary/current-target context, runs pure review planning and commits source observations/previews plus terminal task success atomically. Its queue message contains only the task ID. Rechecking authority at the end of publication makes mid-commit lease loss roll back every generated review row. A forged source ID, target version or candidate reference is rejected. Unrelated later processing cannot replace the immutable input/context or original preview.
+
+The latest observed source row is ordered by batch creation sequence, including when workers finish out of order. An older source row cannot overwrite or be published after a newer observed row; it may be rejected with an audit record. For a current row whose target curation/dictionary/policy changed, an explicit rebase appends a preview version and preserves prior previews. Rebase retains the original permitted source patch and applies it to current curation; it does not silently overwrite unsaved operator edits.
+
+Publishing calls the existing job/course producer validation, immutable version creation and review/publication transitions in one database transaction. Each decision links the review, preview version, batch, source record, reviewer and resulting resource/version. A changed URL is reviewed explicitly. Course edits retain prior versions and saved plans. Source closure preserves application snapshots and notes; it only changes the relevant catalog availability. Unchanged records can be explicitly confirmed without inventing a metadata change. A rejection remains available even when source authority has become stale.
+
+## Replaceable implementation boundaries
+
+The consuming ingestion module owns source/input/context/output schemas, submission/administration/review/execution/authorization/digest ports and pure parsing/planning. Core code has no Next, database/provider SDK or environment reads. Request-scoped composition chooses the Supabase and hashing adapters. HTTP/routes handle bounded transport and origin checks. The worker uses the same validated pure planner behind a lease-aware execution port.
+
+Producer-owned read/link contracts expose current job/course drafts and reviewed link changes. Source/external binding, live policy, target versions and publication audit remain database transaction boundaries; controllers do not reach directly into another domain's tables. Immutable `ingestion_review_versions` preserve the original and rebased previews. `ingestion_publications` links each processed review to its actual result/reviewer; `ingestion_decisions` retains reference-only idempotent receipts. Upgrade/replacement tests must preserve these contracts, not just schema compatibility.
+
+## Approved-feed core and retry authority
+
+`StaticFeedRegistry` accepts deployment-owned definitions: ID, kind, format, exact initial HTTPS URL and exact redirect-host allowlist. Definitions are immutable and have a SHA-256 configuration revision. The eventual API selects an ID; it must not accept arbitrary worker URLs, proxy options, headers, TLS overrides or paths. No live registry or automatic retrieval is configured yet.
+
+`SafeFeedReader` uses [Node HTTPS request options](https://nodejs.org/api/https.html) with an explicit pinned socket lookup. It checks HTTPS/host membership, credentials/ports/fragments, redirects/loops, each-hop DNS and all resolved addresses. Private/reserved or mixed answers fail closed. It sends no service cookies/keys; it retains the original TLS host/certificate check and never checks one address then re-resolves a different one. Media/identity encoding/UTF-8/header/body/deadline/cancellation bounds exclude arbitrary HTML/login scraping or compressed archives.
+
+At most three short attempts are made; a valid longer `Retry-After` is returned as structured metadata. A delay beyond one day requires a manual pause, not a shortened one-day retry. Service-only `task_fail_after` releases the task lease and persists supported waits in both `tasks.next_run_at` and actual pgmq visibility. Stale/expired leases cannot reschedule work, and visibility does not shorten existing backoff. The integrated remote execution/scheduler must consume this authority before being described as live.
+
+## Remaining module 10 delivery gates
+
+- Connect approved registry IDs/revisions to feed-capable source settings, the actual worker and sealed-once remote input. Never refetch changed bytes under a previously sealed attempt.
+- Add idempotent source-specific due scheduling, bounded provider waits/manual pauses, freshness uncertainty and explicit closure handling. Network failure must preserve prior metadata and never infer closure.
+- Verify the complete upload and remote/scheduled browser/worker paths, malformed/stale/revoked/redirect/private-network/rate-limit cases and every publication's origin before opening the completed module PR.
+
+## Verification
+
+The processing core has nineteen tests covering JSON/CSV/permission erasure/bounds/partial patches/normalization/dictionary ambiguity/duplicates/provider paths/closure and approved-feed DNS/redirect/media/body/retry/cancellation decisions. A worker test covers persisted-delay handoff. Three actual database/queue cases cover backoff visibility and lease/service authority. Seventeen new real-stack cases cover configured administrator APIs, actual Node job/course/CSV processing, ID-only dispatch, source revoke/reactivate, source/target/lease guards, immutable inputs/previews, reviewed publication/provenance/idempotence, current-policy rebase, different-source duplicates, course closure and superseded source rows; real mobile/desktop browsers additionally register sources, upload files, retain editorial edits on conflicts, rebuild previews, publish job/course corrections, reload decisions, save source settings and deny anonymous/member controls. Actual screenshots: [mobile](assets/ingestion-mobile.png), [desktop](assets/ingestion-desktop.png). The worker Docker image builds and resolves the new handler imports; missing configuration fails closed.
 
 ```bash
 npm run typecheck
 npm test
 npm run architecture:check
-npm run identity:test -- tests/identity/ingestion-retry.integration.test.ts
+npm run identity:test -- tests/identity/ingestion-batches.integration.test.ts
+npm run identity:test
 ```
 
-The complete module 10 review/import/scheduler workflow is not proven by these core checks. [The design audit](IMPLEMENTATION_AUDIT.md) retains it, along with modules 11–13, real-source rights/content, provider evaluation and hosted operations gates.
+Authored fixtures are removed after tests. No live offering, copying permission, hosted worker, network sandbox, model quality or human editorial review is established by those fixtures. Keep [configuration status](CONFIGURATION.md) and the [complete implementation audit](IMPLEMENTATION_AUDIT.md) as the authoritative remaining goal/release checklist.

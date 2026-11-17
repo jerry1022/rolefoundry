@@ -24,6 +24,7 @@ The repository contains a Next.js App Router application with twelve navigable p
 | Matching | Private versioned reports with explicit conditions, cited evidence, freshness/deletion guards and durable rule-based ranking; local demo retained |
 | Learning | Optional reviewed catalog, private budgeted plans/prerequisites/practice/progress and durable planning; six-link local demo retained |
 | Resume | Private PDF/DOCX/paste sources, confirmation/claim history, grounded order proposals, individual acceptance, fixed PDF exports and deletion cleanup; local demo retained |
+| Ingestion | Authorized JSON/CSV upload/review/publication backend, administrator browser workflow and real worker; remote execution and scheduling in progress |
 | Applications | Private manual cycles, notes, fixed resume references, event history and UTC follow-ups; local board retained |
 | Administration | Server-authorized source/publication, dictionary, course and question-bank review; local provenance inspector/reset retained |
 | Identity/database | Configurable Supabase Auth/PostgreSQL, email OTP, invitations, roles, consent, quotas and audit |

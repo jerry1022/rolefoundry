@@ -8,3 +8,9 @@ export class Sha256ImportKey implements ImportKeyFactory {
       .digest("hex")}`;
   }
 }
+
+export class Sha256ImportDigest {
+  sha256(text: string) {
+    return createHash("sha256").update(text).digest("hex");
+  }
+}

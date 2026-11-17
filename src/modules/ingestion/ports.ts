@@ -1,3 +1,4 @@
+import type { SourcePolicy } from "../jobs/model";
 import type { Actor } from "../identity/core";
 import type { TaskLease } from "../tasks/model";
 import type {
@@ -7,6 +8,9 @@ import type {
   SanitizedImport,
   ImportContext,
   ImportOutput,
+  ImportSetting,
+  ImportBatch,
+  ImportBatchSummary,
 } from "./model";
 export interface ApprovedFeed {
   readonly id: string;
@@ -34,6 +38,7 @@ export interface ImportSubmissionStore {
       batchId: string;
       sourceFingerprint: string;
       content: SanitizedImport;
+      rawHash: string;
     },
     key: string,
   ): Promise<{ id: string; taskId: string; status: string }>;
@@ -44,4 +49,76 @@ export interface ImportExecutionStore {
     signal: AbortSignal,
   ): Promise<{ content: SanitizedImport; context: ImportContext }>;
   publish(lease: TaskLease, output: ImportOutput, signal: AbortSignal): Promise<void>;
+}
+export interface ImportAdministrationStore {
+  settings(): Promise<ImportSetting[]>;
+  configure(
+    id: string,
+    expectedRevision: number,
+    uploadsEnabled: boolean,
+    allowClosure: boolean,
+  ): Promise<ImportSource>;
+  find(id: string): Promise<ImportBatch>;
+  list(cursor?: string): Promise<{ data: ImportBatchSummary[]; nextCursor: string | null }>;
+}
+
+export interface ImportDigest {
+  sha256(text: string): string;
+}
+export interface ImportReviewStore {
+  review(id: string): Promise<import("./model").ImportReview>;
+  prepareReview(
+    id: string,
+    expectedRevision: number,
+    targetId: string | null,
+  ): Promise<import("./model").ImportReviewPreparation>;
+  rebase(
+    id: string,
+    expectedRevision: number,
+    targetId: string | null,
+    sourceFingerprint: string,
+    dictionaryVersion: number,
+    normalized: import("./model").NormalizedRow,
+  ): Promise<import("./model").ImportReview>;
+  decide(
+    id: string,
+    expectedRevision: number,
+    decision: "publish" | "reject" | "close" | "confirm",
+    draft: Record<string, unknown> | null,
+    reason: string,
+    allowNewDuplicate: boolean,
+    key: string,
+  ): Promise<import("./model").ImportReceipt>;
+}
+
+/** UI-owned operations; no persistence or privileged transport is exposed. */
+export interface ImportAdminClient {
+  registerJobSource(input: SourcePolicy): Promise<{ id: string }>;
+  settings(): Promise<ImportSetting[]>;
+  configure(
+    id: string,
+    input: { expectedRevision: number; uploadsEnabled: boolean; allowClosure: boolean },
+  ): Promise<ImportSource>;
+  submit(
+    input: { sourceId: string; batchId: string; format: ImportFormat; content: string },
+    key: string,
+  ): Promise<import("./model").ImportTaskReply>;
+  list(cursor?: string): Promise<{ data: ImportBatchSummary[]; nextCursor: string | null }>;
+  find(id: string): Promise<ImportBatch>;
+  review(id: string): Promise<import("./model").ImportReview>;
+  rebase(
+    id: string,
+    input: { expectedRevision: number; targetId: string | null },
+  ): Promise<import("./model").ImportReview>;
+  decide(
+    id: string,
+    input: {
+      expectedRevision: number;
+      decision: "publish" | "reject" | "close" | "confirm";
+      draft: Record<string, unknown> | null;
+      reason: string;
+      allowNewDuplicate: boolean;
+    },
+    key: string,
+  ): Promise<import("./model").ImportReceipt>;
 }

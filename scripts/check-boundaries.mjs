@@ -34,6 +34,7 @@ for (const file of [
   ...(await files("src/components/learning")),
   ...(await files("src/components/resume")),
   ...(await files("src/components/applications")),
+  ...(await files("src/components/ingestion")),
 ]) {
   if (!/\.tsx?$/.test(file)) continue;
   const source = ts.createSourceFile(
@@ -43,7 +44,7 @@ for (const file of [
     true,
   );
   const domain =
-    /src\/modules\/((?:profile|jobs|skills|assessment|tasks|matching|learning|resume|applications|ingestion)\/(model|ports|service|specializations|catalog|worker|rules|handler|report-state|planner|plan-state|document-state|cleanup|record-state|input|csv|normalizer))\.ts$/.test(
+    /src\/modules\/((?:profile|jobs|skills|assessment|tasks|matching|learning|resume|applications|ingestion)\/(model|ports|service|specializations|catalog|worker|rules|handler|report-state|planner|plan-state|document-state|cleanup|record-state|input|csv|normalizer|review-service))\.ts$/.test(
       file,
     );
   const component =
