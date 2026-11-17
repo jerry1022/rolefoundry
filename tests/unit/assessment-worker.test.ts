@@ -71,6 +71,24 @@ describe("fixed scoring contracts", () => {
   });
 });
 describe("replaceable durable worker engine", () => {
+  it("passes a bounded provider delay to durable storage without sleeping under its lease", async () => {
+    const queue = setup();
+    const worker = new TaskWorker(
+      queue,
+      {
+        "assessment.grade": {
+          execute: async () => {
+            throw new TaskFailure("infrastructure", 60);
+          },
+        },
+      },
+      { workerId: crypto.randomUUID(), leaseSeconds: 5, concurrency: 1 },
+    );
+    await worker.tick(new AbortController().signal);
+    expect(queue.fail).toHaveBeenCalledWith(lease, "infrastructure", 60);
+    expect(queue.acknowledge).not.toHaveBeenCalled();
+    expect(() => new TaskFailure("infrastructure", 86401)).toThrow();
+  });
   it("archives only after a handler has committed and never logs answer contents", async () => {
     const queue = setup();
     const calls: string[] = [];

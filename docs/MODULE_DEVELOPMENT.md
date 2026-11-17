@@ -17,9 +17,9 @@ See the [complete requirement audit](IMPLEMENTATION_AUDIT.md) before claiming th
 | 07 Courses/learning | Reviewed versioned catalog, private budgeted plans/prerequisites, actual worker and independent progress/practice implemented | Real authorized metadata population, editorial review and hosted operations |
 | 08 Resume studio | Private sources, immutable confirmation/claims, grounded order proposals, fixed exports, actual worker and deletion cleanup implemented | Required model-assisted wording integration with 11; hosted containment/recovery and content review |
 | 09 Tracking | Private versioned cycles, manual stages, immutable snapshots/events, fixed resume links and UTC follow-ups implemented | Hosted owner-isolation check; external submissions remain out of scope |
-| 10 Ingestion | Planned | Authorized adapters, reviewable batches and publication provenance |
+| 10 Ingestion | Authorized uploads/approved remote feeds/source schedules, actual worker, administrator review and immutable publication origins implemented; PR #10 | Real source rights/metadata, matching hosted definitions and owned deployment verification |
 | 11 AI Gateway | Port only | Replaceable adapters, bounded execution, output/reference validation and evaluation |
-| 12 Workers | Durable pgmq engine with assessment, matching, learning and resume handlers implemented | Other domain handlers, provider reservations and invalidation outbox dispatch remain |
+| 12 Workers | Durable pgmq engine with assessment, matching, learning, resume and ingestion handlers implemented | Other domain handlers, provider reservations and invalidation outbox dispatch remain |
 | 13 Operations | Identity admin controls only | Reviewed publication, recovery, deletion and telemetry |
 
 Work follows the document sequence, but dependencies are explicit. Modules 05–08 may establish producers and deterministic domain rules before 11/12. They cannot be described as running asynchronous AI features until the gateway/worker integration passes its own checks. Module 02 seeded the initial foreign-key registry; module 04 now adds versioned administration and runtime IDs. Keep each new module's review focused; use a stacked PR base if its predecessor is still open, without silently merging it.
@@ -52,7 +52,7 @@ flowchart LR
 - Cross-module mutations use public service ports or a deliberately granted database transaction boundary. Do not reach into another module's internal tables from presentation code.
 - Keep existing demo APIs as compatibility exports where necessary; new production modules must not depend on the demo workspace shape.
 
-`npm run architecture:check` enforces the profile/job/skill/assessment/task/matching/learning/resume/applications core and corresponding UI import boundaries with the TypeScript parser. Extend its coverage when adding modules. It supplements behavior tests; it does not prove runtime security or transactional correctness.
+`npm run architecture:check` enforces the profile/job/skill/assessment/task/matching/learning/resume/applications/ingestion core and corresponding UI import boundaries with the TypeScript parser. Extend its coverage when adding modules. It supplements behavior tests; it does not prove runtime security or transactional correctness.
 
 ## Dictionary concurrency and historical joins
 

@@ -7,6 +7,7 @@ export const taskKinds = [
   "resume.revise",
   "resume.export",
   "catalog.import",
+  "catalog.fetch",
   "account.delete",
 ] as const;
 export const taskKindSchema = z.enum(taskKinds);
@@ -44,7 +45,15 @@ export const taskLeaseSchema = z.object({
 });
 export type TaskLease = z.infer<typeof taskLeaseSchema>;
 export class TaskFailure extends Error {
-  constructor(readonly category: FailureCategory) {
+  constructor(
+    readonly category: FailureCategory,
+    readonly retryAfterSeconds?: number,
+  ) {
     super(`Task handler failed: ${category}`);
+    if (
+      retryAfterSeconds !== undefined &&
+      (!Number.isInteger(retryAfterSeconds) || retryAfterSeconds < 0 || retryAfterSeconds > 86400)
+    )
+      throw new Error("Invalid task retry delay");
   }
 }

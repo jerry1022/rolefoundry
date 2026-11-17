@@ -14,8 +14,10 @@ await new Promise((resolve, reject) => {
   probe.listen(port, "127.0.0.1", () => probe.close(resolve));
 });
 const origin = `http://127.0.0.1:${port}`;
+const fixtureFeeds = await readFile("tests/support/approved-feeds.json", "utf8");
 const runtimeEnv = {
   ...process.env,
+  ROLEFOUNDRY_APPROVED_FEEDS: fixtureFeeds,
   STATIC_EXPORT: "0",
   NEXT_PUBLIC_BASE_PATH: "",
   ROLEFOUNDRY_IDENTITY_ENABLED: "true",
@@ -87,7 +89,14 @@ try {
         "vitest.identity.config.ts",
         ...process.argv.slice(2),
       ],
-      { stdio: "inherit", env: { ...process.env, ROLEFOUNDRY_TEST_ORIGIN: origin } },
+      {
+        stdio: "inherit",
+        env: {
+          ...process.env,
+          ROLEFOUNDRY_TEST_ORIGIN: origin,
+          ROLEFOUNDRY_APPROVED_FEEDS: fixtureFeeds,
+        },
+      },
     );
     tests.on("error", reject);
     tests.on("close", resolve);

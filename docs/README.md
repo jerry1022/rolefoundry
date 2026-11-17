@@ -6,6 +6,8 @@ RoleFoundry is an open-source AI career workspace. This documentation separates 
 
 - [Configuration status and handoff](CONFIGURATION.md): applied local settings, exact start commands and account-bound hosted verification.
 
+- [Ingestion processing core and remaining integration](INGESTION_SETUP.md): bounded parsing, review planning, approved-feed networking and persisted retry authority.
+
 - [Private manual application tracking](APPLICATIONS_SETUP.md): owner cycles, historical snapshots, fixed resume references, UTC follow-ups and event history.
 
 - [Private resume studio](RESUME_SETUP.md): source upload, immutable facts/claims, individual proposals, fixed exports, deletion cleanup and hosted setup.

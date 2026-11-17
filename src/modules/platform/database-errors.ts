@@ -1,5 +1,6 @@
 import { ApplicationError } from "./errors";
 const failures = {
+  RF_INGESTION_LIMIT: [409, "This import exceeds the batch, row or source history limit."],
   RF_APPLICATION_LIMIT: [409, "The tracker has reached its record, event or follow-up limit."],
   RF_RESUME_LIMIT: [409, "This resume operation exceeds the document, history or content limit."],
   RF_IMMUTABLE: [409, "Historical versions cannot be overwritten. Create a new confirmed version."],
