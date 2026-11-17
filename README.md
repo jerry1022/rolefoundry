@@ -85,7 +85,7 @@ Open `http://127.0.0.1:3200/account/`; receive your code in local Mailpit at por
 
 ### Continue module development
 
-Follow the [numbered delivery plan and dependency rules](docs/MODULE_DEVELOPMENT.md). Modules 01–09 implement identity, private profiles, published jobs, versioned bilingual skills, assessments, matching, reviewed learning, private resume workflows and manual application tracking. Required semantic matching and model-assisted wording remain integration gates with module 11. Module 10 (authorized ingestion) is next; the [complete design audit](docs/IMPLEMENTATION_AUDIT.md) retains every remaining acceptance gate. Each step updates its design, README and executable acceptance tests. Open PRs remain separate review gates.
+Follow the [numbered delivery plan and dependency rules](docs/MODULE_DEVELOPMENT.md). Modules 01–09 implement identity, private profiles, published jobs, versioned bilingual skills, assessments, matching, reviewed learning, private resume workflows and manual application tracking. Required semantic matching and model-assisted wording remain integration gates with module 11. Module 10 (authorized ingestion) is in progress: [bounded parsing, review planning, approved-feed network boundaries and durable retry authority](docs/INGESTION_SETUP.md) are implemented; batch persistence, review/publication, worker/API/UI and scheduling integration remain. The [complete design audit](docs/IMPLEMENTATION_AUDIT.md) retains every remaining acceptance gate. Each step updates its design, README and executable acceptance tests. Open PRs remain separate review gates.
 
 The local helper also enables the database catalog at `/jobs/`, initially empty. Follow [catalog setup](docs/CATALOG_SETUP.md) to review/publish permitted source records. With identity configured, sign in at `/account/` and visit `/skills/` for the private profile. Existing local data is imported only after preview and explicit approval. See [profile setup and API](docs/PROFILE_SETUP.md).
 
@@ -121,6 +121,7 @@ src/modules/resume   Private sources, confirmed facts/claims, grounded revisions
 src/modules/tasks    Queue/handler ports, lease-aware engine and Supabase adapter
 src/modules/platform Safe application errors and bounded HTTP helpers
 src/modules/applications Private cycles, source snapshots, fixed resume links, event history and UTC follow-ups
+src/modules/ingestion Bounded import/review-planning and approved-feed core; full integration pending
 supabase/            Identity/profile/catalog/dictionary/assessment/matching/learning/resume/tracking migrations, owner RLS and local OTP templates
 apps/worker/         Independent queue consumer and explicit dry-run example
 docs/                HLD, 13 module designs, API, data model and deployment
@@ -146,6 +147,7 @@ tests/               Domain tests and browser journeys
 - [Reviewed courses, two-week plans and private progress](docs/LEARNING_SETUP.md)
 - [Private resume sources, claim histories and fixed PDF exports](docs/RESUME_SETUP.md)
 - [Private manual tracking, history and follow-ups](docs/APPLICATIONS_SETUP.md)
+- [Ingestion processing core and remaining integration](docs/INGESTION_SETUP.md)
 - [Complete design acceptance audit](docs/IMPLEMENTATION_AUDIT.md)
 - [Incremental development and replaceable service boundaries](docs/MODULE_DEVELOPMENT.md)
 - [Production API contract](docs/API.md) and [data model](docs/DATA_MODEL.md)

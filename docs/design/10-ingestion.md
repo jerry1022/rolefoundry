@@ -6,7 +6,7 @@ Turn authorized job/course inputs into reviewable catalog records. Preserve prov
 
 ## Current scaffold
 
-Fixtures are authored locally. Job data is entirely fictional. Courses link to official provider pages and contain independent editorial summaries. The inspector shows provenance; there is no crawler, upload endpoint or scheduled fetch.
+Fixtures are authored locally. Job data is entirely fictional. Courses link to official provider pages and contain independent editorial summaries. The inspector shows provenance; there is no connected crawler, upload endpoint or scheduled fetch. A bounded parsing/normalization core, deployment-approved feed network boundary and durable provider-delay extension are implemented and tested; [current scope and remaining integration](../INGESTION_SETUP.md) explicitly retain batch/review persistence, actual import execution, API/UI, publication provenance and source scheduling. The module is not complete.
 
 ## Target data and contracts
 

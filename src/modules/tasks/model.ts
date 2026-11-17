@@ -44,7 +44,15 @@ export const taskLeaseSchema = z.object({
 });
 export type TaskLease = z.infer<typeof taskLeaseSchema>;
 export class TaskFailure extends Error {
-  constructor(readonly category: FailureCategory) {
+  constructor(
+    readonly category: FailureCategory,
+    readonly retryAfterSeconds?: number,
+  ) {
     super(`Task handler failed: ${category}`);
+    if (
+      retryAfterSeconds !== undefined &&
+      (!Number.isInteger(retryAfterSeconds) || retryAfterSeconds < 0 || retryAfterSeconds > 86400)
+    )
+      throw new Error("Invalid task retry delay");
   }
 }

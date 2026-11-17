@@ -97,7 +97,11 @@ export class TaskWorker {
         return;
       }
       const category = error instanceof TaskFailure ? error.category : "infrastructure";
-      const result = await this.queue.fail(lease, category);
+      const retryAfterSeconds = error instanceof TaskFailure ? error.retryAfterSeconds : undefined;
+      const result =
+        retryAfterSeconds === undefined
+          ? await this.queue.fail(lease, category)
+          : await this.queue.fail(lease, category, retryAfterSeconds);
       if (result.status === "failed" || result.status === "succeeded")
         await this.queue.acknowledge(lease);
       this.options.log?.({

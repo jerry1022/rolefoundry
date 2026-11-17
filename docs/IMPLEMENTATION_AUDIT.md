@@ -61,7 +61,7 @@ The integration suite runs against actual local GoTrue, PostgREST, PostgreSQL an
 ## 10 — Ingestion and source governance
 
 - Design: [10-ingestion.md](design/10-ingestion.md).
-- Status: Pending implementation and verification.
+- Status: Processing/network core and durable retry authority implemented/verified; batch/review persistence, actual import execution, administrator routes/UI, publication provenance and scheduling remain pending. See [current scope and required integration](INGESTION_SETUP.md). No live feed or complete import service is claimed.
 - Required acceptance scope: Exercise duplicate batches, cross-source duplicates, partial failures, malformed CSV, undisclosed salary, stale records, revoked source rights, redirects, private-network URLs and explicit closure. Audit every publication back to its batch and reviewer.
 
 ## 11 — AI Gateway
