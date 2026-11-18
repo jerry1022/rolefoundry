@@ -18,6 +18,7 @@ This guide distinguishes settings applied by the project from account-bound host
 | Private application tracking | Migration 09, existing identity/catalog settings | Track/reload a manual cycle, select an owner version and verify UTC follow-up/conflict/deletion behavior |
 | Private object cleanup | Resume registry and service-only janitor | Delete a synthetic source; verify download denial and drained cleanup rows |
 | Processor/font runtime | `Dockerfile.worker`, isolated processor and pinned font assets | Build the image; run `scripts/check-resume-worker-image.mjs` |
+| Local isolated database recovery | `npm run recovery:local` and `--verify-failure-cleanup` | Same-snapshot data/security/queue comparison, isolated send/archive and owned-resource cleanup; [scope and remaining gates](OPERATIONS_RECOVERY.md) |
 | Automated repository checks | GitHub Actions | PR checks cover types, unit/process/browser/database tests and worker image |
 
 Local test keys are generated and stored only in the ignored, owner-readable local environment file. They are not hosted credentials. Tests start their own web/worker processes and stop them when finished; a passing suite does not mean a private web server or production worker was left running. The local database/Auth/Storage services remain available for development.
@@ -61,6 +62,12 @@ The repository provides deployable web/worker code and migrations. A Vercel prev
 
 No new model key is needed for current fixed-choice scoring, rule-based matching/learning or exact-statement resume ordering. Any later provider setup will be documented with its actual chosen integration and verification, without placing secrets in tracked files or browser variables.
 
+## Planned LunaRoute fallback
+
+LunaRoute is recorded as an alternative provider in the [AI Gateway design](design/11-ai-gateway.md#provider-candidates-and-fallback-policy). This documentation change creates no credential, makes no provider request and enables no fallback. Primary-provider selection remains unresolved.
+
+The planned adapter uses a separate server/worker secret named `LUNAROUTE_API_KEY`, a deployment-approved gateway URL, and reviewed model IDs per purpose. Exact runtime configuration will be added with the adapter; these are planned requirements, not working application settings. Do not place provider keys in browser variables or silently forward another provider's key. Before activation, verify model/schema capabilities, recipient/data-use consent, shared quota/deadline handling and bilingual evaluation. Embedding replacement requires an isolated index/reindex. Official references: [API](https://docs.lunaroute.com/api/), [authentication](https://docs.lunaroute.com/getting-started/authentication/), [models](https://docs.lunaroute.com/api/models/).
+
 ## Detailed guides
 
 - [Identity, invitations, Auth hooks, hosted settings and admin bootstrap](IDENTITY_SETUP.md)
@@ -73,6 +80,7 @@ No new model key is needed for current fixed-choice scoring, rule-based matching
 - [Resume storage, permits, facts, exports and cleanup](RESUME_SETUP.md)
 - [Manual application cycles, history and UTC follow-ups](APPLICATIONS_SETUP.md)
 - [Ingestion feeds, schedules, review and deployment configuration](INGESTION_SETUP.md)
+- [Local database recovery rehearsal and remaining hosted/object recovery gates](OPERATIONS_RECOVERY.md)
 - [Web/static/container deployment](DEPLOYMENT.md)
 
 Configuration that can be completed with the available project/account authority is applied and tested as work proceeds. Unavailable account-bound steps remain explicit here with their purpose and verification. Hosted setup is not claimed complete from local tests or an unconfigured preview.

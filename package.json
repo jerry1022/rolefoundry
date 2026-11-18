@@ -23,7 +23,8 @@
     "architecture:check": "node scripts/check-boundaries.mjs",
     "worker:start": "node --conditions=react-server --import tsx apps/worker/src/main.ts",
     "worker:local": "node scripts/local-worker.mjs",
-    "resume:test": "vitest run --config vitest.resume.config.ts"
+    "resume:test": "vitest run --config vitest.resume.config.ts",
+    "recovery:local": "node scripts/recovery/local-rehearsal.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.7",
