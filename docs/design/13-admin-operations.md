@@ -8,6 +8,8 @@ Provide reviewed publication, system visibility and safe operational controls. T
 
 The public inspector displays fixture counts, source provenance and the integration roadmap. A local-only reset requires confirmation and never affects external accounts. It is intentionally labeled as a demo, not secure administration.
 
+The [local database recovery rehearsal](../OPERATIONS_RECOVERY.md) is now executable. It restores a consistent project database/queue snapshot into an owned disposable database, compares content and authorization metadata, probes the restored queue and verifies cleanup on both success and an intentional failure. This is a partial operational delivery; hosted/clean-cluster and Storage-object recovery, account export/deletion, task replay and consolidated administration remain pending.
+
 ## Production interface
 
 Server-authorized `/admin` routes manage catalog review, skills/aliases, question/rubric versions, source policies, invitations, quotas and failed task inspection. `audit_events` records actor, action, resource ID, timestamp and a non-sensitive change summary. Large operations use the task system. Publication changes are versioned and reversible through a new reviewed version.

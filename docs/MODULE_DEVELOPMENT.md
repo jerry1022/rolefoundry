@@ -20,7 +20,7 @@ See the [complete requirement audit](IMPLEMENTATION_AUDIT.md) before claiming th
 | 10 Ingestion | Authorized uploads/approved remote feeds/source schedules, actual worker, administrator review and immutable publication origins implemented; PR #10 | Real source rights/metadata, matching hosted definitions and owned deployment verification |
 | 11 AI Gateway | Port only | Replaceable adapters, bounded execution, output/reference validation and evaluation |
 | 12 Workers | Durable pgmq engine with assessment, matching, learning, resume and ingestion handlers implemented | Other domain handlers, provider reservations and invalidation outbox dispatch remain |
-| 13 Operations | Identity admin controls only | Reviewed publication, recovery, deletion and telemetry |
+| 13 Operations | Identity admin controls plus isolated local database/queue recovery and failure-cleanup rehearsal | Consolidated administration/replay, full account export/deletion, telemetry and hosted/Storage-object recovery |
 
 Work follows the document sequence, but dependencies are explicit. Modules 05–08 may establish producers and deterministic domain rules before 11/12. They cannot be described as running asynchronous AI features until the gateway/worker integration passes its own checks. Module 02 seeded the initial foreign-key registry; module 04 now adds versioned administration and runtime IDs. Keep each new module's review focused; use a stacked PR base if its predecessor is still open, without silently merging it.
 

@@ -79,7 +79,7 @@ The integration suite runs against actual local GoTrue, PostgREST, PostgreSQL an
 ## 13 — Administration and operations
 
 - Design: [13-admin-operations.md](design/13-admin-operations.md).
-- Status: Pending implementation and verification.
+- Status: Partial: [local isolated database/queue recovery and failure-cleanup rehearsal](OPERATIONS_RECOVERY.md) implemented and verified. Consolidated administration, replay, full account export/deletion, telemetry/alerts and hosted/Storage-object recovery remain pending.
 - Required acceptance scope: Verify non-admin rejection, audit coverage, publication rollback, missing-secret startup behavior, failed-task replay, deletion during execution and database/storage restoration. Confirm that deploys do not migrate production data automatically from an unreviewed pull request.
 
 ## Cross-module completion gates
