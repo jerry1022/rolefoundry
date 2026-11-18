@@ -61,6 +61,12 @@ The repository provides deployable web/worker code and migrations. A Vercel prev
 
 No new model key is needed for current fixed-choice scoring, rule-based matching/learning or exact-statement resume ordering. Any later provider setup will be documented with its actual chosen integration and verification, without placing secrets in tracked files or browser variables.
 
+## Planned LunaRoute fallback
+
+LunaRoute is recorded as an alternative provider in the [AI Gateway design](design/11-ai-gateway.md#provider-candidates-and-fallback-policy). This documentation change creates no credential, makes no provider request and enables no fallback. Primary-provider selection remains unresolved.
+
+The planned adapter uses a separate server/worker secret named `LUNAROUTE_API_KEY`, a deployment-approved gateway URL, and reviewed model IDs per purpose. Exact runtime configuration will be added with the adapter; these are planned requirements, not working application settings. Do not place provider keys in browser variables or silently forward another provider's key. Before activation, verify model/schema capabilities, recipient/data-use consent, shared quota/deadline handling and bilingual evaluation. Embedding replacement requires an isolated index/reindex. Official references: [API](https://docs.lunaroute.com/api/), [authentication](https://docs.lunaroute.com/getting-started/authentication/), [models](https://docs.lunaroute.com/api/models/).
+
 ## Detailed guides
 
 - [Identity, invitations, Auth hooks, hosted settings and admin bootstrap](IDENTITY_SETUP.md)

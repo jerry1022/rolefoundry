@@ -89,10 +89,12 @@ See [module designs](design/README.md) for interfaces and failure semantics.
 | Storage | Browser-local demo; private PostgreSQL records and resume Storage; published job/course catalogs | Extend persistence to remaining domains |
 | Search | Local demo filters; published SQL catalog and skill aliases | Add evaluated pgvector reranking |
 | Tasks | Supabase Queues/pgmq, lease-aware Node worker with assessment/matching/learning/resume handlers | Add provider/catalog handlers and invalidation consumers |
-| AI | No provider connected | Gateway adapter selected through a fixed evaluation set |
+| AI | No provider connected | Evaluate direct OpenAI as a primary candidate and LunaRoute as a fallback candidate through replaceable gateway adapters; selection/credentials remain pending |
 | Documents | Private Storage, isolated PDF.js/Mammoth parsing and controlled PDFKit export | Add evaluated model-assisted wording through the gateway |
 | Checks | TypeScript, Vitest, Playwright, actual database authorization/integration and Linux processor checks | Add provider evaluations and operational recovery rehearsals |
 | Build | npm lockfile, Node 24, Next.js | Reproducible CI; standard Next deployment or Docker |
+
+LunaRoute is included as a planned fallback behind the same AI Gateway port. Failover requires reviewed per-purpose routes, recipient consent and shared task/budget limits; it is not enabled today. See [provider candidates and fallback policy](design/11-ai-gateway.md#provider-candidates-and-fallback-policy).
 
 The scaffold intentionally uses npm and CSS rather than adding a monorepo orchestrator or a utility-CSS framework before they are needed. The target service boundaries remain unchanged.
 
