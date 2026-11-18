@@ -80,6 +80,7 @@ async function docker(args, output) {
 let source,
   restored,
   created = false,
+  directoryOwned = false,
   inSnapshot = false,
   result,
   failure;
@@ -102,6 +103,7 @@ try {
     throw Error("Project identity does not match the rehearsal target.");
   await directory(path.join(local, "recovery"));
   await mkdir(runDirectory, { mode: 0o700 });
+  directoryOwned = true;
   source = new pg.Client({
     connectionString: env.DB_URL,
     application_name: "rolefoundry-recovery-source",
@@ -290,12 +292,14 @@ try {
     }
   }
   await source?.end().catch(() => {});
-  for (const name of [
-    "database.dump",
-    "pgmq-meta.ndjson",
-    "pgmq-q_rolefoundry_tasks.ndjson",
-    "pgmq-a_rolefoundry_tasks.ndjson",
-  ])
+  for (const name of directoryOwned
+    ? [
+        "database.dump",
+        "pgmq-meta.ndjson",
+        "pgmq-q_rolefoundry_tasks.ndjson",
+        "pgmq-a_rolefoundry_tasks.ndjson",
+      ]
+    : [])
     await rm(path.join(runDirectory, name), { force: true }).catch(() => {
       failure = Error("Private archive cleanup failed; inspect the owned rehearsal directory.");
     });
