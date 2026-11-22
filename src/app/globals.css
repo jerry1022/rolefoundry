@@ -3563,3 +3563,8 @@ tr:last-child td {
   color: var(--green-dark);
   font-size: 12px;
 }
+.account-data-workspace { min-width: 0; overflow-wrap: anywhere; }
+.account-data-workspace .button-row { display: flex; flex-wrap: wrap; gap: 12px; }
+.account-data-workspace .button { white-space: normal; max-width: 100%; height: auto; }
+.account-data-workspace p { margin-block: 12px; }
+.account-data-workspace article .button { margin: 6px 8px 6px 0; }

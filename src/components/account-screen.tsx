@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState, type FormEvent } from "react";
+import { AccountDataEntry } from "./account-data/entry";
 import { z } from "zod";
 import { CheckCircle2, LogOut, Mail, ShieldCheck } from "lucide-react";
 import {
@@ -149,8 +150,8 @@ export function AccountScreen() {
           <div className="notice inline">
             <ShieldCheck size={18} />
             <span>
-              Sign-in protects your account and private skill profile. Other career pages still use
-              browser-local demo data; signing in does not upload or merge that data.
+              Sign-in protects your private career data. Browser-local demo data is imported only
+              through an explicit reviewed action; signing in does not upload or merge it.
             </span>
           </div>
           {error && (
@@ -336,6 +337,7 @@ export function AccountScreen() {
                   ))}
                 </div>
               </section>
+              <AccountDataEntry key={actor.userId} />
               {actor.role === "admin" && (
                 <section className="panel section-block">
                   <h2>Administrator controls</h2>

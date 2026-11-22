@@ -9,6 +9,7 @@ export const taskKinds = [
   "catalog.import",
   "catalog.fetch",
   "account.delete",
+  "account.export",
 ] as const;
 export const taskKindSchema = z.enum(taskKinds);
 export type TaskKind = z.infer<typeof taskKindSchema>;

@@ -34,6 +34,8 @@ For optional invitation-only authentication, local Supabase setup, runtime secre
 
 [Administrator task/worker diagnostics](OPERATIONS_SETUP.md) use the same private identity and worker settings after the operations migration. No extra telemetry account/key is required. The separate [local database/queue recovery rehearsal](OPERATIONS_RECOVERY.md) requires the owned Docker/Supabase stack; it establishes no hosted or Storage-object restore.
 
+[Private account archives](ACCOUNT_DATA_SETUP.md) add a private bucket and background handler through the account export migration. Use the same worker secrets; validate hosted archive transport/expiry/cleanup separately from the preview build.
+
 ## Vercel
 
 Import `jerry1022/rolefoundry` into Vercel, select Next.js, keep the repository root as Root Directory, and use the default install/build settings (`npm ci`, `npm run build`). Choose Node.js 24. No environment variables are needed for the demo. Leave `STATIC_EXPORT` and `NEXT_PUBLIC_BASE_PATH` unset. The repository's Deploy button opens this import flow; it does not imply that a deployment already exists.

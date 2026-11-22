@@ -1,3 +1,13 @@
+import {
+  AccountExportHandler,
+  AccountExportJanitor,
+} from "../../../src/modules/account-data/handler";
+import {
+  SupabaseAccountExportExecution,
+  SupabaseAccountExportCleanup,
+} from "../../../src/modules/account-data/adapters/supabase";
+import { SupabaseAccountArchiveStorage } from "../../../src/modules/account-data/adapters/storage";
+import { ZipAccountArchive } from "../../../src/modules/account-data/adapters/archive";
 import { createClient } from "@supabase/supabase-js";
 import { z } from "zod";
 import { WorkerPresence } from "../../../src/modules/tasks/presence";
@@ -81,6 +91,11 @@ const resumeJanitor = new ResumeStorageJanitor(
   new SupabaseResumeCleanupRepository(client),
   resumeStorage,
 );
+const accountStorage = new SupabaseAccountArchiveStorage(client),
+  accountJanitor = new AccountExportJanitor(
+    new SupabaseAccountExportCleanup(client),
+    accountStorage,
+  );
 const controller = new AbortController();
 for (const signal of ["SIGINT", "SIGTERM"] as const) process.on(signal, () => controller.abort());
 const feedRegistry = deploymentFeedRegistry(),
@@ -88,6 +103,11 @@ const feedRegistry = deploymentFeedRegistry(),
   feedScheduler = new FeedScheduler(feedStore, feedRegistry);
 let nextFeedScheduleAt = 0;
 const handlers = {
+  "account.export": new AccountExportHandler(
+    new SupabaseAccountExportExecution(client),
+    accountStorage,
+    new ZipAccountArchive(),
+  ),
   "catalog.fetch": new FeedImportHandler(
     feedStore,
     feedRegistry,
@@ -168,6 +188,14 @@ try {
         if (!controller.signal.aborted)
           console.error(
             JSON.stringify({ event: "resume.cleanup_unavailable", code: "RF_UNAVAILABLE" }),
+          );
+      }
+      try {
+        await accountJanitor.tick(controller.signal);
+      } catch {
+        if (!controller.signal.aborted)
+          console.error(
+            JSON.stringify({ event: "account.cleanup_unavailable", code: "RF_UNAVAILABLE" }),
           );
       }
       const count = await worker.tick(controller.signal);

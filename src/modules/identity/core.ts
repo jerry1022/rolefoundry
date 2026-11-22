@@ -58,6 +58,7 @@ const adminActions = new Set([
   "catalog:write",
 ]);
 const ownerActions = new Set([
+  "account:export",
   "applications:read",
   "applications:write",
   "resume:read",
