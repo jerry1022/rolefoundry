@@ -52,7 +52,7 @@ flowchart LR
 - Cross-module mutations use public service ports or a deliberately granted database transaction boundary. Do not reach into another module's internal tables from presentation code.
 - Keep existing demo APIs as compatibility exports where necessary; new production modules must not depend on the demo workspace shape.
 
-`npm run architecture:check` enforces the profile/job/skill/assessment/task/matching/learning/resume/applications/ingestion core and corresponding UI import boundaries with the TypeScript parser. Extend its coverage when adding modules. It supplements behavior tests; it does not prove runtime security or transactional correctness.
+`npm run architecture:check` enforces the profile/job/skill/assessment/task/matching/learning/resume/applications/ingestion/operations core and corresponding UI import boundaries with the TypeScript parser. Extend its coverage when adding modules. It supplements behavior tests; it does not prove runtime security or transactional correctness.
 
 ## Dictionary concurrency and historical joins
 

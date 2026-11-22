@@ -1,5 +1,9 @@
 import { createClient } from "@supabase/supabase-js";
 import { z } from "zod";
+import { WorkerPresence } from "../../../src/modules/tasks/presence";
+import { SupabaseWorkerPresenceStore } from "../../../src/modules/tasks/adapters/presence";
+import type { TaskHandler } from "../../../src/modules/tasks/ports";
+import type { TaskKind } from "../../../src/modules/tasks/model";
 import { TaskWorker } from "../../../src/modules/tasks/worker";
 import { SupabaseTaskQueue } from "../../../src/modules/tasks/adapters/supabase";
 import { SupabaseAssessmentGrader } from "../../../src/modules/assessment/adapters/supabase";
@@ -83,92 +87,114 @@ const feedRegistry = deploymentFeedRegistry(),
   feedStore = new SupabaseFeedExecutionStore(client),
   feedScheduler = new FeedScheduler(feedStore, feedRegistry);
 let nextFeedScheduleAt = 0;
-const worker = new TaskWorker(
-  new SupabaseTaskQueue(client),
-  {
-    "catalog.fetch": new FeedImportHandler(
-      feedStore,
-      feedRegistry,
-      new SafeFeedReader(),
-      new Sha256ImportDigest(),
-    ),
-    "catalog.import": new ImportHandler(
-      new SupabaseImportExecutionStore(client),
-      new Sha256ImportKey(),
-    ),
-    "resume.parse": new ResumeParseHandler(
-      new SupabaseResumeParseStore(client, resumeStorage, resumeDigest),
-      resumeProcessor,
-    ),
-    "resume.revise": new ResumeRevisionHandler(
-      new SupabaseResumeRevisionStore(client),
-      new ConfirmedFactOrderReviser(),
-    ),
-    "resume.export": new ResumeExportHandler(
-      new SupabaseResumeExportStore(client, resumeStorage, resumeDigest),
-      resumeProcessor,
-      resumeProcessor,
-    ),
-    "assessment.grade": new SupabaseAssessmentGrader(client),
-    "matches.refresh": new MatchingHandler(new SupabaseMatchingExecutionStore(client)),
-    "learning.plan": new LearningHandler(
-      new SupabaseLearningExecutionStore(client),
-      new RuleLearningGapAnalyzer(),
-    ),
-  },
-  {
-    workerId: crypto.randomUUID(),
-    leaseSeconds: config.data.seconds,
-    concurrency: config.data.concurrency,
-    log: (event) => console.log(JSON.stringify(event)),
-  },
-);
+const handlers = {
+  "catalog.fetch": new FeedImportHandler(
+    feedStore,
+    feedRegistry,
+    new SafeFeedReader(),
+    new Sha256ImportDigest(),
+  ),
+  "catalog.import": new ImportHandler(
+    new SupabaseImportExecutionStore(client),
+    new Sha256ImportKey(),
+  ),
+  "resume.parse": new ResumeParseHandler(
+    new SupabaseResumeParseStore(client, resumeStorage, resumeDigest),
+    resumeProcessor,
+  ),
+  "resume.revise": new ResumeRevisionHandler(
+    new SupabaseResumeRevisionStore(client),
+    new ConfirmedFactOrderReviser(),
+  ),
+  "resume.export": new ResumeExportHandler(
+    new SupabaseResumeExportStore(client, resumeStorage, resumeDigest),
+    resumeProcessor,
+    resumeProcessor,
+  ),
+  "assessment.grade": new SupabaseAssessmentGrader(client),
+  "matches.refresh": new MatchingHandler(new SupabaseMatchingExecutionStore(client)),
+  "learning.plan": new LearningHandler(
+    new SupabaseLearningExecutionStore(client),
+    new RuleLearningGapAnalyzer(),
+  ),
+} satisfies Partial<Record<TaskKind, TaskHandler>>;
+const workerId = crypto.randomUUID(),
+  presence = new WorkerPresence(
+    new SupabaseWorkerPresenceStore(client),
+    {
+      id: workerId,
+      kinds: Object.keys(handlers) as TaskKind[],
+      leaseSeconds: config.data.seconds,
+      concurrency: config.data.concurrency,
+    },
+    () =>
+      console.error(
+        JSON.stringify({ event: "worker.presence_unavailable", code: "RF_UNAVAILABLE" }),
+      ),
+  );
+const worker = new TaskWorker(new SupabaseTaskQueue(client), handlers, {
+  workerId,
+  leaseSeconds: config.data.seconds,
+  concurrency: config.data.concurrency,
+  log: (event) => console.log(JSON.stringify(event)),
+});
 const once = process.argv.includes("--once"),
   drain = process.argv.includes("--drain");
 let batches = 0;
-while (!controller.signal.aborted) {
-  try {
-    if (Date.now() >= nextFeedScheduleAt) {
-      nextFeedScheduleAt = Date.now() + 60000;
+const draining = () => void presence.report("draining");
+controller.signal.addEventListener("abort", draining, { once: true });
+if (controller.signal.aborted) draining();
+await presence.report("active");
+const presenceTimer = setInterval(() => void presence.report("active"), 10000);
+try {
+  while (!controller.signal.aborted) {
+    try {
+      if (Date.now() >= nextFeedScheduleAt) {
+        nextFeedScheduleAt = Date.now() + 60000;
+        try {
+          const queued = await feedScheduler.tick(controller.signal);
+          if (queued) console.log(JSON.stringify({ event: "feed.scheduled", queued }));
+        } catch {
+          if (!controller.signal.aborted)
+            console.error(
+              JSON.stringify({ event: "feed.schedule_unavailable", code: "RF_UNAVAILABLE" }),
+            );
+        }
+      }
       try {
-        const queued = await feedScheduler.tick(controller.signal);
-        if (queued) console.log(JSON.stringify({ event: "feed.scheduled", queued }));
+        const removed = await resumeJanitor.tick(controller.signal);
+        if (removed) console.log(JSON.stringify({ event: "resume.cleanup", removed }));
       } catch {
         if (!controller.signal.aborted)
           console.error(
-            JSON.stringify({ event: "feed.schedule_unavailable", code: "RF_UNAVAILABLE" }),
+            JSON.stringify({ event: "resume.cleanup_unavailable", code: "RF_UNAVAILABLE" }),
           );
       }
-    }
-    try {
-      const removed = await resumeJanitor.tick(controller.signal);
-      if (removed) console.log(JSON.stringify({ event: "resume.cleanup", removed }));
+      const count = await worker.tick(controller.signal);
+      batches++;
+      if (once || (drain && (count === 0 || batches >= 100))) break;
+      if (!count)
+        await new Promise<void>((resolve) => {
+          const done = () => {
+            clearTimeout(timer);
+            controller.signal.removeEventListener("abort", done);
+            resolve();
+          };
+          const timer = setTimeout(done, 1000);
+          controller.signal.addEventListener("abort", done, { once: true });
+        });
     } catch {
-      if (!controller.signal.aborted)
-        console.error(
-          JSON.stringify({ event: "resume.cleanup_unavailable", code: "RF_UNAVAILABLE" }),
-        );
+      console.error(JSON.stringify({ event: "worker.unavailable", code: "RF_UNAVAILABLE" }));
+      if (once || drain) {
+        process.exitCode = 1;
+        break;
+      }
+      await new Promise((resolve) => setTimeout(resolve, 1000));
     }
-    const count = await worker.tick(controller.signal);
-    batches++;
-    if (once || (drain && (count === 0 || batches >= 100))) break;
-    if (!count)
-      await new Promise<void>((resolve) => {
-        const done = () => {
-          clearTimeout(timer);
-          controller.signal.removeEventListener("abort", done);
-          resolve();
-        };
-        const timer = setTimeout(done, 1000);
-        controller.signal.addEventListener("abort", done, { once: true });
-      });
-  } catch {
-    console.error(JSON.stringify({ event: "worker.unavailable", code: "RF_UNAVAILABLE" }));
-    if (once || drain) {
-      process.exitCode = 1;
-      break;
-    }
-    await new Promise((resolve) => setTimeout(resolve, 1000));
   }
+} finally {
+  clearInterval(presenceTimer);
+  controller.signal.removeEventListener("abort", draining);
+  await presence.report("stopped");
 }
 console.log(JSON.stringify({ event: "worker.stopped" }));

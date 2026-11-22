@@ -26,3 +26,14 @@ export interface TaskLog {
   taskId?: string;
   code?: string;
 }
+
+export type WorkerState = "active" | "draining" | "stopped";
+export interface WorkerDescriptor {
+  id: string;
+  kinds: TaskKind[];
+  leaseSeconds: number;
+  concurrency: number;
+}
+export interface WorkerPresenceStore {
+  report(worker: WorkerDescriptor, state: WorkerState): Promise<void>;
+}

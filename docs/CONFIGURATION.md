@@ -18,6 +18,7 @@ This guide distinguishes settings applied by the project from account-bound host
 | Private application tracking | Migration 09, existing identity/catalog settings | Track/reload a manual cycle, select an owner version and verify UTC follow-up/conflict/deletion behavior |
 | Private object cleanup | Resume registry and service-only janitor | Delete a synthetic source; verify download denial and drained cleanup rows |
 | Processor/font runtime | `Dockerfile.worker`, isolated processor and pinned font assets | Build the image; run `scripts/check-resume-worker-image.mjs` |
+| Administrator task/worker diagnostics | Private `/admin/`, existing administrator session and worker configuration | Apply the operations migration; [setup, read authorization and heartbeat/retention behavior](OPERATIONS_SETUP.md); no additional account/key required |
 | Local isolated database recovery | `npm run recovery:local` and `--verify-failure-cleanup` | Same-snapshot data/security/queue comparison, isolated send/archive and owned-resource cleanup; [scope and remaining gates](OPERATIONS_RECOVERY.md) |
 | Automated repository checks | GitHub Actions | PR checks cover types, unit/process/browser/database tests and worker image |
 
@@ -80,6 +81,7 @@ The planned adapter uses a separate server/worker secret named `LUNAROUTE_API_KE
 - [Resume storage, permits, facts, exports and cleanup](RESUME_SETUP.md)
 - [Manual application cycles, history and UTC follow-ups](APPLICATIONS_SETUP.md)
 - [Ingestion feeds, schedules, review and deployment configuration](INGESTION_SETUP.md)
+- [Administrator diagnostics and worker presence](OPERATIONS_SETUP.md)
 - [Local database recovery rehearsal and remaining hosted/object recovery gates](OPERATIONS_RECOVERY.md)
 - [Web/static/container deployment](DEPLOYMENT.md)
 

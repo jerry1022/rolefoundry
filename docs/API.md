@@ -93,3 +93,17 @@ These private/no-store routes derive the verified administrator and use the same
 | GET `/api/v1/admin/imports/feed-runs/{id}` | `{data:feedRun}`; source/definition/task IDs, fetch status, safe error, created time and optional sealed batch ID |
 
 A successful fetch means its immutable batch and normalization task committed; it does not publish catalog records. Open that batch through the existing import API and review each proposal. Empty valid feeds create zero-row review batches without inferring closure. Scheduled windows use a service-only bounded worker operation, not a public cron route. Revoked/inactive owners, unavailable definitions, pending work and persisted provider waits are skipped. Early resume and stale source/definition/target writes return conflicts. See [ingestion setup](INGESTION_SETUP.md).
+
+## Administrator operations diagnostics
+
+All endpoints are read-only, require a current administrator session at both HTTP and database boundaries, audit successful reads, and return `Cache-Control: no-store`. Raw tables and producer helpers are service-only. See [setup and exact DTO/retention scope](OPERATIONS_SETUP.md).
+
+| Method and path | Contract |
+| --- | --- |
+| GET `/api/v1/admin/operations` | `{data: summary}`: observed timestamp, per-kind queue/ready/running/terminal/retry/lease ages, fresh active coverage, delivery/poison counts |
+| GET `/api/v1/admin/operations/tasks` | Optional `kind`, `status`, opaque `cursor`; `{data: task[], nextCursor}`; fixed 20, descending `(created_at,id)` |
+| GET `/api/v1/admin/operations/tasks/{id}` | `{data: task}`; safe metadata and result-present boolean; missing UUID returns 404 |
+| GET `/api/v1/admin/operations/tasks/{id}/events` | Optional opaque `cursor`; `{data: event[], nextCursor}`; fixed 20, descending bigint sequence |
+| GET `/api/v1/admin/operations/workers` | `{data: {observedAt,data: worker[],truncated}}`; latest 100, active/draining/stopped/stale observations |
+
+Unknown/duplicate query parameters, malformed identifiers/cursors, or cursor reuse across filters/tasks return 400. Cursors do not convey authority; every page rechecks the current role. Inputs, owner identities, source/result references, lease tokens, messages and untrusted classification strings are excluded. No replay endpoint is implemented.

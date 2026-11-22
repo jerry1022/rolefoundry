@@ -3519,3 +3519,47 @@ tr:last-child td {
 .ingestion-workspace details {
   margin-block: 12px;
 }
+
+/* Operational metadata stays inside the administrator panel at mobile widths. */
+.operations-workspace {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.operations-workspace fieldset,
+.operations-workspace .panel,
+.operations-workspace label {
+  min-width: 0;
+}
+.operations-workspace .button {
+  white-space: normal;
+  max-width: 100%;
+  height: auto;
+}
+.operations-workspace input,
+.operations-workspace select {
+  min-width: 0;
+  max-width: 100%;
+}
+.operations-workspace table {
+  min-width: 680px;
+}
+.operations-workspace td,
+.operations-workspace th {
+  white-space: normal;
+}
+.operations-workspace p,
+.operations-workspace dl,
+.operations-workspace h4 {
+  margin-block: 12px;
+}
+.operations-workspace dd {
+  margin: 4px 0 12px;
+}
+.operations-workspace td {
+  color: var(--ink);
+  font-size: 13px;
+}
+.operations-workspace th {
+  color: var(--green-dark);
+  font-size: 12px;
+}
