@@ -1,4 +1,6 @@
 "use client";
+import { DeletionAdministration } from "../account-deletion/administration";
+import { createDeletionAdminClient } from "@/modules/account-deletion/adapters/http-client";
 import { AdminScreen } from "../screens";
 import { PageHeading } from "../ui/page-heading";
 import { createBrowserTransport } from "@/modules/platform/browser-http";
@@ -10,6 +12,7 @@ import { OperationsAdministration } from "../operations/administration";
 const client = createImportAdminClient(),
   feedClient = createFeedAdminClient(),
   operations = createOperationsClient(),
+  deletion = createDeletionAdminClient(),
   request = createBrowserTransport();
 async function isAdmin() {
   try {
@@ -29,6 +32,7 @@ export function AdminWorkspace() {
         description="Verified administrator sessions manage authorized imports and inspect operational metadata. Publication always follows the domain review workflow."
       />
       <OperationsAdministration client={operations} isAdmin={isAdmin} />
+      <DeletionAdministration client={deletion} isAdmin={isAdmin} />
       <ImportAdministration client={client} feedClient={feedClient} isAdmin={isAdmin} />
     </>
   );

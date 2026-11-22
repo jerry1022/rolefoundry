@@ -1,4 +1,14 @@
 import {
+  AccountDeletionHandler,
+  LateDeletionJanitor,
+} from "../../../src/modules/account-deletion/handler";
+import {
+  SupabaseDeletionExecution,
+  SupabaseLateDeletionStore,
+} from "../../../src/modules/account-deletion/adapters/supabase";
+import { SupabaseDeletionDirectory } from "../../../src/modules/account-deletion/adapters/directory";
+import { SupabaseDeletionFiles } from "../../../src/modules/account-deletion/adapters/storage";
+import {
   AccountExportHandler,
   AccountExportJanitor,
 } from "../../../src/modules/account-data/handler";
@@ -96,6 +106,10 @@ const accountStorage = new SupabaseAccountArchiveStorage(client),
     new SupabaseAccountExportCleanup(client),
     accountStorage,
   );
+const deletionJanitor = new LateDeletionJanitor(
+  new SupabaseLateDeletionStore(client),
+  new SupabaseDeletionFiles(client),
+);
 const controller = new AbortController();
 for (const signal of ["SIGINT", "SIGTERM"] as const) process.on(signal, () => controller.abort());
 const feedRegistry = deploymentFeedRegistry(),
@@ -103,6 +117,11 @@ const feedRegistry = deploymentFeedRegistry(),
   feedScheduler = new FeedScheduler(feedStore, feedRegistry);
 let nextFeedScheduleAt = 0;
 const handlers = {
+  "account.delete": new AccountDeletionHandler(
+    new SupabaseDeletionExecution(client),
+    new SupabaseDeletionDirectory(client),
+    new SupabaseDeletionFiles(client),
+  ),
   "account.export": new AccountExportHandler(
     new SupabaseAccountExportExecution(client),
     accountStorage,
@@ -196,6 +215,17 @@ try {
         if (!controller.signal.aborted)
           console.error(
             JSON.stringify({ event: "account.cleanup_unavailable", code: "RF_UNAVAILABLE" }),
+          );
+      }
+      try {
+        await deletionJanitor.tick(controller.signal);
+      } catch {
+        if (!controller.signal.aborted)
+          console.error(
+            JSON.stringify({
+              event: "account.erasure_cleanup_unavailable",
+              code: "RF_UNAVAILABLE",
+            }),
           );
       }
       const count = await worker.tick(controller.signal);

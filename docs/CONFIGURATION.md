@@ -18,6 +18,7 @@ This guide distinguishes settings applied by the project from account-bound host
 | Private application tracking | Migration 09, existing identity/catalog settings | Track/reload a manual cycle, select an owner version and verify UTC follow-up/conflict/deletion behavior |
 | Private object cleanup | Resume registry and service-only janitor | Delete a synthetic source; verify download denial and drained cleanup rows |
 | Processor/font runtime | `Dockerfile.worker`, isolated processor and pinned font assets | Build the image; run `scripts/check-resume-worker-image.mjs` |
+| Live account deletion and recovery | Existing identity/worker settings; apply the deletion migration | No new key/account; [private receipts, operator recovery, ledger export and retention boundaries](ACCOUNT_DELETION_SETUP.md) |
 | Private account exports | Existing identity and worker settings, private bucket created by migration | No new secret/account; [setup, format, expiry and hosted transport checks](ACCOUNT_DATA_SETUP.md) |
 | Administrator task/worker diagnostics | Private `/admin/`, existing administrator session and worker configuration | Apply the operations migration; [setup, read authorization and heartbeat/retention behavior](OPERATIONS_SETUP.md); no additional account/key required |
 | Local isolated database recovery | `npm run recovery:local` and `--verify-failure-cleanup` | Same-snapshot data/security/queue comparison, isolated send/archive and owned-resource cleanup; [scope and remaining gates](OPERATIONS_RECOVERY.md) |
@@ -59,7 +60,7 @@ The repository provides deployable web/worker code and migrations. A Vercel prev
 | Persistent worker host | Deploy `Dockerfile.worker` outside Vercel Functions; store the matching project's server credentials in its secret manager | Tasks finish without an open web request; monitor retries, queue age and cleanup |
 | Private source Storage | Migration 08 creates a private PDF/DOCX bucket and restrictive policies; project-wide limit must allow at least 5 MiB | Cross-user/public downloads fail; fixed owner download, expiry and deletion pass |
 | Authorized catalogs and expert content | Record source permissions, reviewed metadata and question/rubric review in the implemented admin UIs | Audit provenance and inspect representative results; fixtures do not satisfy real-content review |
-| Backups, alerts and full account deletion operation | Module 13 runbooks and executable controls remain in progress | Rehearse an isolated restoration and deletion replay before a real-person pilot |
+| Backups, alerts and restore deletion replay | Live erasure/ledger export are implemented; cross-environment recovery remains in progress | Store a protected ledger outside snapshots, then validate reapplication and object restoration before a real-person pilot |
 | Model-assisted ranking/wording | Required module 11 integration and evaluation are still pending | Complete the gateway/provider/data-use evaluation before claiming AI features |
 
 No new model key is needed for current fixed-choice scoring, rule-based matching/learning or exact-statement resume ordering. Any later provider setup will be documented with its actual chosen integration and verification, without placing secrets in tracked files or browser variables.
@@ -82,6 +83,7 @@ The planned adapter uses a separate server/worker secret named `LUNAROUTE_API_KE
 - [Resume storage, permits, facts, exports and cleanup](RESUME_SETUP.md)
 - [Manual application cycles, history and UTC follow-ups](APPLICATIONS_SETUP.md)
 - [Ingestion feeds, schedules, review and deployment configuration](INGESTION_SETUP.md)
+- [Live account deletion, receipts and recovery](ACCOUNT_DELETION_SETUP.md)
 - [Private account exports and cleanup](ACCOUNT_DATA_SETUP.md)
 - [Administrator diagnostics and worker presence](OPERATIONS_SETUP.md)
 - [Local database recovery rehearsal and remaining hosted/object recovery gates](OPERATIONS_RECOVERY.md)

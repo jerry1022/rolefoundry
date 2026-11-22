@@ -29,6 +29,7 @@ export const taskSchema = z.object({
   status: taskStatusSchema,
   attempts: z.number().int().nonnegative(),
   maxAttempts: z.number().int().positive(),
+  retryPolicy: z.enum(["bounded", "until-complete"]).optional(),
   createdAt: z.string(),
   startedAt: z.string().nullable(),
   finishedAt: z.string().nullable(),

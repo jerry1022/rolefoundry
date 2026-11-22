@@ -121,4 +121,4 @@ Pages and layouts use `.tsx`; dynamic Route Handlers use `route.ts`. The GitHub 
 
 ## Private data portability
 
-The configured account screen now provides [sealed private account exports](ACCOUNT_DATA_SETUP.md), durable ZIP creation, owner download/removal and cleanup. It uses existing identity/worker settings plus the account export migration; no provider secret or analysis consent is required. Full self-service account deletion remains pending.
+The configured account screen now provides [sealed private account exports](ACCOUNT_DATA_SETUP.md), durable ZIP creation, owner download/removal and cleanup. It uses existing identity/worker settings plus the account export migration; no provider secret or analysis consent is required. [Self-service live deletion](ACCOUNT_DELETION_SETUP.md) now disables private access and sign-in, removes Auth/private data through persistent erasure tasks and offers private signed-out receipts. Off-host restore deletion replay remains pending.

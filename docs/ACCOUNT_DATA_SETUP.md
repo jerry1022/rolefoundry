@@ -37,7 +37,7 @@ Committed resume source PDFs/DOCX and completed generated PDFs are copied byte-f
 
 ## Remaining account lifecycle work
 
-The export flow is implemented; self-service account deletion is still pending. A complete deletion coordinator must durably track work after Auth/profile removal, block new sessions/work immediately, reconcile outstanding writes and file cleanup, remove remaining identifying records and apply a minimized deletion ledger during restore. Existing hard-deletion and deactivation guards plus the new artifact janitor are prerequisites, not a claim that the full lifecycle has been delivered. See [the complete design audit](IMPLEMENTATION_AUDIT.md).
+The [self-service live deletion coordinator](ACCOUNT_DELETION_SETUP.md) now blocks access, survives Auth/profile removal, drains private files and minimizes retained identifiers. It removes account archives as well as their source data. Trusted post-backup ledger reapplication, external backup expiry and hosted recovery remain separate operational gates. See [the complete design audit](IMPLEMENTATION_AUDIT.md).
 
 ## Browser evidence
 

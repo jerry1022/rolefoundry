@@ -82,7 +82,11 @@ export class TaskWorker {
     const deadline = setTimeout(() => local.abort(), this.options.executionTimeoutMs ?? 60_000);
     try {
       this.options.log?.({ event: "task.started", taskId: lease.taskId });
-      await Promise.race([handler.execute(lease, local.signal), interrupted]);
+      const outcome = await Promise.race([handler.execute(lease, local.signal), interrupted]);
+      if (outcome === "deferred") {
+        this.options.log?.({ event: "task.deferred", taskId: lease.taskId });
+        return;
+      }
       if (!lost) {
         await this.queue.acknowledge(lease);
         this.options.log?.({ event: "task.completed", taskId: lease.taskId });

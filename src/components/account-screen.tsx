@@ -1,5 +1,11 @@
 "use client";
 import { useEffect, useState, type FormEvent } from "react";
+import {
+  DeletionRequestEntry,
+  DeletionProgressEntry,
+  DeletionReceiptEntry,
+} from "./account-deletion/entry";
+import type { DeletionReceipt } from "@/modules/account-deletion/model";
 import { AccountDataEntry } from "./account-data/entry";
 import { z } from "zod";
 import { CheckCircle2, LogOut, Mail, ShieldCheck } from "lucide-react";
@@ -46,6 +52,7 @@ type Usage = z.infer<typeof usageSchema>;
 
 export function AccountScreen() {
   const [actor, setActor] = useState<Actor | null>(null);
+  const [deletionReceipt, setDeletionReceipt] = useState<DeletionReceipt | null>(null);
   const [policies, setPolicies] = useState<Policy[]>([]);
   const [consents, setConsents] = useState<Consent[]>([]);
   const [usage, setUsage] = useState<Usage[]>([]);
@@ -168,6 +175,8 @@ export function AccountScreen() {
             <section className="panel" aria-live="polite">
               Loading your account…
             </section>
+          ) : deletionReceipt ? (
+            <DeletionProgressEntry receipt={deletionReceipt} />
           ) : !actor ? (
             <section className="panel account-signin">
               <span className="large-icon">
@@ -338,6 +347,19 @@ export function AccountScreen() {
                 </div>
               </section>
               <AccountDataEntry key={actor.userId} />
+              <DeletionRequestEntry
+                onAccepted={(receipt) => {
+                  setDeletionReceipt(receipt);
+                  setActor(null);
+                  setConsents([]);
+                  setUsage([]);
+                  setEmail("");
+                  setCode("");
+                  setCodeSent(false);
+                  setError("");
+                  setMessage("");
+                }}
+              />
               {actor.role === "admin" && (
                 <section className="panel section-block">
                   <h2>Administrator controls</h2>
@@ -479,6 +501,7 @@ export function AccountScreen() {
               )}
             </>
           )}
+          <DeletionReceiptEntry />
         </>
       )}
     </>
