@@ -531,13 +531,23 @@ it("clears every mounted private editor after role revocation", async () => {
     await webExpect(
       bank.getByText(`${prefix} private answer context`, { exact: true }),
     ).toBeVisible();
+    await bank.getByLabel("Rubric key", { exact: true }).fill(`${prefix}-denied`);
+    await bank
+      .getByLabel("Rubric description", { exact: true })
+      .fill("No mutation after role loss");
+    const denied = page.getByText("Administration requires a current administrator session.", {
+      exact: false,
+    });
     await stack.sql.query("update public.profiles set role='member' where user_id=$1", [admin.id]);
     try {
-      await bank.getByLabel("Rubric key", { exact: true }).fill(`${prefix}-denied`);
+      // Another mounted panel can discover revocation before this mutation is clicked.
+      // Both paths must clear all private editors and publish no rubric.
       await bank
-        .getByLabel("Rubric description", { exact: true })
-        .fill("No mutation after role loss");
-      await bank.getByRole("button", { name: "Create rubric version", exact: true }).click();
+        .getByRole("button", { name: "Create rubric version", exact: true })
+        .click({ timeout: 2000 })
+        .catch(async () => {
+          await webExpect(denied).toBeVisible();
+        });
       await webExpect(
         page.getByText("Administration requires a current administrator session.", {
           exact: false,
@@ -549,6 +559,13 @@ it("clears every mounted private editor after role revocation", async () => {
       await webExpect(page.getByLabel("Invitations and allowances", { exact: true })).toHaveCount(
         0,
       );
+      expect(
+        (
+          await stack.sql.query("select 1 from public.rubric_versions where key=$1", [
+            `${prefix}-denied`,
+          ])
+        ).rowCount,
+      ).toBe(0);
     } finally {
       await stack.sql.query("update public.profiles set role='admin' where user_id=$1", [admin.id]);
     }
