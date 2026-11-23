@@ -411,6 +411,7 @@ it("manages invitations, future quotas and eligible refunds on mobile with share
   const browser = await chromium.launch();
   try {
     const page = await browser.newPage({ viewport: { width: 390, height: 844 } });
+    page.setDefaultTimeout(8000);
     await cookie(page);
     await page.goto(`${stack.origin}/admin/`);
     const panel = page.getByLabel("Invitations and allowances", { exact: true });
@@ -522,6 +523,7 @@ it("clears every mounted private editor after role revocation", async () => {
   const browser = await chromium.launch();
   try {
     const page = await browser.newPage({ viewport: { width: 390, height: 844 } });
+    page.setDefaultTimeout(8000);
     await cookie(page);
     await page.goto(`${stack.origin}/admin/`);
     const bank = page.getByLabel("Assessment questions and rubrics", { exact: true });
@@ -559,6 +561,7 @@ it("discards a delayed private bank reply after closing its editor and losing ad
   let release = () => {};
   try {
     const page = await browser.newPage({ viewport: { width: 390, height: 844 } });
+    page.setDefaultTimeout(8000);
     await cookie(page);
     await page.goto(`${stack.origin}/admin/`);
     let captured!: () => void;
@@ -576,7 +579,12 @@ it("discards a delayed private bank reply after closing its editor and losing ad
     });
     const bank = page.getByLabel("Assessment questions and rubrics", { exact: true });
     await bank.locator("summary").click();
-    await loaded;
+    await Promise.race([
+      loaded,
+      new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error("Private bank request was not captured")), 8000),
+      ),
+    ]);
     await bank.locator("summary").click();
     await webExpect(
       bank.getByRole("heading", { name: "Question bank administration", exact: true }),
