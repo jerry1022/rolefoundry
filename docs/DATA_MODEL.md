@@ -116,3 +116,7 @@ Completion clears contact hashes/captured invitation IDs, nulls operational prof
 ### Audited task recovery
 
 `task_replays` binds one request UUID and old task to one new task, nullable administrator actor, coded reason and creation time. The previous-task FK cascades ordinary deletion; the new-task/actor FKs become null where necessary. Browser roles have no raw access, and the service role has read access only. Domain-owned private binding functions revalidate the original accepted input and update its current task pointer in the same transaction as enqueue/linkage/audit. The old task row and sealed input remain unchanged; assessment execution increments its existing revision while retaining sealed responses. Operational recovery links contain no copied private content and are excluded from the owner archive format. See [recovery scope and retention](TASK_REPLAY_SETUP.md).
+
+### Consolidated identity administration
+
+The existing invitation/quota tables remain authoritative. New administrator-only functions return bounded minimized pages; no contact hash or user relationship is exposed by the invitation directory. Unused-invitation revocation sets its expiry under the row lock used for activation and records a coded identity audit event; used records conflict. No new account-offboarding authority or table editor is introduced. Quota read DTOs preserve bigint IDs as decimal strings. Shared UI/client ports and the independent directory service/store are specified in [administrator setup](ADMIN_WORKSPACE_SETUP.md).

@@ -990,7 +990,9 @@ it("keeps import controls and batch contents unavailable to anonymous and member
       });
       await page.goto(`${stack.origin}/admin/`);
       await webExpect(
-        page.getByText("Administrator access is required.", { exact: false }),
+        page.getByText("Administration requires a current administrator session.", {
+          exact: false,
+        }),
       ).toBeVisible();
       await webExpect(page.getByLabel("Import content", { exact: true })).toHaveCount(0);
       expect(requests).toEqual([]);

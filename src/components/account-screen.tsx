@@ -7,6 +7,8 @@ import {
 } from "./account-deletion/entry";
 import type { DeletionReceipt } from "@/modules/account-deletion/model";
 import { AccountDataEntry } from "./account-data/entry";
+import { IdentityAdministration } from "./identity/administration";
+import { createIdentityAdminClient } from "@/modules/identity/adapters/admin-client";
 import { z } from "zod";
 import { CheckCircle2, LogOut, Mail, ShieldCheck } from "lucide-react";
 import {
@@ -14,11 +16,10 @@ import {
   consentSchema,
   policySchema,
   usageSchema,
-  utcWeekStart,
   type Actor,
-  type AnalysisFeature,
 } from "@/modules/identity/core";
 
+const identityAdminClient = createIdentityAdminClient();
 const enabled = process.env.NEXT_PUBLIC_IDENTITY_ENABLED === "true";
 const base = `${process.env.NEXT_PUBLIC_BASE_PATH || ""}/api/v1/identity`;
 class AccountRequestError extends Error {
@@ -63,17 +64,6 @@ export function AccountScreen() {
   const [email, setEmail] = useState("");
   const [code, setCode] = useState("");
   const [codeSent, setCodeSent] = useState(false);
-  const [inviteEmail, setInviteEmail] = useState("");
-  const [inviteDate, setInviteDate] = useState(() =>
-    new Date(Date.now() + 7 * 86400000).toISOString().slice(0, 10),
-  );
-  const [feature, setFeature] = useState<AnalysisFeature>("assessment");
-  const [limit, setLimit] = useState(3);
-  const [effectiveDate, setEffectiveDate] = useState(() =>
-    new Date(utcWeekStart(new Date()).getTime() + 7 * 86400000).toISOString().slice(0, 10),
-  );
-  const [refundTask, setRefundTask] = useState("");
-  const [refundReason, setRefundReason] = useState("");
 
   async function refresh() {
     const currentPolicies = z.array(policySchema).parse(await request("policies"));
@@ -361,143 +351,11 @@ export function AccountScreen() {
                 }}
               />
               {actor.role === "admin" && (
-                <section className="panel section-block">
-                  <h2>Administrator controls</h2>
-                  <div className="account-admin-grid">
-                    <form
-                      onSubmit={(event) =>
-                        submit(event, async () => {
-                          await request("admin/invitations", "POST", {
-                            email: inviteEmail,
-                            expiresAt: `${inviteDate}T23:59:59.000Z`,
-                          });
-                          setInviteEmail("");
-                          setMessage(
-                            "Invitation added. The recipient can sign in with their email before it expires.",
-                          );
-                        })
-                      }
-                    >
-                      <h3>Invite a member</h3>
-                      <label className="field-label">
-                        Invite email
-                        <input
-                          type="email"
-                          className="text-input"
-                          required
-                          value={inviteEmail}
-                          onChange={(event) => setInviteEmail(event.target.value)}
-                        />
-                      </label>
-                      <label className="field-label">
-                        Invitation expires (UTC)
-                        <input
-                          type="date"
-                          className="text-input"
-                          required
-                          value={inviteDate}
-                          onChange={(event) => setInviteDate(event.target.value)}
-                        />
-                      </label>
-                      <button className="button primary" disabled={busy}>
-                        Add invitation
-                      </button>
-                    </form>
-                    <form
-                      onSubmit={(event) =>
-                        submit(event, async () => {
-                          await request("admin/quota-policies", "POST", {
-                            feature,
-                            limit,
-                            effectiveFrom: `${effectiveDate}T00:00:00.000Z`,
-                          });
-                          setMessage("Quota policy scheduled. Existing usage remains unchanged.");
-                        })
-                      }
-                    >
-                      <h3>Schedule a future quota</h3>
-                      <label className="field-label">
-                        Analysis feature
-                        <select
-                          className="text-input"
-                          value={feature}
-                          onChange={(event) => setFeature(event.target.value as AnalysisFeature)}
-                        >
-                          <option value="assessment">Assessment</option>
-                          <option value="resume">Resume</option>
-                        </select>
-                      </label>
-                      <label className="field-label">
-                        Weekly limit
-                        <input
-                          type="number"
-                          min={0}
-                          max={10000}
-                          className="text-input"
-                          required
-                          value={limit}
-                          onChange={(event) => setLimit(Number(event.target.value))}
-                        />
-                      </label>
-                      <label className="field-label">
-                        Effective Monday (UTC)
-                        <input
-                          type="date"
-                          className="text-input"
-                          required
-                          value={effectiveDate}
-                          onChange={(event) => setEffectiveDate(event.target.value)}
-                        />
-                      </label>
-                      <button className="button primary" disabled={busy}>
-                        Schedule quota
-                      </button>
-                    </form>
-                    <form
-                      onSubmit={(event) =>
-                        submit(event, async () => {
-                          await request("admin/refunds", "POST", {
-                            taskId: refundTask,
-                            reason: refundReason,
-                          });
-                          setRefundTask("");
-                          setRefundReason("");
-                          await refresh();
-                          setMessage(
-                            "The infrastructure-failure refund was recorded in the audit log.",
-                          );
-                        })
-                      }
-                    >
-                      <h3>Refund failed analysis</h3>
-                      <p className="muted">
-                        Only consumed analyses that failed because of infrastructure are eligible.
-                      </p>
-                      <label className="field-label">
-                        Task ID
-                        <input
-                          className="text-input"
-                          required
-                          value={refundTask}
-                          onChange={(event) => setRefundTask(event.target.value)}
-                        />
-                      </label>
-                      <label className="field-label">
-                        Refund reason
-                        <textarea
-                          className="text-input"
-                          required
-                          maxLength={1000}
-                          value={refundReason}
-                          onChange={(event) => setRefundReason(event.target.value)}
-                        />
-                      </label>
-                      <button className="button secondary" disabled={busy}>
-                        Record audited refund
-                      </button>
-                    </form>
-                  </div>
-                </section>
+                <IdentityAdministration
+                  client={identityAdminClient}
+                  onChanged={refresh}
+                  onUnavailable={() => void refresh().catch(() => setActor(null))}
+                />
               )}
             </>
           )}

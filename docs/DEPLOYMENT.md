@@ -72,3 +72,5 @@ Deploy web, worker and managed Supabase as separate components. Keep regions clo
 The design uses Google Fonts with system fallbacks. If external fonts are blocked, the interface remains usable. A privacy-focused deployment can self-host licensed fonts later. The demo makes no AI, job-feed or course-progress requests; official course links open only when clicked.
 
 [Administrator task recovery](TASK_REPLAY_SETUP.md) requires `20261114130000_admin_task_replay.sql` plus compatible web/worker code. Reuse existing secrets and matching approved feed definitions; deploy through the reviewed procedure. The HTTP request does not start a worker, reset an old task or apply migrations.
+
+The [consolidated administrator workspace](ADMIN_WORKSPACE_SETUP.md) requires the identity directory migration for paged invitation/quota reads and unused-invitation revocation. Existing identity/source/recovery settings remain sufficient; it adds no browser credential or privileged database editor.

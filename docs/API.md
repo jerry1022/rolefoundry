@@ -141,3 +141,7 @@ Status contains request ID, status (`queued`, `cleaning-files`, `removing-accoun
 ### Administrator task recovery
 
 GET `/api/v1/admin/operations/tasks/{taskId}/replay` returns minimized eligibility and an existing child task ID. POST to the same path accepts only `{requestId: UUID,reason}` with the four coded recovery reasons, same-origin JSON and a 512-byte bound, returning `202 {data: {previousTaskId,taskId}}`. Current administrator authorization is repeated in the service and database; failed eligibility/conflicting request identity is 409. The mutation atomically creates a new task and rebinds the original accepted domain input without resetting the previous attempt. See [per-kind checks, idempotency, privacy and limits](TASK_REPLAY_SETUP.md).
+
+## Identity administration directory
+
+GET `/api/v1/identity/admin/invitations` and GET `/api/v1/identity/admin/quota-policies` accept only an optional opaque cursor and return `{data,nextCursor}`, fixed 20. Invitations omit email/hashes/actor IDs; quota IDs are exact decimal strings. POST `/api/v1/identity/admin/invitations/{id}/revoke` accepts a same-origin strict empty JSON body (128 bytes), expires only an unused invitation and is idempotent for already expired unused records. Every route independently verifies administrator authority in the service and SQL, and successful reads/revocation are audited. See [directory schemas, paging, revocation and retained old controls](ADMIN_WORKSPACE_SETUP.md).

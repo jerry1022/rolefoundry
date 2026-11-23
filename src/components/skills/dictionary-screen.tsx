@@ -12,10 +12,12 @@ export function DictionaryScreen({
   client,
   adminClient,
   isAdmin,
+  embedded = false,
 }: {
   client: SkillClient;
   adminClient: SkillAdminClient;
   isAdmin: () => Promise<boolean>;
+  embedded?: boolean;
 }) {
   const [filter, setFilter] = useState("");
   const [dictionary, setDictionary] = useState<SkillDictionary | null>(null),
@@ -31,6 +33,12 @@ export function DictionaryScreen({
     [historical, setHistorical] = useState(false),
     [removalReason, setRemovalReason] = useState("");
   function failed(error: unknown) {
+    if (error instanceof ApplicationError && [401, 403].includes(error.status)) {
+      setAdmin(false);
+      setEditor(null);
+      setRemovalReason("");
+      setMessage("");
+    }
     setError(
       error instanceof ApplicationError
         ? error.message
@@ -85,16 +93,18 @@ export function DictionaryScreen({
   );
   return (
     <>
-      <PageHeading
-        eyebrow="STABLE IDS · REVIEWED MEANING"
-        title="The shared language of skills."
-        description="Explore canonical concepts, exact aliases and their versions. Related concepts and completed courses do not automatically prove ability."
-        action={
-          <Link className="button secondary" href="/skills/">
-            My private skill profile
-          </Link>
-        }
-      />
+      {!embedded && (
+        <PageHeading
+          eyebrow="STABLE IDS · REVIEWED MEANING"
+          title="The shared language of skills."
+          description="Explore canonical concepts, exact aliases and their versions. Related concepts and completed courses do not automatically prove ability."
+          action={
+            <Link className="button secondary" href="/skills/">
+              My private skill profile
+            </Link>
+          }
+        />
+      )}
       {error && (
         <div className="notice" role="alert">
           <p>{error}</p>

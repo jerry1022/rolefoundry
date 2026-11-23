@@ -362,7 +362,10 @@ it("supports real mobile administrator lookup, history pagination and on-demand 
     // Revoke role after an authorized read; the next API call must clear cached observations.
     await stack.sql.query("update public.profiles set role='member' where user_id=$1", [admin.id]);
     await panel.getByRole("button", { name: "Refresh task diagnostics", exact: true }).click();
-    await webExpect(panel).toContainText("Task diagnostics require an administrator session.");
+    await webExpect(
+      page.getByText("Administration requires a current administrator session.", { exact: false }),
+    ).toBeVisible();
+    await webExpect(panel).toHaveCount(0);
     await webExpect(
       panel.getByRole("heading", { name: "Queue and lease observations" }),
     ).toHaveCount(0);

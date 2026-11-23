@@ -100,3 +100,7 @@ No real feed or schedule has been enabled automatically because no publisher aut
 ## Administrator task recovery
 
 Apply the task-replay migration and deploy compatible web/worker code using existing identity/worker settings. Feed recovery reuses the exact deployment-approved feed registry; no browser-supplied URL is accepted. No new account/key is needed. See [operator flow, per-kind authority checks and recovery bounds](TASK_REPLAY_SETUP.md). This does not activate an AI provider or apply a hosted migration automatically.
+
+## Consolidated administration
+
+Apply `20261114140000_identity_admin_directory.sql` and use the existing verified administrator bootstrap and identity settings. No new account/key or model call is required. [The setup guide](ADMIN_WORKSPACE_SETUP.md) describes shared editor controls, invitation revocation, future quotas, refunds and the role-loss boundary. Hosted schema changes remain reviewed operator actions.

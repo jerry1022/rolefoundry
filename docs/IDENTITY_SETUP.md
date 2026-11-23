@@ -77,7 +77,7 @@ where user_id = (
 );
 ```
 
-An administrator can then use the account page to invite members, schedule future quotas and record infrastructure-failure refunds. These actions are reauthorized by the API and database even when the browser displays admin controls.
+An administrator can use the account page or the [consolidated administrator workspace](ADMIN_WORKSPACE_SETUP.md) to invite members, schedule future quotas and record infrastructure-failure refunds. The same shared component now includes minimized paged invitation/quota records and unused-invitation revocation after the administration migration. These actions are reauthorized by the API and database even when the browser displays admin controls.
 
 ## API surface
 
@@ -93,6 +93,9 @@ All routes below are under `/api/v1/identity`:
 | GET/POST/DELETE `/consents` | Read, grant a current version, or revoke a purpose |
 | GET `/usage` | Current UTC-week limits, reserved and consumed counts |
 | GET `/tasks/{id}` | Owner-only task state; other/missing IDs both return 404 |
+| GET `/admin/invitations` | Administrator-only minimized page of 20 invitation records; opaque cursor |
+| POST `/admin/invitations/{id}/revoke` | Expire an unused invitation; redeemed conflicts; already expired is idempotent |
+| GET `/admin/quota-policies` | Administrator-only page of 20 policies; exact decimal-string IDs |
 | POST `/admin/invitations` | Create/reissue an unused invitation |
 | POST `/admin/quota-policies` | Schedule a future Monday quota |
 | POST `/admin/refunds` | Refund consumed infrastructure failures with an audit reason |

@@ -263,6 +263,12 @@ export function AssessmentBank({
     [message, setMessage] = useState(""),
     [reason, setReason] = useState("");
   function failed(error: unknown) {
+    if (error instanceof ApplicationError && [401, 403].includes(error.status)) {
+      setBank(null);
+      setDictionary(null);
+      setReason("");
+      setMessage("");
+    }
     setError(
       error instanceof ApplicationError
         ? error.message
