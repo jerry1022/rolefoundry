@@ -27,7 +27,7 @@ const sql = new pg.Client({ connectionString: env.DB_URL });
 await sql.connect();
 try {
   const { rows } = await sql.query(
-    'select id as "requestId",subject_id as "subjectId",requested_at as "requestedAt",completed_at as "completedAt" from public.account_deletions order by requested_at,id',
+    `select id as "requestId",subject_id as "subjectId",to_char(requested_at at time zone 'UTC','YYYY-MM-DD"T"HH24:MI:SS.US"Z"') as "requestedAt",to_char(completed_at at time zone 'UTC','YYYY-MM-DD"T"HH24:MI:SS.US"Z"') as "completedAt" from public.account_deletions order by requested_at,id`,
   );
   const handle = await open(filename, "wx", 0o600);
   try {

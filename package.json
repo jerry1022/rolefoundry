@@ -24,9 +24,10 @@
     "worker:start": "node --conditions=react-server --import tsx apps/worker/src/main.ts",
     "worker:local": "node scripts/local-worker.mjs",
     "resume:test": "vitest run --config vitest.resume.config.ts",
-    "recovery:local": "node scripts/recovery/local-rehearsal.mjs",
+    "recovery:local": "node --conditions=react-server --import tsx scripts/recovery/local-rehearsal.mjs",
     "account:ledger": "node scripts/export-deletion-ledger.mjs",
-    "account:resume": "node scripts/resume-deletion.mjs"
+    "account:resume": "node scripts/resume-deletion.mjs",
+    "recovery:test": "node --test tests/recovery/*.test.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.7",

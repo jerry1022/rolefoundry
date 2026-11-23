@@ -8,6 +8,9 @@ import { randomUUID } from "node:crypto";
 import pg from "pg";
 import { quote, digest, databaseSnapshot, compareSnapshots } from "./postgres-snapshot.mjs";
 import { exportQueue, restoreQueue } from "./queue-snapshot.mjs";
+import { isolatedServices } from "./isolated-services.mjs";
+import { deletionFixture } from "./deletion-fixture.mjs";
+import { readDeletionLedger, applyDeletionLedger } from "./deletion-ledger.mjs";
 
 const workspace = fileURLToPath(new URL("../../", import.meta.url));
 const local = path.join(workspace, ".local");
@@ -20,9 +23,22 @@ const archive = path.join(runDirectory, "database.dump");
 const reportPath = path.join(runDirectory, "report.json");
 const started = performance.now();
 const arguments_ = process.argv.slice(2);
-if (arguments_.some((value) => value !== "--verify-failure-cleanup") || arguments_.length > 1)
-  throw Error("Only --verify-failure-cleanup is supported.");
+const modes = [
+  "--verify-failure-cleanup",
+  "--verify-deletion-replay",
+  "--verify-deletion-replay-failure",
+];
+const ledgerArgument = arguments_.length === 2 && arguments_[0] === "--deletion-ledger";
+if (
+  !ledgerArgument &&
+  (arguments_.length > 1 || arguments_.some((value) => !modes.includes(value)))
+)
+  throw Error("Use one rehearsal mode, or --deletion-ledger <private-json-path>.");
 const verifyFailureCleanup = arguments_.includes("--verify-failure-cleanup");
+const verifyServiceFailureCleanup = arguments_.includes("--verify-deletion-replay-failure");
+const verifyDeletionReplay =
+  arguments_.includes("--verify-deletion-replay") || verifyServiceFailureCleanup;
+const externalLedger = ledgerArgument ? await readDeletionLedger(arguments_[1]) : undefined;
 const cleanupProbe = Error("Intentional disposable restore failure.");
 
 async function directory(location) {
@@ -79,6 +95,8 @@ async function docker(args, output) {
 
 let source,
   restored,
+  fixture,
+  services,
   created = false,
   directoryOwned = false,
   inSnapshot = false,
@@ -87,10 +105,17 @@ let source,
 try {
   await directory(local);
   const envPath = path.join(local, "identity-env.json");
-  if ((await lstat(envPath)).isSymbolicLink()) throw Error("Refusing a symlink environment file.");
-  const env = JSON.parse(await readFile(envPath, "utf8")),
+  let env, url;
+  try {
+    const file = await lstat(envPath);
+    if (!file.isFile() || file.isSymbolicLink()) throw Error();
+    env = JSON.parse(await readFile(envPath, "utf8"));
     url = new URL(env.DB_URL);
+  } catch {
+    throw Error("Local recovery settings are missing or invalid; credentials are not printed.");
+  }
   if (
+    !["postgres:", "postgresql:"].includes(url.protocol) ||
     !["127.0.0.1", "localhost"].includes(url.hostname) ||
     url.port !== "54322" ||
     url.pathname !== "/postgres"
@@ -113,6 +138,10 @@ try {
   await source.query("set timezone='UTC'");
   if ((await source.query("select current_database() name")).rows[0].name !== "postgres")
     throw Error("Unexpected source database.");
+  if (verifyDeletionReplay) {
+    fixture = deletionFixture(env, source, runDirectory);
+    await fixture.prepare();
+  }
   console.log(
     "Capturing a consistent local database backup; no row contents or credentials are printed.",
   );
@@ -139,6 +168,7 @@ try {
   );
   await source.query("rollback");
   inSnapshot = false;
+  await fixture?.afterBackup();
   await source.query(`create database ${quote(target)} template template0`);
   created = true;
   await source.query(`comment on database ${quote(target)} is '${marker}'`);
@@ -238,8 +268,32 @@ try {
   )
     throw Error("Restored queue probe payload did not round-trip.");
 
+  let deletionReplay;
+  if (verifyDeletionReplay) {
+    console.log(
+      "Verifying newer deletion markers against isolated Auth, Storage and REST services.",
+    );
+    services = await isolatedServices({ runId, target, runDirectory });
+    if (verifyServiceFailureCleanup) throw cleanupProbe;
+    deletionReplay = await fixture.verify(restored, services, runId);
+  }
+  const ledgerOverlay = externalLedger
+    ? await applyDeletionLedger(restored, runId, externalLedger.ledger)
+    : undefined;
   result = {
     status: "passed",
+    ...(ledgerOverlay
+      ? {
+          ledgerOverlay: {
+            entries: ledgerOverlay.entries.length,
+            queued: ledgerOverlay.entries.filter((entry) => entry.action === "queued").length,
+            ledgerDigest: ledgerOverlay.ledgerDigest,
+            fileDigest: externalLedger.fileDigest,
+            erasureExecuted: false,
+          },
+        }
+      : {}),
+    ...(deletionReplay ? { deletionReplay } : {}),
     createdAt: new Date().toISOString(),
     scope:
       "local project PostgreSQL database restored to an isolated disposable database in the same cluster",
@@ -261,19 +315,30 @@ try {
       extensionVersions: true,
     },
     excluded: [
-      "Storage object bytes",
+      verifyDeletionReplay
+        ? "General object backup/recovery; only one controlled PDF tested"
+        : "Storage object bytes",
       "cluster roles/global settings",
       "host loss/hosted disaster recovery",
       "external Auth/SMTP/provider configuration",
     ],
-    sourceDataModified: false,
+    sourceDataModified: verifyDeletionReplay,
+    ...(verifyDeletionReplay
+      ? { sourceMutationScope: "owned synthetic fixture only; sequence counters advance" }
+      : {}),
   };
 } catch (error) {
   failure = error;
 } finally {
+  try {
+    await services?.stop();
+    if (services && result) result.isolatedServicesRemoved = true;
+  } catch (error) {
+    failure = error;
+  }
   await restored?.end().catch(() => {});
   if (inSnapshot) await source?.query("rollback").catch(() => {});
-  if (created) {
+  if (created && !failure?.recoveryServicesCleanupFailed) {
     try {
       const ownership = (
         await source.query(
@@ -290,6 +355,12 @@ try {
         "Disposable database cleanup failed. Preserve the private report and inspect the owned rehearsal database.",
       );
     }
+  }
+  try {
+    await fixture?.cleanup();
+    if (fixture && result) result.sourceFixtureRemoved = true;
+  } catch {
+    failure = Error("Owned recovery fixture cleanup failed; inspect this run before retrying.");
   }
   await source?.end().catch(() => {});
   for (const name of directoryOwned
@@ -309,9 +380,14 @@ if (failure === cleanupProbe) {
   result = {
     status: "cleanup-verified",
     createdAt: new Date().toISOString(),
-    scope: "intentional failure after creating the owned disposable database",
+    scope: verifyServiceFailureCleanup
+      ? "intentional failure after starting owned isolated Auth/Storage/REST services"
+      : "intentional failure after creating the owned disposable database",
+    ...(verifyServiceFailureCleanup
+      ? { isolatedServicesRemoved: true, sourceFixtureRemoved: true }
+      : {}),
     disposableDatabaseRemoved: true,
-    sourceDataModified: false,
+    sourceDataModified: verifyDeletionReplay,
   };
 }
 if (failure) {
@@ -321,13 +397,13 @@ if (failure) {
   result.backupArchiveRemoved = true;
   result.elapsedMs = Math.round(performance.now() - started);
   await writeFile(reportPath, JSON.stringify(result, null, 2) + "\n", { mode: 0o600 });
-  if (verifyFailureCleanup)
+  if (verifyFailureCleanup || verifyServiceFailureCleanup)
     console.log(
       "Intentional failure cleanup passed: owned disposable database and all private archives removed.",
     );
   else
     console.log(
-      `Recovery rehearsal passed: ${result.tables} tables, ${result.policies} policies, ${result.routines} routines. Disposable database and archive removed.`,
+      `${verifyDeletionReplay ? "Deletion replay and " : ""}Recovery rehearsal passed: ${result.tables} tables, ${result.policies} policies, ${result.routines} routines. Disposable database and archive removed.`,
     );
   console.log(`Private metadata-only report: ${path.relative(workspace, reportPath)}`);
 }
