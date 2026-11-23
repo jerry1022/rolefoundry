@@ -46,9 +46,9 @@ Responses contain task IDs/kinds/state, attempts/timestamps, safe allowlisted er
 
 ## Recovery and remaining controls
 
-See [the executable isolated database/queue recovery rehearsal](OPERATIONS_RECOVERY.md). Diagnostics add no mutation control: replay must be a separately audited **domain** request that revalidates current owner/input/source permissions and preserves the original attempt. Never reset a task row or resend a queue message as an operational shortcut.
+See [the executable isolated database/queue recovery rehearsal](OPERATIONS_RECOVERY.md). Diagnostics reads create no work. The separate [task recovery mutation port](TASK_REPLAY_SETUP.md) now creates an audited **domain** attempt, revalidates current owner/input/source permissions and preserves the original attempt. Never reset a task row or resend a queue message as an operational shortcut.
 
-Module 13 remains partial: consolidated skills/question/invitation/quota administration, authorized domain replay, authoritative off-host ledger delivery/hosted cutover, external telemetry/alerts, and hosted/clean-cluster/Storage-object restore are outstanding. Source administration remains available through its [existing domain workflow](INGESTION_SETUP.md).
+Module 13 remains partial: consolidated skills/question/invitation/quota administration, authoritative off-host ledger delivery/hosted cutover, external telemetry/alerts, and hosted/clean-cluster/Storage-object restore are outstanding. Source administration remains available through its [existing domain workflow](INGESTION_SETUP.md).
 
 ## Browser evidence
 

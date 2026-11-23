@@ -35,3 +35,5 @@ If a result commits before message archival and the message returns, the next ha
 ## Acceptance tests
 
 Simulate duplicate delivery, lease expiry, crash before/after commit, provider timeout, poison payload, stale input, owner deletion and graceful shutdown. Verify that queue age, lease age, retries and terminal failures are observable.
+
+[Administrator task recovery](../TASK_REPLAY_SETUP.md) now creates a new audited attempt through domain-owned binding functions, rechecking current owner/input/source authority and preserving old execution history. Explicit HTTP mutations are independent of diagnostics reads and do not resend old queue messages or alter retry counters. Provider dispatch/budgets, invalidation outbox consumers and per-purpose concurrency remain pending.

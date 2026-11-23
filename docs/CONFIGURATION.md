@@ -96,3 +96,7 @@ Configuration that can be completed with the available project/account authority
 `ROLEFOUNDRY_APPROVED_FEEDS` is server/worker only and defaults to `[]`. Set the identical bounded definition JSON on the web host and independent worker, then restart/redeploy both. It selects exact HTTPS URLs/hosts by ID and revision; administrators can select IDs but cannot supply worker URLs. [The ingestion guide](INGESTION_SETUP.md) gives the template, setup locations and verification steps. `identity:dev` uses Next environment loading; `worker:local` inherits the shell environment, so configuring only `.env.local` is insufficient for that process.
 
 No real feed or schedule has been enabled automatically because no publisher authorization/feed definition has been supplied. Local migrations, queue execution, administrator forms and synthetic fixture verification are applied; source permission, real metadata and a hosted end-to-end run remain operator/editorial gates. The test server's authored `.invalid` definitions are confined to `scripts/test-identity.mjs` and do not configure the demo or deployed worker.
+
+## Administrator task recovery
+
+Apply the task-replay migration and deploy compatible web/worker code using existing identity/worker settings. Feed recovery reuses the exact deployment-approved feed registry; no browser-supplied URL is accepted. No new account/key is needed. See [operator flow, per-kind authority checks and recovery bounds](TASK_REPLAY_SETUP.md). This does not activate an AI provider or apply a hosted migration automatically.
