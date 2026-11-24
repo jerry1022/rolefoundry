@@ -119,6 +119,9 @@ export class MatchingFixtures {
     );
     await sql.query("delete from public.match_runs where user_id=any($1::uuid[])", [userIds]);
     const jobs = [this.jobIds];
+    // Dependents that reference fixture job versions must go first, or the catalog would be
+    // left with a half-deleted published job.
+    await sql.query("delete from public.revision_proposals where job_id=any($1::uuid[])", jobs);
     await sql.query("delete from public.bookmarks where job_id=any($1::uuid[])", jobs);
     await sql.query(
       "delete from public.job_skill_links where requirement_id in(select r.id from public.job_requirements r join public.job_versions v on v.id=r.job_version_id where v.job_id=any($1::uuid[]))",

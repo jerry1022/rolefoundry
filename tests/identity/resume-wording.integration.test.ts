@@ -219,10 +219,6 @@ afterAll(async () => {
   await stack.sql.query("delete from public.ai_recipient_approvals where recipient=$1", [
     recipient,
   ]);
-  // Proposals reference the fixture job version; remove this test's proposals first.
-  await stack.sql.query("delete from public.revision_proposals where document_id=any($1::uuid[])", [
-    documents,
-  ]);
   await fixtures.cleanup(stack.users.map((user) => user.id));
   await stack.close();
 });
