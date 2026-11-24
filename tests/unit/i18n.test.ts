@@ -1,6 +1,9 @@
-import { describe, expect, it } from "vitest";
-import { formatters, translate } from "../../src/lib/i18n";
+import { beforeAll, describe, expect, it } from "vitest";
+import { formatters, loadMessages, translate } from "../../src/lib/i18n";
 import { zhTW, zhTWSections } from "../../src/lib/messages/zh-TW/index";
+
+// The zh-TW catalogue is loaded on demand, as in the browser.
+beforeAll(() => loadMessages("zh-TW"));
 
 describe("locale messages", () => {
   it("falls back to English and interpolates named placeholders", () => {

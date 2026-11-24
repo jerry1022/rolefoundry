@@ -1,7 +1,10 @@
 import { readFileSync } from "node:fs";
-import { describe, expect, it } from "vitest";
-import { translate } from "../../src/lib/i18n";
+import { beforeAll, describe, expect, it } from "vitest";
+import { loadMessages, translate } from "../../src/lib/i18n";
 import { fixedResumeText, resumeText } from "../../src/components/resume/resume-text";
+
+// The zh-TW catalogue is loaded on demand, as in the browser.
+beforeAll(() => loadMessages("zh-TW"));
 
 describe("resume proposal sentences in Traditional Chinese", () => {
   it("lists and translates every fixed sentence the rules can store", () => {
