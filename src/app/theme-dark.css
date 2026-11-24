@@ -548,7 +548,7 @@
   }
 }
 :root[data-theme="dark"] .topbar {
-  background: rgb(23 28 24 / 72%);
+  background: rgb(23 28 24 / 90%);
   border-bottom: 1px solid rgb(145 159 153 / 7%);
 }
 :root[data-theme="dark"] .demo-pill {

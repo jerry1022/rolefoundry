@@ -22,3 +22,7 @@ Text must reach at least 4.6:1. The dark generator lightens every derived text c
 ## Keyboard navigation
 
 Below 760px the sidebar is an off-canvas panel. The menu button exposes `aria-expanded`/`aria-controls`. Opening it moves focus to the first navigation link, and Escape closes it and returns focus to the button. While closed, the panel is `inert`, so Tab and screen readers skip it. A browser test covers this flow.
+
+## Vendor prefixes
+
+Write only standard properties in `globals.css`; the CSS compiler adds vendor prefixes for the supported browsers. Do not hand-write `-webkit-backdrop-filter`: a rule that declares both the standard and the prefixed property loses both in the compiled output. This silently removed the frosted top bar, hero card and floating labels until it was caught, and `tests/unit/styles.test.ts` now rejects it.
