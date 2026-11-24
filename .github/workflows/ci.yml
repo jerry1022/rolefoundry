@@ -26,7 +26,7 @@ jobs:
       - run: npm run theme:check
       - run: npm run worker:demo
       - run: npm run build
-      - run: npx playwright install --with-deps chromium
+      - run: npx playwright install --with-deps chromium firefox
       - run: npm run test:e2e
       - run: NEXT_PUBLIC_BASE_PATH=/rolefoundry npm run build:pages
       - run: test ! -d out/api
