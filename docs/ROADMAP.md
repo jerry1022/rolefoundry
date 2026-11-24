@@ -39,7 +39,7 @@ See [module-by-module delivery status](MODULE_DEVELOPMENT.md); module 10 is the 
 - [ ] External editorial calibration of skill mappings and assessment rubrics.
 - [ ] Curated catalog of 30–50 courses with source review dates.
 - [ ] Larger foundational question bank with expert calibration.
-- [ ] Traditional Chinese UI and locale-aware formatting. The [shell, demo and member-facing connected screens are bilingual](LOCALIZATION.md) with `Intl` formatting and CI key checks; authored content and ingestion/operations administration remain English.
+- [ ] Traditional Chinese UI and locale-aware formatting. The [shell, demo, connected and administration screens are bilingual](LOCALIZATION.md) with `Intl` formatting and CI key checks; authored content remains English pending reviewed per-locale fields.
 
 ## v0.4 — Production analysis
 
