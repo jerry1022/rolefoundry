@@ -48,7 +48,7 @@ See [module-by-module delivery status](MODULE_DEVELOPMENT.md); module 10 is the 
 - [x] Grounded order proposals, individual acceptance, immutable versions and verified PDF export.
 - [ ] Evaluated model-assisted wording from confirmed facts through module 11. Owner-applied, fact-preserving [wording suggestions](RESUME_SETUP.md#optional-ai-wording-suggestions) are integrated; live evaluation remains.
 - [x] Source-grounded private matching snapshots, explicit conditions and immediate deletion purge.
-- [ ] Structured short-answer grading and reviewed semantic/model match recipe.
+- [ ] Structured short-answer grading and reviewed semantic/model match recipe. The [grounded grading core and calibration gate](ASSESSMENT_SETUP.md#short-answer-calibration-not-enabled) exist; semantic ordering is integrated; live calibration and enablement remain.
 - [x] Reviewed course catalog, two-week budgeted plans/prerequisites and private progress/practice references.
 - [ ] Human review of real course mappings, prerequisites and practice outcomes.
 

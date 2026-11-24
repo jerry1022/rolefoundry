@@ -1,7 +1,11 @@
 import { z } from "zod";
 
 /** Purposes are closed: a new model use requires a reviewed template, policy and consent text. */
-export const gatewayPurposes = ["matching.semantic-rank", "resume.wording"] as const;
+export const gatewayPurposes = [
+  "matching.semantic-rank",
+  "resume.wording",
+  "assessment.short-answer",
+] as const;
 export type GatewayPurpose = (typeof gatewayPurposes)[number];
 
 export const providerFailureKinds = [

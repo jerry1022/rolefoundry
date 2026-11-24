@@ -24,7 +24,7 @@ This guide distinguishes settings applied by the project from account-bound host
 | Local isolated database recovery | `npm run recovery:local` and `--verify-failure-cleanup` | Same-snapshot data/security/queue comparison, isolated send/archive and owned-resource cleanup; [scope and remaining gates](OPERATIONS_RECOVERY.md) |
 | Private operations telemetry | Optional web observation, service-only aggregate RPCs and independent Node exporter | [Setup, private token, local scrape/alert/recovery rehearsal and hosted gates](TELEMETRY_SETUP.md) |
 | Course link observations | Optional `Dockerfile.course-links` process, `ROLEFOUNDRY_COURSE_LINK_SOURCES` (default `[]`) | [Setup, request safety, shared cadence and alerts](COURSE_LINKS_SETUP.md); empty policy sends no request |
-| AI Gateway core | `ROLEFOUNDRY_AI_POLICY` (empty by default), gateway migrations, fake-adapter tests | `npm test -- tests/unit/gateway.test.ts`, offline `npm run gateway:eval`; [setup](AI_GATEWAY_SETUP.md). No provider is called |
+| AI Gateway core | `ROLEFOUNDRY_AI_POLICY` (empty by default), gateway migrations, fake-adapter tests | `npm test -- tests/unit/gateway.test.ts`, offline `npm run gateway:eval` and `npm run gateway:calibrate`; [setup](AI_GATEWAY_SETUP.md). No provider is called |
 | Automated repository checks | GitHub Actions | PR checks cover types, unit/process/browser/database tests and worker image |
 
 Local test keys are generated and stored only in the ignored, owner-readable local environment file. They are not hosted credentials. Tests start their own web/worker processes and stop them when finished; a passing suite does not mean a private web server or production worker was left running. The local database/Auth/Storage services remain available for development.
