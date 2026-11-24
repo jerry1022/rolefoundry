@@ -438,3 +438,41 @@ it("paginates bounded course and host observations without duplicates or hidden 
     );
   }
 });
+it("records checker-side failures without changing availability and caps excessive waits", async () => {
+  const { policy, course, host } = await fixture();
+  const target = (await claim(policy))!;
+  // A provider outage is an observation; only a missing page flags the course for review.
+  expect(
+    await complete(target, "server-error", 503, new Date(Date.now() + 30 * 86400000).toISOString()),
+  ).toBe(true);
+  expect((await state(course.id)).availability).toBe("available");
+  const hostRow = await stack.sql.query(
+    "select manual_pause,next_probe_at from public.course_link_hosts where hostname=$1",
+    [host],
+  );
+  // Waits beyond seven days become an operator-clearable pause instead of a month-long stop.
+  expect(hostRow.rows[0].manual_pause).toBe(true);
+  expect(+hostRow.rows[0].next_probe_at).toBeLessThan(Date.now() + 8 * 86400000);
+  const listed = await (await stack.request("admin/courses/link-checks", admin)).json();
+  const revision = listed.data.hosts.find((item: { host: string }) => item.host === host).revision;
+  const resumed = await stack.request("admin/courses/link-checks/resume", admin, "POST", {
+    host,
+    expectedRevision: revision,
+    reason: "Provider confirmed recovery",
+  });
+  expect(resumed.status).toBe(200);
+  const audit = await stack.sql.query(
+    "select reason from public.course_audit where actor_id=$1 and action='course.links_resume' order by created_at desc limit 1",
+    [admin.id],
+  );
+  expect(audit.rows[0].reason).toBe(`${host}: Provider confirmed recovery`);
+});
+it("does not claim course URLs that the probe cannot check", async () => {
+  const { policy, course } = await fixture();
+  await stack.sql.query(
+    "update public.course_versions set metadata=jsonb_set(metadata,'{url}',to_jsonb((metadata->>'url')||'?ref=feed')) where course_id=$1",
+    [course.id],
+  );
+  expect(await claim(policy)).toBeNull();
+  expect((await state(course.id)).availability).toBe("available");
+});

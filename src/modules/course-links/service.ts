@@ -18,7 +18,14 @@ export class CourseLinkChecker {
         const index = (this.cursor + offset) % policies.length,
           policy = policies[index];
         signal.throwIfAborted();
-        const claimed = await this.store.claim(policy, signal);
+        // One failing source must not stop the others in this tick.
+        let claimed;
+        try {
+          claimed = await this.store.claim(policy, signal);
+        } catch (error) {
+          if (signal.aborted) throw error;
+          continue;
+        }
         if (!claimed) continue;
         this.cursor = (index + 1) % policies.length;
         const target = linkTargetSchema.parse(claimed);
