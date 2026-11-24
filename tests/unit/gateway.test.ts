@@ -950,3 +950,64 @@ describe("provider token budgets", () => {
     ).toThrow();
   });
 });
+
+describe("provider cost estimates", () => {
+  it("prices reported usage per attempt and leaves unknown pricing unknown", async () => {
+    const { estimateCostMicros } = await import("../../src/modules/gateway/service");
+    expect(
+      estimateCostMicros(
+        { inputPerMillionUsd: 3, outputPerMillionUsd: 15 },
+        { inputTokens: 1000, outputTokens: 200 },
+      ),
+    ).toBe(6000);
+    expect(estimateCostMicros(undefined, { inputTokens: 1, outputTokens: 1 })).toBeNull();
+    expect(estimateCostMicros({ inputPerMillionUsd: 3, outputPerMillionUsd: 15 }, null)).toBeNull();
+    const priced = parseGatewayPolicy(
+      JSON.stringify({
+        routes: {
+          "resume.wording": {
+            primary: {
+              adapter: "primary",
+              model: "m",
+              recipients: ["primary"],
+              pricing: { inputPerMillionUsd: 2, outputPerMillionUsd: 10 },
+            },
+            deadlineMs: 5000,
+            primaryAttempts: 1,
+            maxInputChars: 4000,
+            maxOutputTokens: 400,
+            concurrency: 1,
+          },
+        },
+      }),
+    );
+    const gateway = new AIGateway({
+      policy: priced,
+      adapters: [
+        new FakeAdapter("primary", [
+          { text: "{", usage: { inputTokens: 500, outputTokens: 0 } },
+          { text: good, usage: { inputTokens: 600, outputTokens: 100 } },
+        ]),
+      ],
+      templates: gatewayTemplates,
+      authority: authority(),
+      clock: instant,
+    });
+    const result = await run(gateway);
+    expect(result.attempts.map((attempt) => attempt.costMicros)).toEqual([1000, 2200]);
+    expect(result.costMicros).toBe(3200);
+    expect(
+      (
+        await run(
+          new AIGateway({
+            policy: policy(),
+            adapters: [new FakeAdapter("primary", [{ text: good }])],
+            templates: gatewayTemplates,
+            authority: authority(),
+            clock: instant,
+          }),
+        )
+      ).costMicros,
+    ).toBeNull();
+  });
+});

@@ -96,7 +96,7 @@ interface Execution {
 
 /** Which provider is called, and why. */
 interface CallPlan {
-  target: { adapter: string; model: string };
+  target: { adapter: string; model: string; pricing?: TokenPricing };
   phase: GatewayAttempt["phase"];
   kind: GatewayAttempt["kind"];
   fallbackReason: ProviderFailureKind | null;
@@ -105,6 +105,17 @@ interface CallPlan {
 type CallOutcome = { plan: CallPlan } & (
   { response: AdapterResponse } | { failure: ProviderFailureKind; retryAfterMs: number | null }
 );
+
+type TokenPricing = { inputPerMillionUsd: number; outputPerMillionUsd: number };
+
+/** Micro-dollars from provider-reported usage; unknown pricing or usage stays unknown. */
+export function estimateCostMicros(pricing: TokenPricing | undefined, usage: GatewayUsage | null) {
+  if (!pricing || !usage) return null;
+  return Math.round(
+    usage.inputTokens * pricing.inputPerMillionUsd +
+      usage.outputTokens * pricing.outputPerMillionUsd,
+  );
+}
 
 /** Safe task codes; provider messages are never surfaced. */
 const failureCodes: Record<ProviderFailureKind, string> = {
@@ -153,6 +164,9 @@ function resultBuilder<T>(
       }),
       { inputTokens: 0, outputTokens: 0 },
     ),
+    costMicros: attempts.some((attempt) => attempt.costMicros !== null)
+      ? attempts.reduce((sum, attempt) => sum + (attempt.costMicros ?? 0), 0)
+      : null,
     latencyMs: elapsed(),
   });
 }
@@ -334,6 +348,7 @@ export class AIGateway {
       outcome: "ok",
       latencyMs: 0,
       usage: null,
+      costMicros: null,
       fallbackReason: plan.fallbackReason,
     };
     let acquired = false;
@@ -357,6 +372,7 @@ export class AIGateway {
       signal.throwIfAborted();
       record.reportedModel = response.reportedModel;
       record.usage = response.usage;
+      record.costMicros = estimateCostMicros(plan.target.pricing, response.usage);
       if (reservation) {
         // Settle with reported usage; without it the conservative estimate stands.
         if (response.usage)

@@ -103,6 +103,16 @@ export function renderMetrics(input: TelemetrySnapshot) {
       })),
     );
   gauge(
+    "rolefoundry_ai_estimated_cost_usd_24h",
+    "Estimated provider spend in the last 24 hours from configured pricing; not an invoice.",
+    (snapshot.gateway ?? [])
+      .filter((item) => item.costMicros !== undefined)
+      .map((item) => ({
+        labels: `provider="${item.provider}"`,
+        value: item.costMicros! / 1_000_000,
+      })),
+  );
+  gauge(
     "rolefoundry_provider_integration_enabled",
     "AI provider integration is not enabled in this implementation.",
     [{ value: 0 }],

@@ -14,6 +14,17 @@ const targetShape = {
    * provider plus any reviewed upstream). Consent must cover all of them.
    */
   recipients: z.array(adapterId).min(1).max(8),
+  /**
+   * Deployment-supplied list prices (USD per million tokens) for spend estimates. Prices are
+   * never hard-coded; without them cost stays unknown rather than guessed.
+   */
+  pricing: z
+    .object({
+      inputPerMillionUsd: z.number().min(0).max(1000),
+      outputPerMillionUsd: z.number().min(0).max(1000),
+    })
+    .strict()
+    .optional(),
 };
 const ownRecipient = {
   message: "A route's recipients must include its own provider.",
