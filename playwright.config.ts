@@ -5,10 +5,12 @@ export default defineConfig({
   testDir: "./tests/e2e",
   fullyParallel: false,
   use: { baseURL, trace: "retain-on-failure" },
-  // Firefox catches engine differences (CSS compilation, vendor prefixes, focus handling).
+  // Three engines catch differences in CSS compilation, vendor prefixes and focus handling;
+  // WebKit stands in for Safari, which many zh-TW mobile visitors use.
   projects: [
     { name: "chromium", use: { ...devices["Desktop Chrome"] } },
     { name: "firefox", use: { ...devices["Desktop Firefox"] } },
+    { name: "webkit", use: { ...devices["Desktop Safari"] } },
   ],
   webServer: {
     command: `npm run dev -- --port ${port}`,
