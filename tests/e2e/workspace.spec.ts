@@ -343,3 +343,28 @@ test("demo routes meet WCAG 2.1 AA in light and dark themes and both languages",
   }
   expect(failures).toEqual([]);
 });
+
+test("mobile navigation is keyboard operable and hidden from Tab while closed", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/jobs/");
+  await expect(page.locator("h1")).toBeVisible();
+  const menu = page.getByRole("button", { name: "Open navigation" });
+  await expect(menu).toHaveAttribute("aria-expanded", "false");
+  // The closed off-canvas panel is inert: its links cannot take focus.
+  await expect(page.locator("#workspace-navigation")).toHaveAttribute("inert", "");
+  await menu.focus();
+  await page.keyboard.press("Enter");
+  const toggle = page.getByRole("button", { name: "Close navigation" }).last();
+  await expect(toggle).toHaveAttribute("aria-expanded", "true");
+  await expect(page.locator("#workspace-navigation")).not.toHaveAttribute("inert", "");
+  // Focus moves into the panel, and Escape returns it to the menu button.
+  await expect(page.locator("#workspace-navigation a").first()).toBeFocused();
+  await page.keyboard.press("Escape");
+  await expect(page.getByRole("button", { name: "Open navigation" })).toBeFocused();
+  await expect(page.locator("#workspace-navigation")).toHaveAttribute("inert", "");
+  // On desktop the sidebar is always reachable.
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await expect(page.locator("#workspace-navigation")).not.toHaveAttribute("inert", "");
+});

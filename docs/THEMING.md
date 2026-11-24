@@ -18,3 +18,7 @@ Browser tests cover the system default, persisted choice across reloads, the boo
 ## Contrast
 
 Text must reach at least 4.6:1. The dark generator lightens every derived text color (keeping its OKLCH hue) until it meets that ratio against `--surface-2`, so new rules inherit readable dark text. In the light theme, use the text tokens (`--ink`, `--ink-2`, `--muted`, `--muted-2`, `--emerald`), which meet the ratio on near-white surfaces. The Playwright and integration suites run axe-core (WCAG 2.1 AA) in both themes and fail on any violation.
+
+## Keyboard navigation
+
+Below 760px the sidebar is an off-canvas panel. The menu button exposes `aria-expanded`/`aria-controls`. Opening it moves focus to the first navigation link, and Escape closes it and returns focus to the button. While closed, the panel is `inert`, so Tab and screen readers skip it. A browser test covers this flow.
