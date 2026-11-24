@@ -1,2 +1,2 @@
-import { Dashboard } from "@/components/screens";
+import { Dashboard } from "@/components/demo/dashboard";
 export default Dashboard;

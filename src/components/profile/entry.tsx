@@ -1,5 +1,5 @@
 "use client";
-import { SkillsScreen } from "../screens";
+import { SkillsScreen } from "../demo/skills";
 import { ProfileScreen } from "./profile-screen";
 import { createHttpProfileClient } from "@/modules/profile/adapters/http-client";
 import { createSkillClient } from "@/modules/skills/adapters/http-client";

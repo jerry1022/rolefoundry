@@ -1,7 +1,7 @@
 "use client";
 import { DeletionAdministration } from "../account-deletion/administration";
 import { createDeletionAdminClient } from "@/modules/account-deletion/adapters/http-client";
-import { AdminScreen } from "../screens";
+import { AdminScreen } from "../demo/admin";
 import { PageHeading } from "../ui/page-heading";
 import Link from "next/link";
 import { useMemo } from "react";
