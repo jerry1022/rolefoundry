@@ -11,7 +11,6 @@ export const common = {
   Experience: "經驗",
   Mandatory: "必要",
   None: "無",
-  "Not supplied": "未提供",
   "Plan learning for this role": "為這個職缺規劃學習",
   Preferred: "加分",
   "Prepare a tracking record": "建立追蹤紀錄",
