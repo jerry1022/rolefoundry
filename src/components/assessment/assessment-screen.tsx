@@ -158,7 +158,7 @@ export function AssessmentScreen({
       />
       {error && (
         <div className="notice" role="alert">
-          <p>{error}</p>
+          <p>{t(error)}</p>
           {login ? (
             <Link className="button secondary" href="/account/">
               {t("Sign in to start an assessment")}

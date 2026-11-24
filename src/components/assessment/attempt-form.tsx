@@ -96,7 +96,7 @@ export function AttemptForm({
       </p>
       {error && (
         <div className="notice" role="alert">
-          <p>{error}</p>
+          <p>{t(error)}</p>
           <button
             className="button secondary"
             disabled={saving || submitting}

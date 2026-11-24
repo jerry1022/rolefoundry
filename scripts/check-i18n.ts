@@ -31,6 +31,19 @@ for (const root of roots)
       if (!used.has(match[1])) used.set(JSON.parse(`"${match[1]}"`), file);
   }
 
+// Server messages reach the UI as `ApplicationError.message` and are shown with `t(error)`, so
+// every literal message thrown by a module (and each mapped database failure) needs a key too.
+const serverMessage = [
+  /ApplicationError\(\s*"RF_[A-Z_]+",\s*\d+,\s*"((?:[^"\\]|\\.)*)"/g,
+  /\[\s*\d{3},\s*"((?:[^"\\]|\\.)*)",?\s*\]/g,
+];
+for (const file of await walk("src/modules"))
+  for (const pattern of serverMessage)
+    for (const match of (await readFile(file, "utf8")).matchAll(pattern)) {
+      const key = JSON.parse(`"${match[1]}"`);
+      if (!used.has(key)) used.set(key, `${file} (server message)`);
+    }
+
 // Data labels that the demo renders through `t(value)`.
 const dataLabels = [
   ...Object.values(skillLabels),

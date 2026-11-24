@@ -275,7 +275,7 @@ export function LearningWorkspaceScreen({
       )}
       {error && (
         <div className="notice" role="alert">
-          <p>{error}</p>
+          <p>{t(error)}</p>
           {login ? (
             <Link className="button secondary" href="/account/">
               {t("Open account and privacy")}

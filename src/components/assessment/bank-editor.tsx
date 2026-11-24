@@ -248,7 +248,7 @@ function QuestionForm({
               onChange={(event) => setExplanation(event.target.value)}
             />
           </label>
-          {error && <p role="alert">{error}</p>}
+          {error && <p role="alert">{t(error)}</p>}
           <button className="button primary">{t("Create draft question")}</button>
         </fieldset>
       </form>
@@ -325,7 +325,7 @@ export function AssessmentBank({
       </p>
       {error && (
         <p className="notice" role="alert">
-          {error}
+          {t(error)}
         </p>
       )}
       {message && (

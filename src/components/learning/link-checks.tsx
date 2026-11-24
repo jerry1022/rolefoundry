@@ -94,7 +94,7 @@ export function CourseLinkChecks({ client }: { client: CourseLinkClient }) {
           "Checks run only for deployment-approved sources. Dates show the last observation, not an active check on this page.",
         )}
       </p>
-      {error && <p role="alert">{error}</p>}
+      {error && <p role="alert">{t(error)}</p>}
       {busy && <p role="status">{t("Loading or updating link observations…")}</p>}
       <button
         className="button secondary"

@@ -37,3 +37,15 @@ describe("locale formatting", () => {
     expect(en.date("not a date")).toBe("");
   });
 });
+
+describe("server messages", () => {
+  it("translates thrown and mapped database messages for zh-TW viewers", () => {
+    for (const message of [
+      "Sign in to continue.",
+      "The data changed. Reload before trying again.",
+      "The weekly analysis limit has been reached.",
+    ])
+      expect(translate("zh-TW", message)).not.toBe(message);
+    expect(translate("en", "Sign in to continue.")).toBe("Sign in to continue.");
+  });
+});

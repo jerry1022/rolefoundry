@@ -181,7 +181,7 @@ export function AccountScreen() {
           </div>
           {error && (
             <div className="notice warning" role="alert">
-              {error}
+              {t(error)}
             </div>
           )}
           {message && (

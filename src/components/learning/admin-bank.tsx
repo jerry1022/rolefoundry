@@ -258,7 +258,7 @@ function DraftForm({
           "An existing approved version stays visible while the next draft is reviewed. Estimates and practice prompts must be clearly editorial.",
         )}
       </p>
-      {error && <p role="alert">{error}</p>}
+      {error && <p role="alert">{t(error)}</p>}
       <fieldset className="profile-form-fields" disabled={busy || !bank.sources.length}>
         <label>
           {t("Provider")}
@@ -547,7 +547,7 @@ export function CourseAdministration({
       </p>
       {error && (
         <p className="notice" role="alert">
-          {error}
+          {t(error)}
         </p>
       )}
       {message && (

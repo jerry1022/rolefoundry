@@ -265,7 +265,7 @@ export function DeletionReceiptCheck({ client }: { client: DeletionClient }) {
         </label>
         <button className="button secondary">{t("Check deletion receipt")}</button>
       </form>
-      {error && <p role="alert">{error}</p>}
+      {error && <p role="alert">{t(error)}</p>}
       {current && (
         <DeletionProgress key={current.id + current.secret} client={client} receipt={current} />
       )}
