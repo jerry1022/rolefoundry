@@ -2,7 +2,8 @@ import { z } from "zod";
 import { ApplicationError } from "../platform/errors";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
-export const featureSchema = z.enum(["assessment", "resume"]);
+/** Mirrors the `consent_policies` registry; add a purpose there and here together. */
+export const featureSchema = z.enum(["assessment", "resume", "matching"]);
 export type AnalysisFeature = z.infer<typeof featureSchema>;
 export const actorSchema = z.object({ userId: z.uuid(), role: z.enum(["member", "admin"]) });
 export type Actor = Readonly<z.infer<typeof actorSchema>>;

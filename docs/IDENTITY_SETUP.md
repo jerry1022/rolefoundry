@@ -126,3 +126,9 @@ Pages and layouts use `.tsx`; dynamic Route Handlers use `route.ts`. The GitHub 
 ## Private data portability
 
 The configured account screen now provides [sealed private account exports](ACCOUNT_DATA_SETUP.md), durable ZIP creation, owner download/removal and cleanup. It uses existing identity/worker settings plus the account export migration; no provider secret or analysis consent is required. [Self-service live deletion](ACCOUNT_DELETION_SETUP.md) now disables private access and sign-in, removes Auth/private data through persistent erasure tasks and offers private signed-out receipts. Off-host restore deletion replay remains pending.
+
+## Consent purpose registry
+
+Migration `20261114200000_consent_purpose_registry.sql` makes `consent_policies` the single list of analysis purposes. Quota policies, identity tasks and reservations reference it by foreign key, and the consent/quota/reservation functions check membership instead of hard-coded lists. Adding a purpose is therefore one reviewed policy row plus its default quota (and the matching `featureSchema` entry in `src/modules/identity/core.ts`).
+
+The migration adds `matching` (policy `2026-11-24`, default 5 per UTC week) for [semantic role ranking through the AI gateway](AI_GATEWAY_SETUP.md). It is granted and revoked independently of resume analysis, and rule-based matching never requires it. Existing grants, tasks and reservations are unchanged.
