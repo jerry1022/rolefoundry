@@ -109,5 +109,17 @@ export function createLearningAdminClient(fetcher: typeof fetch = fetch): Learni
         body: input,
       });
     },
+    translate: async (id, input) => {
+      await request(`admin/courses/${encodeURIComponent(id)}/translations`, {
+        method: "POST",
+        body: input,
+      });
+    },
+    removeTranslation: async (id, input) => {
+      await request(`admin/courses/${encodeURIComponent(id)}/translations/remove`, {
+        method: "POST",
+        body: input,
+      });
+    },
   };
 }

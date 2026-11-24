@@ -24,6 +24,11 @@ import { CourseLinkChecks } from "../learning/link-checks";
 import { AiRecipientAdministration } from "./ai-recipients";
 import { AiUsageReport } from "./ai-usage";
 import { JobTranslationAdministration } from "../jobs/translation-admin";
+import { CourseTranslationAdministration } from "../learning/course-translation-admin";
+import {
+  createCourseClient,
+  createLearningAdminClient,
+} from "@/modules/learning/adapters/http-client";
 import {
   createCatalogClient,
   createCatalogTranslationClient,
@@ -53,6 +58,8 @@ function PrivateAdminWorkspace() {
     aiUsage,
     catalog,
     jobTranslations,
+    courses,
+    learningAdmin,
   } = useMemo(
     () => ({
       client: createImportAdminClient(fetcher),
@@ -69,6 +76,8 @@ function PrivateAdminWorkspace() {
       aiUsage: createUsageClient(fetcher),
       catalog: createCatalogClient(fetcher),
       jobTranslations: createCatalogTranslationClient(fetcher),
+      courses: createCourseClient(fetcher),
+      learningAdmin: createLearningAdminClient(fetcher),
     }),
     [fetcher],
   );
@@ -110,6 +119,9 @@ function PrivateAdminWorkspace() {
           </AdminSection>
           <AdminSection title={t("Job translations")}>
             <JobTranslationAdministration catalog={catalog} translations={jobTranslations} />
+          </AdminSection>
+          <AdminSection title={t("Course translations")}>
+            <CourseTranslationAdministration courses={courses} admin={learningAdmin} />
           </AdminSection>
           <AdminSection title={t("Invitations and allowances")}>
             <IdentityAdministration client={identity} />

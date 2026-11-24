@@ -5,6 +5,8 @@ import {
   courseQuerySchema,
   courseSourceSchema,
   courseDraftSchema,
+  courseTranslationInputSchema,
+  courseTranslationRemovalSchema,
   planRequestSchema,
   resourceUrl,
 } from "./model";
@@ -117,6 +119,21 @@ export class LearningAdministrationService {
   async bank(actor: Actor) {
     await this.allow(actor);
     return this.repository.bank();
+  }
+  /** Reviewed zh-TW editorial text; the database rejects anything but the published version. */
+  async translate(actor: Actor, id: unknown, input: unknown) {
+    await this.allow(actor);
+    return this.repository.translate(
+      parse(z.uuid(), id),
+      parse(courseTranslationInputSchema, input),
+    );
+  }
+  async removeTranslation(actor: Actor, id: unknown, input: unknown) {
+    await this.allow(actor);
+    return this.repository.removeTranslation(
+      parse(z.uuid(), id),
+      parse(courseTranslationRemovalSchema, input),
+    );
   }
   async source(actor: Actor, input: unknown) {
     await this.allow(actor);

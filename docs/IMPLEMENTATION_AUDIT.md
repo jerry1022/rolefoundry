@@ -43,7 +43,7 @@ The integration suite runs against actual local GoTrue, PostgREST, PostgreSQL an
 ## 07 — Course catalog and learning plans
 
 - Design: [07-courses-learning.md](design/07-courses-learning.md).
-- Status: Implemented and locally verified; see [learning setup](LEARNING_SETUP.md). Source authorization, reviewed real metadata population, editorial usefulness and hosted operations remain release gates.
+- Status: Implemented and locally verified; see [learning setup](LEARNING_SETUP.md). Source authorization, reviewed real metadata population, editorial usefulness and hosted operations remain release gates. Editorial course text can carry [reviewed zh-TW translations](LEARNING_SETUP.md#reviewed-course-translations) bound to the published version.
 - Required acceptance scope: Verify prerequisite order, no matching resource, completed-course deduplication, limited time budgets, unavailable resources, outdated metadata and source-ID validation. Ensure a course-complete event never promotes ability without separate evidence.
 
 ## 08 — Resume studio

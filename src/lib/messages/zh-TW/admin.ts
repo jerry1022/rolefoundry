@@ -107,4 +107,12 @@ export const admin = {
   "Who reviewed it and against which source": "由誰審查、依據哪個來源",
   "Save reviewed translation": "儲存已審查的翻譯",
   "Remove translation": "移除翻譯",
+  "Course translations": "課程翻譯",
+  "Published courses are temporarily unavailable.": "已發布課程暫時無法取得。",
+  "The course could not be loaded.": "無法載入此課程。",
+  "Translate RoleFoundry's editorial notes for the published version. Official course titles stay in the provider's language.":
+    "翻譯已發布版本中 RoleFoundry 的編輯說明。官方課程名稱維持提供者的原文。",
+  "Load more courses": "載入更多課程",
+  "Practice prompt (Traditional Chinese)": "練習題目（繁體中文）",
+  "Completion criteria (Traditional Chinese)": "完成標準（繁體中文）",
 } satisfies Messages;

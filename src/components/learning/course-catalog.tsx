@@ -5,6 +5,7 @@ import type { CourseClient } from "@/modules/learning/ports";
 import type { CoursePage, CourseProgress, CourseQuery } from "@/modules/learning/model";
 import type { SkillClient } from "@/modules/skills/ports";
 import { localizedSkillName, skillLabel } from "@/modules/skills/model";
+import { localizedCourseText } from "@/modules/learning/model";
 import { ApplicationError } from "@/modules/platform/errors";
 import { msg, useI18n } from "@/lib/i18n";
 const difficulties = [msg("Beginner"), msg("Intermediate"), msg("Advanced"), msg("Unknown")];
@@ -142,6 +143,7 @@ export function CourseCatalog({
         {page?.data.map((course) => {
           const completed =
             progress?.data.some((item) => item.courseId === course.id && item.completed) || false;
+          const text = localizedCourseText(course, locale);
           return (
             <article className="panel learning-card" key={course.id}>
               <p className="mini-label">
@@ -151,7 +153,7 @@ export function CourseCatalog({
               {course.source.isDemo && (
                 <p className="pill">{t("Demonstration metadata · fictional offering")}</p>
               )}
-              <p>{course.summary}</p>
+              <p lang={text.lang}>{text.summary}</p>
               <p className="muted">
                 {t(course.difficulty)} · {course.language || t("Language not supplied")} ·{" "}
                 {course.officialMinutes !== null
@@ -191,8 +193,13 @@ export function CourseCatalog({
               </p>
               <details>
                 <summary>{t("Practice outcome")}</summary>
-                <p>{course.practice.prompt}</p>
-                <p>{course.practice.completionCriteria}</p>
+                <p lang={text.lang}>{text.practicePrompt}</p>
+                <p lang={text.lang}>{text.completionCriteria}</p>
+                {text.reviewedAt && (
+                  <p className="muted">
+                    {t("Reviewed translation of RoleFoundry's editorial notes.")}
+                  </p>
+                )}
               </details>
               <div className="learning-actions">
                 <a

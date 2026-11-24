@@ -53,6 +53,8 @@ Paths are under `/api/v1`. Public list responses are `{data, nextCursor, revisio
 | POST `/admin/courses/sources/{id}/status` | `{status: "active" or "revoked", reason}` | Audited source transition |
 | POST `/admin/courses` | Course draft | Created immutable version and revision |
 | PATCH `/admin/courses/{id}` | `{course, expectedRevision}` | New immutable draft; prior published version remains visible |
+| POST `/admin/courses/{id}/translations` | `{versionId, locale: "zh-TW", summary, practicePrompt, completionCriteria, reviewNote}` | Reviewed translation of the published version |
+| POST `/admin/courses/{id}/translations/remove` | `{versionId, locale, reason}` | Audited removal |
 | POST `/admin/courses/{id}/transition` | `{expectedRevision, action, reason}` | Audited review/publication/retirement/revalidation |
 | GET `/admin/courses/link-checks` | Optional `cursor`, `hostCursor` | Bounded [course link observations](COURSE_LINKS_SETUP.md) and host waits |
 | POST `/admin/courses/link-checks/resume` | `{host, expectedRevision, reason}` | Audited manual-pause clearance; never shortens a provider wait |
@@ -63,6 +65,16 @@ Paths are under `/api/v1`. Public list responses are `{data, nextCursor, revisio
 A source policy has `providerId, name, publisher, authorizationBasis, rightsSummary, allowedHosts, permittedFields, isDemo`. The twelve required fields are `title, url, provider, summary, skills, prerequisites, duration, practice, language, difficulty, format, availability`.
 
 A draft has `key, providerId, sourceId, title, url, summary, skills, prerequisiteSkills, prerequisiteCourseIds, language, difficulty, format, officialMinutes, editorialMinutes, durationNote, practice`. Practice has `prompt, completionCriteria, minutes`. Use canonical dictionary IDs and course UUIDs. Difficulty is `Beginner`, `Intermediate`, `Advanced` or `Unknown`; missing duration/language are null. Revision PATCH wraps this draft in `{course, expectedRevision}`. Transition actions are `review`, `publish`, `retire`, `confirmed_active`, `network_failure`; explicit reasons are mandatory. Review precedes publication. The role-verified UI exposes these forms without asking users to compose API payloads.
+
+### Reviewed course translations
+
+The **Course translations** section of `/admin/` stores reviewed Traditional Chinese text for RoleFoundry's editorial fields (migration `20261114330000`): the summary, the practice prompt and the completion criteria. Official course titles, provider names and URLs stay in the provider's language because they name the linked page.
+
+- A translation belongs to the **published** course version (`course_version_translations`). Saving with any other `versionId` returns 409. Publishing a new version hides it until someone reviews the new version, while a pending draft leaves the published translation in place.
+- Saves need a review note, which becomes the `course_audit` reason (`course.translated`). Removal needs its own reason (`course.translation_removed`).
+- Public course JSON carries `translations["zh-TW"]`. `localizedCourseText` in `src/modules/learning/model.ts` uses it for zh-TW viewers, with `lang="zh-Hant"` and a note that it is a reviewed translation.
+
+Learning-plan steps keep the text snapshotted when the plan was built.
 
 ## Source policy and replacement boundaries
 
