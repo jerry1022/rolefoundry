@@ -6,7 +6,6 @@ export const operationsAdmin = {
   "Review content and operate the workspace.": "審核內容並營運工作區。",
   "Manage reviewed skills, assessment versions, invitations and allowances alongside authorized sources and task recovery.":
     "管理已審核的技能、能力檢測版本、邀請與使用額度，以及授權來源與任務復原。",
-  "Checking administrator access…": "正在確認管理員權限…",
   "Administration requires a current administrator session.":
     "管理功能需要有效的管理員登入工作階段。",
   "Administrator access could not be verified. Retry when the identity service is available.":

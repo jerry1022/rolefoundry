@@ -19,4 +19,5 @@ export const common = {
   "Visit original source ↗": "前往原始來源 ↗",
   "Weekly learning hours": "每週學習時數",
   "Work authorization": "工作許可",
+  "Checking administrator access…": "正在確認管理員權限…",
 } satisfies Messages;

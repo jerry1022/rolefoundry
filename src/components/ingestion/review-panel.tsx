@@ -4,10 +4,11 @@ import type { ImportAdminClient } from "@/modules/ingestion/ports";
 import type { ImportReview } from "@/modules/ingestion/model";
 import { jobDraftSchema } from "@/modules/jobs/model";
 import { courseDraftSchema } from "@/modules/learning/model";
+import { msg, useI18n } from "@/lib/i18n";
 import { ApplicationError } from "@/modules/platform/errors";
 import { ImportDraftEditor } from "./draft-editor";
-function display(value: unknown) {
-  if (value === null || value === undefined) return "Unknown / absent";
+function display(value: unknown, absent: string) {
+  if (value === null || value === undefined) return absent;
   return typeof value === "string" ? value : JSON.stringify(value);
 }
 export function ImportReviewPanel({
@@ -21,6 +22,7 @@ export function ImportReviewPanel({
   onChanged: () => Promise<void>;
   onDenied: () => void;
 }) {
+  const { t } = useI18n();
   const [review, setReview] = useState(initial),
     [draft, setDraft] = useState(initial.normalized.candidate),
     [targetId, setTargetId] = useState(initial.normalized.targetId || ""),
@@ -56,7 +58,7 @@ export function ImportReviewPanel({
       setError(
         error instanceof ApplicationError
           ? error.message
-          : "The review could not be saved. Your edits are still here.",
+          : msg("The review could not be saved. Your edits are still here."),
       );
       if (error instanceof ApplicationError && [401, 403].includes(error.status)) onDenied();
     } finally {
@@ -66,7 +68,7 @@ export function ImportReviewPanel({
   }
   async function decide(decision: "publish" | "reject" | "close" | "confirm") {
     if (!reason.trim()) {
-      setError("Explain this review decision before saving.");
+      setError(msg("Explain this review decision before saving."));
       return;
     }
     let metadata: Record<string, unknown> | null = null;
@@ -76,12 +78,11 @@ export function ImportReviewPanel({
           ? jobDraftSchema.safeParse(draft)
           : courseDraftSchema.safeParse(draft);
       if (!parsed.success) {
-        setError(
-          `Check the reviewed metadata: ${parsed.error.issues
-            .slice(0, 5)
-            .map((issue) => `${issue.path.join(" / ")}: ${issue.message}`)
-            .join("; ")}`,
-        );
+        const issues = parsed.error.issues
+          .slice(0, 5)
+          .map((issue) => `${issue.path.join(" / ")}: ${issue.message}`)
+          .join("; ");
+        setError(t("Check the reviewed metadata: {issues}", { issues }));
         return;
       }
       metadata = parsed.data;
@@ -99,57 +100,69 @@ export function ImportReviewPanel({
     const receipt = await client.decide(review.id, input, pending.current.key);
     pending.current = null;
     // A saved decision is acknowledged before refreshing; a refresh failure never suggests retrying publication blindly.
-    setMessage(`Saved ${receipt.decision}. Publication reference: ${receipt.id}`);
+    setMessage(
+      t("Saved {decision}. Publication reference: {id}", {
+        decision: receipt.decision,
+        id: receipt.id,
+      }),
+    );
     accept(await client.review(review.id));
     await onChanged();
   }
   return (
-    <section className="panel section-block" aria-label="Import record review">
-      <h3>Review source record {row.externalId}</h3>
+    <section className="panel section-block" aria-label={t("Import record review")}>
+      <h3>{t("Review source record {id}", { id: row.externalId })}</h3>
       <p>
-        Preview {review.previewVersion} · {review.state} · {review.kind}
+        {t("Preview {version}", { version: review.previewVersion })} · {review.state} ·{" "}
+        {review.kind}
       </p>
       <p className="muted">
-        Source ID: {review.sourceId}.{" "}
+        {t("Source ID: {id}.", { id: review.sourceId })}{" "}
         <a href={row.url} target="_blank" rel="noreferrer">
-          Open original source
+          {t("Open original source")}
         </a>
       </p>
       {editable && !current && (
         <div className="notice" role="status">
-          This preview needs attention:{" "}
-          {[
-            !review.sourceCurrent && "source permissions or settings changed",
-            !review.dictionaryCurrent && "skill dictionary changed",
-            !review.targetCurrent && "catalog target changed",
-            !review.sourceLatest && "a newer source batch supersedes this row",
-          ]
-            .filter(Boolean)
-            .join("; ")}
-          . Rebuild a current preview before publishing. Superseded rows can only be rejected.
+          {t(
+            "This preview needs attention: {reasons}. Rebuild a current preview before publishing. Superseded rows can only be rejected.",
+            {
+              reasons: [
+                !review.sourceCurrent && t("source permissions or settings changed"),
+                !review.dictionaryCurrent && t("skill dictionary changed"),
+                !review.targetCurrent && t("catalog target changed"),
+                !review.sourceLatest && t("a newer source batch supersedes this row"),
+              ]
+                .filter(Boolean)
+                .join("; "),
+            },
+          )}
         </div>
       )}
       {error && (
         <p className="notice" role="alert">
-          {error}
+          {t(error)}
         </p>
       )}
-      {message && <p role="status">{message}</p>}
+      {message && <p role="status">{t(message)}</p>}
       {review.publication && (
         <p>
-          Recorded decision: {review.publication.decision} · reference {review.publication.id} ·{" "}
-          {review.publication.createdAt}
+          {t("Recorded decision: {decision} · reference {id}", {
+            decision: review.publication.decision,
+            id: review.publication.id,
+          })}{" "}
+          · {review.publication.createdAt}
         </p>
       )}
       <details open>
-        <summary>Source changes ({row.changes.length})</summary>
+        <summary>{t("Source changes ({count})", { count: row.changes.length })}</summary>
         <div className="table-scroll">
           <table>
             <thead>
               <tr>
-                <th>Field</th>
-                <th>Previous value</th>
-                <th>Source proposal</th>
+                <th>{t("Field")}</th>
+                <th>{t("Previous value")}</th>
+                <th>{t("Source proposal")}</th>
               </tr>
             </thead>
             <tbody>
@@ -158,8 +171,12 @@ export function ImportReviewPanel({
                   <th>
                     {change.field} · {change.operation}
                   </th>
-                  <td style={{ overflowWrap: "anywhere" }}>{display(change.before)}</td>
-                  <td style={{ overflowWrap: "anywhere" }}>{display(change.after)}</td>
+                  <td style={{ overflowWrap: "anywhere" }}>
+                    {display(change.before, t("Unknown / absent"))}
+                  </td>
+                  <td style={{ overflowWrap: "anywhere" }}>
+                    {display(change.after, t("Unknown / absent"))}
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -171,40 +188,43 @@ export function ImportReviewPanel({
           {row.issues.map((issue, index) => (
             <li key={index}>
               {issue.code} · {issue.field}
-              {issue.blocking ? " · needs correction" : ""}
+              {issue.blocking ? ` · ${t("needs correction")}` : ""}
             </li>
           ))}
         </ul>
       )}
       {!!row.unmappedSkills.length && (
         <p>
-          Unmapped source skills: {row.unmappedSkills.join(", ")}. Review canonical mappings before
-          publishing.
+          {t("Unmapped source skills: {skills}. Review canonical mappings before publishing.", {
+            skills: row.unmappedSkills.join(", "),
+          })}
         </p>
       )}
       {editable && (
         <fieldset disabled={busy} className="profile-form-fields">
           <label>
-            Catalog target
+            {t("Catalog target")}
             <select
               className="text-input"
-              aria-label="Import catalog target"
+              aria-label={t("Import catalog target")}
               value={targetId}
               onChange={(event) => setTargetId(event.target.value)}
             >
-              <option value="">Create a separate catalog record</option>
+              <option value="">{t("Create a separate catalog record")}</option>
               {[...new Set([...(row.targetId ? [row.targetId] : []), ...row.candidateIds])].map(
                 (id) => (
                   <option key={id} value={id}>
-                    {id === row.targetId ? "Current linked record" : "Potential duplicate"} · {id}
+                    {id === row.targetId ? t("Current linked record") : t("Potential duplicate")} ·{" "}
+                    {id}
                   </option>
                 ),
               )}
             </select>
           </label>
           <p className="muted">
-            Choosing a target takes effect only after rebuilding the preview. Rebuilding or
-            reloading replaces unsaved editorial edits with the new source proposal.
+            {t(
+              "Choosing a target takes effect only after rebuilding the preview. Rebuilding or reloading replaces unsaved editorial edits with the new source proposal.",
+            )}
           </p>
           <button
             type="button"
@@ -218,15 +238,15 @@ export function ImportReviewPanel({
                     targetId: targetId || null,
                   }),
                 );
-                setMessage("Rebuilt preview. Review the new differences before deciding.");
+                setMessage(msg("Rebuilt preview. Review the new differences before deciding."));
               })
             }
           >
-            Rebuild preview and discard unsaved edits
+            {t("Rebuild preview and discard unsaved edits")}
           </button>
           {row.state === "active" && (
             <details open>
-              <summary>Reviewed publication metadata</summary>
+              <summary>{t("Reviewed publication metadata")}</summary>
               <ImportDraftEditor kind={review.kind} draft={draft} onChange={setDraft} />
             </details>
           )}
@@ -237,14 +257,14 @@ export function ImportReviewPanel({
                 checked={allowNew}
                 onChange={(event) => setAllowNew(event.target.checked)}
               />
-              I reviewed the possible duplicates and intend to create a separate record.
+              {t("I reviewed the possible duplicates and intend to create a separate record.")}
             </label>
           )}
           <label>
-            Review decision reason
+            {t("Review decision reason")}
             <textarea
               className="text-input"
-              aria-label="Import decision reason"
+              aria-label={t("Import decision reason")}
               maxLength={1000}
               value={reason}
               onChange={(event) => setReason(event.target.value)}
@@ -258,7 +278,7 @@ export function ImportReviewPanel({
                 disabled={!current || targetId !== (row.targetId || "")}
                 onClick={() => void perform(() => decide("publish"))}
               >
-                Publish reviewed metadata
+                {t("Publish reviewed metadata")}
               </button>
             )}
             {row.state === "active" && row.disposition === "unchanged" && (
@@ -268,7 +288,7 @@ export function ImportReviewPanel({
                 disabled={!current}
                 onClick={() => void perform(() => decide("confirm"))}
               >
-                Confirm unchanged record
+                {t("Confirm unchanged record")}
               </button>
             )}
             {row.state === "closed" && (
@@ -278,7 +298,7 @@ export function ImportReviewPanel({
                 disabled={!current}
                 onClick={() => void perform(() => decide("close"))}
               >
-                Confirm explicit source closure
+                {t("Confirm explicit source closure")}
               </button>
             )}
             <button
@@ -286,7 +306,7 @@ export function ImportReviewPanel({
               className="button secondary"
               onClick={() => void perform(() => decide("reject"))}
             >
-              Reject source proposal
+              {t("Reject source proposal")}
             </button>
           </div>
         </fieldset>
@@ -298,11 +318,11 @@ export function ImportReviewPanel({
         onClick={() =>
           void perform(async () => {
             accept(await client.review(review.id));
-            setMessage("Reloaded saved preview; unsaved edits were discarded.");
+            setMessage(msg("Reloaded saved preview; unsaved edits were discarded."));
           })
         }
       >
-        Reload review and discard unsaved edits
+        {t("Reload review and discard unsaved edits")}
       </button>
     </section>
   );

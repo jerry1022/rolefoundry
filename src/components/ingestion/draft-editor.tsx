@@ -1,4 +1,5 @@
 "use client";
+import { msg, useI18n } from "@/lib/i18n";
 import { jobLevels, workplaces } from "@/modules/jobs/model";
 import { tracks } from "@/modules/skills/catalog";
 import { careerPaths } from "@/modules/jobs/specializations";
@@ -39,62 +40,62 @@ const object = (key: string, label: string, fields: Field[], nullable = false): 
   nullable,
 });
 const jobs: Field[] = [
-  text("title", "Role title"),
-  text("company", "Company"),
-  select("track", "Assessment track", tracks),
+  text("title", msg("Role title")),
+  text("company", msg("Company")),
+  select("track", msg("Assessment track"), tracks),
   select(
     "specialization",
-    "Career direction",
+    msg("Career direction"),
     careerPaths.map((path) => path.id),
   ),
-  text("location", "Location", true),
-  select("workplace", "Workplace", workplaces, true),
-  select("level", "Seniority", jobLevels, true),
-  text("summary", "Editorial summary"),
+  text("location", msg("Location"), true),
+  select("workplace", msg("Workplace"), workplaces, true),
+  select("level", msg("Seniority"), jobLevels, true),
+  text("summary", msg("Editorial summary")),
   object(
     "salary",
-    "Disclosed salary",
+    msg("Disclosed salary"),
     [
-      number("min", "Minimum", true),
-      number("max", "Maximum", true),
-      text("currency", "Currency (ISO code)"),
-      select("interval", "Pay period", ["hour", "month", "year"]),
+      number("min", msg("Minimum"), true),
+      number("max", msg("Maximum"), true),
+      text("currency", msg("Currency (ISO code)")),
+      select("interval", msg("Pay period"), ["hour", "month", "year"]),
     ],
     true,
   ),
-  array("responsibilities", "Responsibilities", text("", "Responsibility")),
+  array("responsibilities", msg("Responsibilities"), text("", msg("Responsibility"))),
   array(
     "requirements",
-    "Requirements",
-    object("", "Requirement", [
-      text("text", "Requirement text"),
-      select("priority", "Priority", ["mandatory", "preferred"]),
-      array("skills", "Canonical skill IDs", text("", "Skill ID")),
+    msg("Requirements"),
+    object("", msg("Requirement"), [
+      text("text", msg("Requirement text")),
+      select("priority", msg("Priority"), ["mandatory", "preferred"]),
+      array("skills", msg("Canonical skill IDs"), text("", msg("Skill ID"))),
     ]),
   ),
-  object("conditions", "Employment conditions", [
-    text("workAuthorization", "Work authorization", true),
-    text("education", "Education", true),
-    number("experienceYears", "Required years of experience", true),
+  object("conditions", msg("Employment conditions"), [
+    text("workAuthorization", msg("Work authorization"), true),
+    text("education", msg("Education"), true),
+    number("experienceYears", msg("Required years of experience"), true),
   ]),
-  text("expiresAt", "Expiry (ISO timestamp with timezone)", true),
+  text("expiresAt", msg("Expiry (ISO timestamp with timezone)"), true),
 ];
 const courses: Field[] = [
-  text("title", "Course title"),
-  text("summary", "Editorial summary"),
-  array("skills", "Canonical skill IDs", text("", "Skill ID")),
-  array("prerequisiteSkills", "Prerequisite skill IDs", text("", "Skill ID")),
-  array("prerequisiteCourseIds", "Prerequisite course IDs", text("", "Course ID")),
-  text("language", "Language", true),
-  select("difficulty", "Difficulty", ["Beginner", "Intermediate", "Advanced", "Unknown"]),
-  text("format", "Course format"),
-  number("officialMinutes", "Official study minutes", true),
-  number("editorialMinutes", "Editorial study minutes", true),
-  text("durationNote", "Duration basis and uncertainty"),
-  object("practice", "Independent practice", [
-    text("prompt", "Practice prompt"),
-    text("completionCriteria", "Completion criteria"),
-    number("minutes", "Practice minutes"),
+  text("title", msg("Course title")),
+  text("summary", msg("Editorial summary")),
+  array("skills", msg("Canonical skill IDs"), text("", msg("Skill ID"))),
+  array("prerequisiteSkills", msg("Prerequisite skill IDs"), text("", msg("Skill ID"))),
+  array("prerequisiteCourseIds", msg("Prerequisite course IDs"), text("", msg("Course ID"))),
+  text("language", msg("Language"), true),
+  select("difficulty", msg("Difficulty"), ["Beginner", "Intermediate", "Advanced", "Unknown"]),
+  text("format", msg("Course format")),
+  number("officialMinutes", msg("Official study minutes"), true),
+  number("editorialMinutes", msg("Editorial study minutes"), true),
+  text("durationNote", msg("Duration basis and uncertainty")),
+  object("practice", msg("Independent practice"), [
+    text("prompt", msg("Practice prompt")),
+    text("completionCriteria", msg("Completion criteria")),
+    number("minutes", msg("Practice minutes")),
   ]),
 ];
 function blank(field: Field): unknown {
@@ -115,11 +116,13 @@ function FieldEditor({
   path: string;
   onChange: (value: unknown) => void;
 }) {
+  const { t } = useI18n();
+  const label = t(field.label);
   if (field.type === "object") {
     const record = value && typeof value === "object" ? (value as Record<string, unknown>) : null;
     return (
       <fieldset className="panel">
-        <legend>{field.label}</legend>
+        <legend>{label}</legend>
         {field.nullable && (
           <label>
             <input
@@ -133,7 +136,7 @@ function FieldEditor({
                 )
               }
             />
-            Include {field.label.toLowerCase()}
+            {t("Include {field}", { field: label.toLowerCase() })}
           </label>
         )}
         {(!field.nullable || record) &&
@@ -142,7 +145,7 @@ function FieldEditor({
               key={child.key}
               field={child}
               value={record?.[child.key]}
-              path={`${path} / ${child.label}`}
+              path={`${path} / ${t(child.label)}`}
               onChange={(next) => onChange({ ...record, [child.key]: next })}
             />
           ))}
@@ -153,7 +156,7 @@ function FieldEditor({
     const rows = Array.isArray(value) ? value : [];
     return (
       <fieldset className="panel">
-        <legend>{field.label}</legend>
+        <legend>{label}</legend>
         {rows.map((row, index) => (
           <div key={index} className="section-block">
             <FieldEditor
@@ -167,10 +170,10 @@ function FieldEditor({
             <button
               type="button"
               className="button secondary"
-              aria-label={`Remove ${path} ${index + 1}`}
+              aria-label={t("Remove {item}", { item: `${path} ${index + 1}` })}
               onClick={() => onChange(rows.filter((_, position) => position !== index))}
             >
-              Remove
+              {t("Remove")}
             </button>
           </div>
         ))}
@@ -180,7 +183,7 @@ function FieldEditor({
           disabled={rows.length >= 20}
           onClick={() => onChange([...rows, blank(field.item!)])}
         >
-          Add {field.label.toLowerCase()}
+          {t("Add {field}", { field: label.toLowerCase() })}
         </button>
       </fieldset>
     );
@@ -188,17 +191,19 @@ function FieldEditor({
   if (field.type === "select")
     return (
       <label>
-        {field.label}
+        {label}
         <select
           className="text-input"
           aria-label={path}
           value={typeof value === "string" ? value : ""}
           onChange={(event) => onChange(event.target.value || (field.nullable ? null : ""))}
         >
-          <option value="">{field.nullable ? "Unknown / undisclosed" : "Choose a value"}</option>
+          <option value="">
+            {field.nullable ? t("Unknown / undisclosed") : t("Choose a value")}
+          </option>
           {field.choices!.map((choice) => (
             <option key={choice} value={choice}>
-              {careerPaths.find((path) => path.id === choice)?.title || choice}
+              {t(careerPaths.find((path) => path.id === choice)?.title || choice)}
             </option>
           ))}
         </select>
@@ -207,7 +212,7 @@ function FieldEditor({
   if (field.type === "number")
     return (
       <label>
-        {field.label}
+        {label}
         <input
           className="text-input"
           aria-label={path}
@@ -215,7 +220,7 @@ function FieldEditor({
           min={0}
           step="any"
           value={typeof value === "number" ? value : ""}
-          placeholder={field.nullable ? "Unknown / undisclosed" : "Enter a number"}
+          placeholder={field.nullable ? t("Unknown / undisclosed") : t("Enter a number")}
           onChange={(event) =>
             onChange(
               event.target.value === "" ? (field.nullable ? null : "") : event.target.valueAsNumber,
@@ -233,7 +238,7 @@ function FieldEditor({
         rows={2}
         maxLength={3000}
         value={typeof value === "string" ? value : ""}
-        placeholder={field.nullable ? "Unknown / undisclosed" : "Enter reviewed metadata"}
+        placeholder={field.nullable ? t("Unknown / undisclosed") : t("Enter reviewed metadata")}
         onChange={(event) => onChange(event.target.value || (field.nullable ? null : ""))}
       />
     </label>
@@ -249,6 +254,7 @@ export function ImportDraftEditor({
   draft: Record<string, unknown>;
   onChange: (draft: Record<string, unknown>) => void;
 }) {
+  const { t } = useI18n();
   return (
     <div className="profile-form-fields">
       {(kind === "jobs" ? jobs : courses).map((field) => (
@@ -256,7 +262,7 @@ export function ImportDraftEditor({
           key={field.key}
           field={field}
           value={draft[field.key]}
-          path={field.label}
+          path={t(field.label)}
           onChange={(value) => onChange({ ...draft, [field.key]: value })}
         />
       ))}
