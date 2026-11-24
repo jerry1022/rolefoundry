@@ -1,3 +1,4 @@
+import type { WordingContext, WordingRecord } from "./wording";
 import type { Actor } from "../identity/core";
 import type { TaskLease } from "../tasks/model";
 import type {
@@ -33,6 +34,16 @@ export interface ResumeParseStore {
   load(lease: TaskLease, signal: AbortSignal): Promise<ResumeParseSource>;
   publish(lease: TaskLease, draft: ExtractedResume, signal: AbortSignal): Promise<void>;
   failed(lease: TaskLease, code: ProcessingCode, signal: AbortSignal): Promise<void>;
+}
+/** Optional wording stage: reservation context and atomic publication with suggestions. */
+export interface ResumeWordingStore {
+  wordingContext(lease: TaskLease, signal: AbortSignal): Promise<WordingContext | null>;
+  publishWorded(
+    lease: TaskLease,
+    proposal: ResumeRevisionOutput,
+    wording: WordingRecord,
+    signal: AbortSignal,
+  ): Promise<void>;
 }
 export interface ResumeRevisionStore {
   load(lease: TaskLease, signal: AbortSignal): Promise<ResumeRevisionInput>;
@@ -99,13 +110,18 @@ export interface ResumeClient extends Pick<
   | "paste"
   | "retryParse"
   | "confirm"
-  | "revise"
   | "proposal"
   | "accept"
   | "export"
   | "remove"
 > {
   upload(id: string, token: string, file: File): Promise<ResumeDocument>;
+  /** Requests an order proposal, optionally with AI wording suggestions. */
+  revise(
+    id: string,
+    request: { versionId: string; jobId: string; expectedRevision: number; wording?: boolean },
+    key: string,
+  ): Promise<ResumeTaskReply>;
   download(exportId: string): Promise<{ bytes: Uint8Array; filename: string }>;
 }
 /** Service-only cleanup deliberately survives deletion of the source owner. */

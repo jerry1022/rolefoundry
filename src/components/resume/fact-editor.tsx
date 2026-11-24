@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { msg, useI18n } from "@/lib/i18n";
 import { confirmedResumeSchema, resumeLimits } from "@/modules/resume/model";
 import type { ResumeDocument, ConfirmedResume, ResumeFact } from "@/modules/resume/model";
@@ -39,11 +39,14 @@ export function ResumeFactEditor({
   busy,
   dictionary,
   onConfirm,
+  incoming,
 }: {
   document: ResumeDocument;
   busy: boolean;
   dictionary: SkillDictionary | null;
   onConfirm: (content: ConfirmedResume, revision: number) => Promise<ResumeDocument>;
+  /** A reviewed wording suggestion to place into the draft (nonce makes repeats apply). */
+  incoming?: { factId: string; text: string; nonce: number } | null;
 }) {
   const { t, fmt } = useI18n();
   const [draft, setDraft] = useState(() => initial(document)),
@@ -58,6 +61,17 @@ export function ResumeFactEditor({
   const labels = new Map(
     (dictionary?.skills || []).map((skill) => [skill.id, skill.nameEn] as const),
   );
+  // Apply an owner-chosen suggestion to the draft only; confirmation stays explicit.
+  useEffect(() => {
+    if (!incoming) return;
+    setDraft((current) => ({
+      ...current,
+      facts: current.facts.map((fact) =>
+        fact.id === incoming.factId ? { ...fact, text: incoming.text } : fact,
+      ),
+    }));
+    setDirty(true);
+  }, [incoming]);
   function change(value: ConfirmedResume) {
     setDraft(value);
     setDirty(true);

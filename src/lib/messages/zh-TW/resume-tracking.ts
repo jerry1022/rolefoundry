@@ -24,8 +24,6 @@ export const resumeTracking = {
   "Delete source and derived data": "刪除來源與衍生資料",
   "Keep this source": "保留這份來源",
   "Targeted review and fixed exports": "針對職缺檢視與固定版本匯出",
-  "Confirmed version {version}. New wording from a model is not enabled; the current suggestion reorders existing statements only.":
-    "已確認版本 {version}。尚未啟用模型產生的新措辭；目前的建議只會調整既有敘述的順序。",
   "Resume target role": "履歷目標職缺",
   "Load more resume target roles": "載入更多目標職缺",
   "Suggest a fact-preserving order": "建議保留事實的排序",
@@ -298,4 +296,31 @@ export const resumeTracking = {
   "Loading history…": "正在載入紀錄…",
   "Show earlier events": "顯示較早的事件",
   "Refresh event history": "重新整理事件紀錄",
+  // Optional AI wording suggestions.
+  "AI wording is not enabled on this deployment. Your allowance was returned.":
+    "此部署未啟用 AI 措辭建議，額度已退還。",
+  "No statement was long enough to reword. Your allowance was returned.":
+    "沒有足夠長的陳述需要改寫，額度已退還。",
+  "Permission was withdrawn before AI wording ran.": "AI 措辭建議執行前同意已撤回。",
+  "The suggestions changed facts or numbers, so none are shown.":
+    "建議內容更動了事實或數字，因此不予顯示。",
+  "AI wording could not complete. The order proposal is still available.":
+    "AI 措辭建議未能完成，順序建議仍可使用。",
+  "AI wording suggestions": "AI 措辭建議",
+  "Each suggestion rewrites one confirmed statement without adding facts or numbers. Use one to edit your draft, check it, then confirm a new version.":
+    "每則建議只改寫一項已確認的陳述，不會新增事實或數字。套用到草稿、檢查後，再確認為新版本。",
+  "Use in my draft": "套用到我的草稿",
+  "Your statements already read clearly; no rewording suggested.":
+    "你的陳述已經很清楚，沒有需要改寫的建議。",
+  "Your weekly AI allowance is used up; the order proposal was still created.":
+    "本週 AI 額度已用完；仍已建立順序建議。",
+  "AI wording needs your resume analysis permission in Account & privacy; the order proposal was still created.":
+    "AI 措辭建議需要你在「帳號與隱私」中同意履歷分析；仍已建立順序建議。",
+  "Confirmed version {version}. Order suggestions reorder existing statements. Optional AI wording is only a suggestion until you edit and confirm it.":
+    "已確認版本 {version}。順序建議只會重新排列既有陳述；選用的 AI 措辭在你編輯並確認前都只是建議。",
+  "Also suggest clearer wording with AI": "同時以 AI 建議更清楚的措辭",
+  "Needs your resume analysis permission and uses one weekly allowance. Suggestions keep every fact and number, and change nothing until you confirm.":
+    "需要你的履歷分析同意，並使用一次每週額度。建議會保留所有事實與數字，在你確認前不會更動任何內容。",
+  "Suggestion added to your draft. Review it, then confirm a new version.":
+    "已將建議加入草稿，請檢查後再確認為新版本。",
 } satisfies Messages;

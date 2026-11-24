@@ -1,5 +1,6 @@
 import { expect } from "vitest";
 import type { LocalFixtures, LocalMember } from "./local-fixtures";
+import { leaseTask } from "./task-fixtures";
 import { publicationFields, type JobDraft, type PublishedJob } from "../../src/modules/jobs/model";
 
 /** Owned, fictional catalog/profile fixtures for matching tests; callers clean up by prefix. */
@@ -97,33 +98,8 @@ export class MatchingFixtures {
     return owner;
   }
 
-  /** Leases exactly the given task, releasing anything else this read happened to claim. */
-  async lease(taskId: string) {
-    for (let attempt = 0; attempt < 10; attempt++) {
-      const result = await this.stack.privileged.rpc("task_read", {
-        p_worker: crypto.randomUUID(),
-        p_kinds: ["matches.refresh"],
-        p_seconds: 30,
-        p_quantity: 8,
-      });
-      if (result.error) throw Error(result.error.message);
-      const leases = result.data as { taskId: string; token: string; messageId: string }[];
-      for (const other of leases.filter((value) => value.taskId !== taskId))
-        await this.stack.privileged.rpc("task_release", {
-          p_task: other.taskId,
-          p_token: other.token,
-        });
-      const selected = leases.find((value) => value.taskId === taskId);
-      if (selected)
-        return {
-          taskId: selected.taskId,
-          token: selected.token,
-          messageId: String(selected.messageId),
-          kind: "matches.refresh" as const,
-          leaseSeconds: 30,
-        };
-    }
-    throw Error("Owned matching task was not visible");
+  lease(taskId: string) {
+    return leaseTask(this.stack, taskId, "matches.refresh");
   }
 
   /** Removes this fixture's queue messages, runs and catalog records (in dependency order). */

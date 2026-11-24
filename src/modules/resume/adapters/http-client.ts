@@ -103,12 +103,12 @@ export function createResumeClient(fetcher: typeof fetch = fetch): ResumeClient 
         ).data,
       );
     },
-    async revise(id, versionId, jobId, expectedRevision, key) {
+    async revise(id, body, key) {
       return resumeTaskReplySchema.parse(
         (
           await request(`resumes/${id}/revisions`, {
             method: "POST",
-            body: { versionId, jobId, expectedRevision },
+            body,
             idempotencyKey: key,
           })
         ).data,

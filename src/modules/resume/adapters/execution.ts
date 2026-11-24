@@ -1,5 +1,6 @@
 import "server-only";
 import { z } from "zod";
+import type { ResumeWordingStore } from "../ports";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { TaskLease } from "../../tasks/model";
 import { TaskFailure } from "../../tasks/model";
@@ -19,6 +20,7 @@ import {
 } from "../model";
 import type { ExtractedResume, ResumeRevisionOutput, ProcessingCode } from "../model";
 import { resumeWorkerRpc } from "./rpc";
+import type { WordingRecord } from "../wording";
 const authority = (lease: TaskLease) => ({ p_task: lease.taskId, p_token: lease.token });
 export class SupabaseResumeParseStore implements ResumeParseStore {
   constructor(
@@ -68,7 +70,16 @@ export class SupabaseResumeParseStore implements ResumeParseStore {
     );
   }
 }
-export class SupabaseResumeRevisionStore implements ResumeRevisionStore {
+const wordingContextSchema = z
+  .object({
+    identityTaskId: z.uuid(),
+    ownerId: z.uuid(),
+    inputVersion: z.string().min(1).max(200),
+    jobTitle: z.string().max(300),
+    requirements: z.array(z.string().max(4000)).max(200),
+  })
+  .strict();
+export class SupabaseResumeRevisionStore implements ResumeRevisionStore, ResumeWordingStore {
   constructor(private readonly client: SupabaseClient) {}
   async load(lease: TaskLease, signal: AbortSignal) {
     return revisionInputSchema.parse(
@@ -80,6 +91,31 @@ export class SupabaseResumeRevisionStore implements ResumeRevisionStore {
       this.client,
       "resume_revision_publish",
       { ...authority(lease), p_output: proposal },
+      signal,
+    );
+  }
+  async wordingContext(lease: TaskLease, signal: AbortSignal) {
+    const data = await resumeWorkerRpc(
+      this.client,
+      "resume_wording_context",
+      authority(lease),
+      signal,
+    );
+    if (data === null) return null;
+    const parsed = wordingContextSchema.safeParse(data);
+    if (!parsed.success) throw new TaskFailure("validation");
+    return parsed.data;
+  }
+  async publishWorded(
+    lease: TaskLease,
+    proposal: ResumeRevisionOutput,
+    wording: WordingRecord,
+    signal: AbortSignal,
+  ) {
+    await resumeWorkerRpc(
+      this.client,
+      "resume_revision_publish_worded",
+      { ...authority(lease), p_output: proposal, p_wording: wording },
       signal,
     );
   }

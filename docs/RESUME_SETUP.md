@@ -1,6 +1,6 @@
 # Private resume studio
 
-Module 08 implements private PDF/DOCX sources, bounded parsing, owner-confirmed facts and claim histories, source-grounded order proposals, individual acceptance and fixed-version PDF export. The independent Node worker executes the actual `resume.parse`, `resume.revise` and `resume.export` handlers. It uses no model, provider consent or AI allowance. **Required model-assisted wording remains pending integration/evaluation with module 11**; the implemented deterministic fallback is not described as AI rewriting or an ATS score.
+Module 08 implements private PDF/DOCX sources, bounded parsing, owner-confirmed facts and claim histories, source-grounded order proposals, individual acceptance and fixed-version PDF export. The independent Node worker executes the actual `resume.parse`, `resume.revise` and `resume.export` handlers. Order proposals use no model. [Optional AI wording suggestions](#optional-ai-wording-suggestions) run through module 11 with resume consent and a weekly allowance; they never change a confirmed version on their own, and nothing is described as an ATS score.
 
 ## Run locally — configured by the project
 
@@ -36,8 +36,8 @@ Paths are under `/api/v1`. All operations require an active verified session. Mu
 | GET `/resumes/{id}` | Source UUID | Private status/error, extracted draft, current confirmed version and bounded history |
 | POST `/resumes/{id}/confirm` | `{expectedRevision, content: {facts, sections}}` | New immutable version, source-bound unreviewed claims and updated document |
 | GET `/resume-versions/{id}` | Version UUID | Exact owner source version and its dictionary version |
-| POST `/resumes/{id}/revisions` | `{versionId, jobId, expectedRevision}` and idempotency header | `202 {id, taskId, status}` |
-| GET `/resume-revisions/{id}` | Proposal UUID | Source/job version, stale flag, before/after changes and accepted choices |
+| POST `/resumes/{id}/revisions` | `{versionId, jobId, expectedRevision, wording?: boolean}` and idempotency header | `202 {id, taskId, status, wording: {state, code}}` |
+| GET `/resume-revisions/{id}` | Proposal UUID | Source/job version, stale flag, before/after changes, accepted choices and `wording {state, code, suggestions}` |
 | POST `/resume-revisions/{id}/accept` | `{expectedRevision, changeIds}` | New version containing only accepted order changes |
 | POST `/resumes/{id}/exports` | `{versionId}` and idempotency header | `202 {id, taskId, status}` for that fixed version |
 | POST `/resume-exports/{id}/download-intents` | No content | `201 {id, expiresAt}`; requires same-origin POST |
@@ -50,6 +50,17 @@ The upload URL is the application source endpoint, not a public or long-lived ob
 Download permit IDs last 60 seconds and also require the same owner session. The server checks access before and after fetching the object and verifies its stored size/hash. No public/CDN signed URL is returned. Deletion therefore revokes new application reads even if an older permit has not yet expired. Previously downloaded copies cannot be recalled.
 
 Idempotency is actor + operation + key. Repeating an identical request returns its prior record/task; changed content under that key returns `409`. An uncertain UI submission reuses its key. Confirmation/acceptance carry the document revision. Repeating the same accepted choices returns the prior accepted version; different choices conflict. Parsing retries require the exact failed task with `RF_RETRY_EXHAUSTED`, retain the original source and are capped at five parse tasks per source. Unsupported/scanned/encrypted input uses a fresh source or paste fallback, not an unbounded retry loop.
+
+## Optional AI wording suggestions
+
+A revision request may include `"wording": true`. The deterministic `resume-order-v1` proposal and its acceptance are unchanged. Separately, `resume-wording-v1` suggests a clearer rewrite for individual confirmed facts:
+
+- **Owner control:** suggestions are stored on the proposal and shown beside it. **Use in my draft** places one into the fact editor; the owner reviews it and confirms a new version through the normal confirm flow. That flow creates a new immutable version and leaves earlier versions and claim history intact. A suggestion never edits a confirmed version, accepts itself or links claims.
+- **Facts preserved:** each suggestion rewrites exactly one fact and may contain only numbers present in that fact. The gateway rejects fabricated references or numbers, and SQL rechecks the structure: known non-contact facts, unique, bounded plain text. Contact facts are never sent or reworded. Unchanged rewrites are dropped.
+- **Consent and allowance:** the server reserves a `resume` analysis before creating the proposal, keyed by its `Idempotency-Key`, and releases it if the proposal cannot be created. Missing consent or allowance returns `wording: {state: "unavailable", code}` while the order proposal is still created. The worker releases the reservation when wording is disabled or nothing is long enough to reword. Otherwise it consumes the allowance, records the content-free attempt, publishes order and wording together (`resume_revision_publish_worded`), and only then completes the identity task. Provider failures are refundable; invalid output is a validation failure.
+- **Data:** at most 40 eligible facts and 12 target requirements (300 characters each) are sent, minimized and delimited as data. Suggestions are part of the proposal row and are erased with proposals on source deletion.
+
+The worker reads `ROLEFOUNDRY_AI_POLICY` (a `resume.wording` route) and provider keys. Without a route, requests are accepted and the proposal reports `RF_GATEWAY_DISABLED`.
 
 ## Models and planning rules
 

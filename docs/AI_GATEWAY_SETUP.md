@@ -2,7 +2,7 @@
 
 Module 11 now has an executable, provider-neutral core in `src/modules/gateway`. It implements the [design](design/11-ai-gateway.md) execution flow: domain authority checks, minimized and delimited input, deployment routing policy, bounded retries with at most one approved transient fallback, strict structured-output validation, one bounded repair, reference/fact checks and a publication guard. Every call is recorded as an attempt with provider, configured and reported model, latency, usage and fallback reason.
 
-**Status:** core, adapters and a fixed bilingual evaluation set are implemented and covered by fake-adapter tests. No provider is selected, no credentials are configured in the repository and only the matching worker calls it, for opt-in tie ordering. [Identity-backed admission, reviewed recipients and durable attempt records](#identity-backed-authority-and-records) are implemented. Matching semantic ranking and resume wording still use their labelled deterministic recipes until a provider passes evaluation, consent text and quota reservations are connected, and the [audit gates](IMPLEMENTATION_AUDIT.md) are met.
+**Status:** core, adapters and a fixed bilingual evaluation set are implemented and covered by fake-adapter tests. No provider is selected, no credentials are configured in the repository and the matching and resume workers call it for opt-in tie ordering and wording suggestions. [Identity-backed admission, reviewed recipients and durable attempt records](#identity-backed-authority-and-records) are implemented. Matching semantic ranking and resume wording still use their labelled deterministic recipes until a provider passes evaluation, consent text and quota reservations are connected, and the [audit gates](IMPLEMENTATION_AUDIT.md) are met.
 
 ## Components
 
@@ -101,6 +101,5 @@ Five integration cases run against the real local stack: administrator-only, aud
 ## Remaining gates
 
 - Provider selection from live evaluation with authorized credentials, plus reviewed retention/data-use terms for every recipient before approval.
-- Worker integration for resume wording proposals (individual acceptance unchanged). [Semantic matching](MATCHING_SETUP.md#optional-semantic-ordering) is integrated as tie-only ordering with a rules fallback, recording and identity budget handling.
-- Resume wording needs a reviewed data-model decision first. `resume-order-v1` proposals only reorder confirmed facts, and claim links point at exact confirmed fact text. An accepted rewording must create a new owner-confirmed fact version, keeping the original fact and claim history, and a `resume-wording-v1` recipe whose validation reuses `preservesFacts`. The owner must explicitly confirm the reworded text.
+- [Semantic matching](MATCHING_SETUP.md#optional-semantic-ordering) (tie-only ordering) and [resume wording suggestions](RESUME_SETUP.md#optional-ai-wording-suggestions) (owner-applied, fact-preserving) are integrated through one shared `runOptionalAnalysis` lifecycle.
 - Provider cost in currency (tokens are recorded) and an embedding index with isolated reindexing.
