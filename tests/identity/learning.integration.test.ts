@@ -405,7 +405,12 @@ describe("module 07 reviewed courses and private learning plans", () => {
     expect((await put(body(first.versionId), await stack.member())).status).toBe(403);
     expect((await put({ ...body(first.versionId), title: "翻譯標題" })).status).toBe(400);
     expect((await put(body(crypto.randomUUID()))).status).toBe(409);
+    const courseRevision = async () =>
+      (await stack.sql.query("select revision from public.course_catalog_state")).rows[0].revision;
+    const before = await courseRevision();
     expect((await put(body(first.versionId))).status).toBe(200);
+    // Display text must not bump the revision that marks learning plans stale.
+    expect(await courseRevision()).toBe(before);
     const translated = await read();
     expect(translated.title).toBe(first.title);
     expect(translated.translations?.["zh-TW"]).toMatchObject({

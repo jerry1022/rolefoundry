@@ -187,7 +187,8 @@ export const shortAnswerOutput = z
   .strict();
 export type ShortAnswerOutput = z.infer<typeof shortAnswerOutput>;
 
-const normalized = (text: string) => text.normalize("NFKC").replace(/\s+/g, " ").trim().toLowerCase();
+const normalized = (text: string) =>
+  text.normalize("NFKC").replace(/\s+/g, " ").trim().toLowerCase();
 
 /**
  * Every criterion is judged exactly once; a "met" verdict must quote a non-trivial span that
@@ -227,7 +228,8 @@ export const shortAnswerSpec: OutputSpec<ShortAnswerOutput> = {
     const seen = new Set<string>();
     const text = normalized(answer.text);
     return output.criteria.every((item) => {
-      if (seen.has(item.criterionRef) || !criteria.some((c) => c.ref === item.criterionRef)) return false;
+      if (seen.has(item.criterionRef) || !criteria.some((c) => c.ref === item.criterionRef))
+        return false;
       seen.add(item.criterionRef);
       if (!item.met) return item.quote === null;
       const quote = item.quote ? normalized(item.quote) : "";
@@ -304,7 +306,8 @@ export const skillExtractionSpec: OutputSpec<SkillExtractionOutput> = {
       const text = normalized(fact.text);
       const skills = new Set<string>();
       return item.skills.every((skill) => {
-        if (skills.has(skill.skillRef) || kinds.get(skill.skillRef)?.label !== "skill") return false;
+        if (skills.has(skill.skillRef) || kinds.get(skill.skillRef)?.label !== "skill")
+          return false;
         skills.add(skill.skillRef);
         const quote = normalized(skill.quote);
         return quote.length >= 2 && text.includes(quote);

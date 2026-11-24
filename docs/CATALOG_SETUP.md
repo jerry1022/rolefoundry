@@ -52,7 +52,7 @@ Use a verified administrator session and JSON. All routes below are under `/api/
 | POST `/jobs/{id}/sources` | `{sourceId, externalId, url}` → attach another authorized source |
 | POST `/jobs/{id}/status` | `{expectedRevision, status}` → reviewed lifecycle transition |
 | POST `/jobs/{id}/translations` | `{versionId, locale: "zh-TW", title, summary, responsibilities, reviewNote}` → reviewed translation of the current version |
-| POST `/jobs/{id}/translations/remove` | `{versionId, locale}` → remove that translation |
+| POST `/jobs/{id}/translations/remove` | `{versionId, locale, reason}` → remove that translation |
 | POST `/observations/{jobSourceId}/record` | `{event: "confirmed_active" | "confirmed_closed" | "network_failure"}` |
 
 The job draft schema is defined in `src/modules/jobs/model.ts`. It contains a stable `canonicalKey`, company/title, assessment track, specialization, nullable location/workplace/level/salary, summary, responsibilities, structured requirements/conditions and optional expiry. Canonical keys prevent duplicate openings. Source/external IDs cannot be attached to two different canonical jobs. Multiple permitted sources produce one job result while retaining their own provenance.
@@ -69,7 +69,7 @@ Administrators add reviewed Traditional Chinese text in the **Job translations**
 
 - A translation belongs to one immutable job version (`job_version_translations`). Saving requires the current `versionId`, so a stale form returns 409. A later revision hides the translation until someone reviews the new version, which means readers never see text that describes an older listing.
 - Only fields that the version itself publishes can be translated: the title, summary and responsibilities. Publication already requires every source to permit those fields, so a translation never exceeds the source's rights. Each published responsibility needs exactly one translated line.
-- Every save needs a review note and records the reviewer. Saves and removals write `catalog_audit` (`job.translated`, `job.translation_removed`) without any job text.
+- Every save needs a review note and records the reviewer, and every removal needs a reason. Both are stored as the `catalog_audit` reason (`job.translated`, `job.translation_removed`), with no job text. These writes do not bump the catalog revision, so a translation never marks match reports or learning plans stale (migration `20261114380000`).
 - Public job responses carry `translations["zh-TW"]` (title, summary, responsibilities, reviewedAt) for the current version only. `localizedJobText` in `src/modules/jobs/model.ts` uses it for zh-TW viewers and sets `lang="zh-Hant"`. Job details note that the text is a reviewed translation. Everyone else, and any version without an aligned translation, sees the English source.
 
 Lexical search also matches the reviewed translation of each job's current version (migration `20261114350000`), so Traditional Chinese readers can search by the reviewed title, summary or responsibilities. Requirement text, company names and bookmark snapshots stay in the source language.

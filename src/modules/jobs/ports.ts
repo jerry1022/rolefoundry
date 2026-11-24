@@ -6,7 +6,7 @@ import type {
   BookmarkPage,
   JobDraft,
   JobTranslationInput,
-  JobTranslationLocale,
+  JobTranslationRemoval,
 } from "./model";
 import type { z } from "zod";
 import type { sourcePolicySchema, sourceLinkSchema } from "./model";
@@ -45,17 +45,11 @@ export interface CatalogAdminRepository {
     event: "confirmed_active" | "confirmed_closed" | "network_failure",
   ): Promise<void>;
   translate(id: string, input: JobTranslationInput): Promise<void>;
-  removeTranslation(
-    id: string,
-    input: { versionId: string; locale: JobTranslationLocale },
-  ): Promise<void>;
+  removeTranslation(id: string, input: JobTranslationRemoval): Promise<void>;
 }
 export interface CatalogTranslationClient {
   translate(id: string, input: JobTranslationInput): Promise<void>;
-  removeTranslation(
-    id: string,
-    input: { versionId: string; locale: JobTranslationLocale },
-  ): Promise<void>;
+  removeTranslation(id: string, input: JobTranslationRemoval): Promise<void>;
 }
 export interface CatalogClient {
   list(query: JobQuery, signal?: AbortSignal): Promise<CatalogPage>;

@@ -71,7 +71,7 @@ export function JobTranslationAdministration({
   }
 
   async function run(action: "save" | "remove") {
-    if (!job || !draft || busy) return;
+    if (!job || !draft || busy || !draft.reviewNote.trim()) return;
     setBusy(true);
     setError("");
     setStatus("");
@@ -83,7 +83,11 @@ export function JobTranslationAdministration({
           ...draft,
         });
       else
-        await translations.removeTranslation(job.id, { versionId: job.versionId, locale: "zh-TW" });
+        await translations.removeTranslation(job.id, {
+          versionId: job.versionId,
+          locale: "zh-TW",
+          reason: draft.reviewNote,
+        });
       await open(job.id);
       setStatus(action === "save" ? msg("Translation saved.") : msg("Translation removed."));
     } catch (reason) {
@@ -208,7 +212,7 @@ export function JobTranslationAdministration({
               <button
                 className="button secondary"
                 type="button"
-                disabled={busy}
+                disabled={busy || !draft.reviewNote.trim()}
                 onClick={() => void run("remove")}
               >
                 {t("Remove translation")}
