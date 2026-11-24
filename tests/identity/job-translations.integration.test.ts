@@ -35,6 +35,11 @@ const translation = (versionId: string, responsibilities = ["設計評估資料�
   responsibilities,
   reviewNote: "Synthetic fixture reviewed against the published listing",
 });
+const search = async (q: string) => {
+  const response = await stack.request(`jobs?q=${encodeURIComponent(q)}&limit=50`);
+  expect(response.status).toBe(200);
+  return ((await response.json()).data as { id: string }[]).map((job) => job.id);
+};
 const put = (body: unknown, user = admin) =>
   stack.request(`admin/catalog/jobs/${jobId}/translations`, user, "POST", body);
 const transition = (expectedRevision: number, status: string) =>
@@ -95,7 +100,12 @@ it("publishes reviewed translations for the exact current version only", async (
   expect((await put({ ...translation(first.versionId), locale: "ja" })).status).toBe(400);
   expect((await put(translation(crypto.randomUUID()))).status).toBe(409);
 
+  // The specialization's own aliases can contain Chinese terms, so use translation-only text.
+  expect(await search(`${prefix} 設計評估資料集`)).not.toContain(jobId);
   expect((await put(translation(first.versionId))).status).toBe(200);
+  // Reviewed translations are searchable alongside the source text.
+  expect(await search(`${prefix} 設計評估資料集`)).toContain(jobId);
+  expect(await search("交付檢索功能")).toContain(jobId);
   const translated = await published();
   expect(translated.translations?.["zh-TW"]).toMatchObject({
     title: "AI 應用工程師",
@@ -118,6 +128,7 @@ it("publishes reviewed translations for the exact current version only", async (
   const second = await published();
   expect(second.versionId).not.toBe(first.versionId);
   expect(second.translations).toEqual({});
+  expect(await search("交付檢索功能")).not.toContain(jobId);
   expect((await put(translation(first.versionId))).status).toBe(409);
 
   expect((await put(translation(second.versionId))).status).toBe(200);

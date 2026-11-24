@@ -72,7 +72,7 @@ Administrators add reviewed Traditional Chinese text in the **Job translations**
 - Every save needs a review note and records the reviewer. Saves and removals write `catalog_audit` (`job.translated`, `job.translation_removed`) without any job text.
 - Public job responses carry `translations["zh-TW"]` (title, summary, responsibilities, reviewedAt) for the current version only. `localizedJobText` in `src/modules/jobs/model.ts` uses it for zh-TW viewers and sets `lang="zh-Hant"`. Job details note that the text is a reviewed translation. Everyone else, and any version without an aligned translation, sees the English source.
 
-Requirement text, company names, search and bookmark snapshots stay in the source language. Lexical search does not index translations yet.
+Lexical search also matches the reviewed translation of each job's current version (migration `20261114350000`), so Traditional Chinese readers can search by the reviewed title, summary or responsibilities. Requirement text, company names and bookmark snapshots stay in the source language.
 
 ## Architecture and verification
 
