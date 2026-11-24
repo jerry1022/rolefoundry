@@ -2,6 +2,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { recipientPurposes, type RecipientPage } from "@/modules/gateway/admin";
 import type { RecipientClient } from "@/modules/gateway/adapters/http-client";
+import { msg, useI18n } from "@/lib/i18n";
 import { ApplicationError } from "@/modules/platform/errors";
 
 type Purpose = (typeof recipientPurposes)[number];
@@ -13,6 +14,7 @@ const failure = (error: unknown, fallback: string) =>
  * deployment routing policy and owner consent are still required for every request.
  */
 export function AiRecipientAdministration({ client }: { client: RecipientClient }) {
+  const { t } = useI18n();
   const [page, setPage] = useState<RecipientPage>();
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
@@ -29,7 +31,7 @@ export function AiRecipientAdministration({ client }: { client: RecipientClient 
         .catch((reason) => {
           if (!signal?.aborted) {
             setPage(undefined);
-            setError(failure(reason, "Recipient approvals are temporarily unavailable."));
+            setError(failure(reason, msg("Recipient approvals are temporarily unavailable.")));
           }
         });
     },
@@ -50,7 +52,7 @@ export function AiRecipientAdministration({ client }: { client: RecipientClient 
       setDraft((current) => ({ ...current, recipient: "", reason: "" }));
       await load();
     } catch (reason) {
-      setError(failure(reason, "The change could not be confirmed. Refresh before retrying."));
+      setError(failure(reason, msg("The change could not be confirmed. Refresh before retrying.")));
     } finally {
       setBusy(false);
     }
@@ -59,12 +61,13 @@ export function AiRecipientAdministration({ client }: { client: RecipientClient 
   return (
     <div className="ai-recipients">
       <p className="muted">
-        Approve each provider (and any reviewed upstream) for the current consent version. A new
-        consent version starts with no approved recipients.
+        {t(
+          "Approve each provider (and any reviewed upstream) for the current consent version. A new consent version starts with no approved recipients.",
+        )}
       </p>
       {error && (
         <p className="notice warning" role="alert">
-          {error}
+          {t(error)}
         </p>
       )}
       {page && (
@@ -72,12 +75,12 @@ export function AiRecipientAdministration({ client }: { client: RecipientClient 
           <table>
             <thead>
               <tr>
-                <th>Purpose</th>
-                <th>Consent version</th>
-                <th>Recipient</th>
-                <th>Reason</th>
+                <th>{t("Purpose")}</th>
+                <th>{t("Consent version")}</th>
+                <th>{t("Recipient")}</th>
+                <th>{t("Reason")}</th>
                 <th>
-                  <span className="sr-only">Actions</span>
+                  <span className="sr-only">{t("Actions")}</span>
                 </th>
               </tr>
             </thead>
@@ -102,7 +105,7 @@ export function AiRecipientAdministration({ client }: { client: RecipientClient 
                         })
                       }
                     >
-                      Revoke
+                      {t("Revoke")}
                     </button>
                   </td>
                 </tr>
@@ -110,7 +113,7 @@ export function AiRecipientAdministration({ client }: { client: RecipientClient 
               {!page.approvals.length && (
                 <tr>
                   <td colSpan={5}>
-                    No recipients are approved. Model requests cannot be admitted.
+                    {t("No recipients are approved. Model requests cannot be admitted.")}
                   </td>
                 </tr>
               )}
@@ -126,7 +129,7 @@ export function AiRecipientAdministration({ client }: { client: RecipientClient 
         }}
       >
         <label className="field-label">
-          Purpose
+          {t("Purpose")}
           <select
             className="text-input"
             value={draft.purpose}
@@ -138,7 +141,7 @@ export function AiRecipientAdministration({ client }: { client: RecipientClient 
           </select>
         </label>
         <label className="field-label">
-          Recipient ID
+          {t("Recipient ID")}
           <input
             className="text-input"
             value={draft.recipient}
@@ -148,7 +151,7 @@ export function AiRecipientAdministration({ client }: { client: RecipientClient 
           />
         </label>
         <label className="field-label">
-          Review reason (required for approve and revoke)
+          {t("Review reason (required for approve and revoke)")}
           <input
             className="text-input"
             value={draft.reason}
@@ -160,7 +163,7 @@ export function AiRecipientAdministration({ client }: { client: RecipientClient 
           className="button primary"
           disabled={busy || !draft.recipient || !draft.reason.trim()}
         >
-          Approve recipient
+          {t("Approve recipient")}
         </button>
       </form>
     </div>

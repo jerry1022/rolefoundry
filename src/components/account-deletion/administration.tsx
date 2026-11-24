@@ -7,6 +7,7 @@ import {
   type ResumeReason,
 } from "@/modules/account-deletion/model";
 import { ApplicationError } from "@/modules/platform/errors";
+import { msg, useI18n } from "@/lib/i18n";
 export function DeletionAdministration({
   client,
   isAdmin,
@@ -14,6 +15,7 @@ export function DeletionAdministration({
   client: DeletionAdminClient;
   isAdmin: () => Promise<boolean>;
 }) {
+  const { t } = useI18n();
   const [allowed, setAllowed] = useState(false),
     [task, setTask] = useState(""),
     [id, setId] = useState(""),
@@ -46,7 +48,7 @@ export function DeletionAdministration({
       setError(
         error instanceof ApplicationError
           ? error.message
-          : "Account removal recovery is unavailable.",
+          : msg("Account removal recovery is unavailable."),
       );
       if (error instanceof ApplicationError && [401, 403].includes(error.status)) {
         setAllowed(false);
@@ -60,14 +62,15 @@ export function DeletionAdministration({
   return (
     <details
       className="panel section-block account-deletion-workspace"
-      aria-label="Account deletion recovery"
+      aria-label={t("Account deletion recovery")}
     >
-      <summary>Account deletion recovery</summary>
+      <summary>{t("Account deletion recovery")}</summary>
       {allowed ? (
         <>
           <p>
-            Recover an already accepted deletion request after reviewing its failed task. Resume
-            creates an audited new attempt; it cannot initiate deletion for another account.
+            {t(
+              "Recover an already accepted deletion request after reviewing its failed task. Resume creates an audited new attempt; it cannot initiate deletion for another account.",
+            )}
           </p>
           <form
             onSubmit={(event) => {
@@ -76,7 +79,7 @@ export function DeletionAdministration({
             }}
           >
             <label className="field-label">
-              Deletion task identifier
+              {t("Deletion task identifier")}
               <input
                 className="text-input"
                 value={task}
@@ -86,7 +89,7 @@ export function DeletionAdministration({
               />
             </label>
             <button className="button secondary" disabled={busy}>
-              Find deletion request
+              {t("Find deletion request")}
             </button>
           </form>
           <form
@@ -96,7 +99,7 @@ export function DeletionAdministration({
             }}
           >
             <label className="field-label">
-              Deletion request identifier
+              {t("Deletion request identifier")}
               <input
                 className="text-input"
                 value={id}
@@ -106,7 +109,7 @@ export function DeletionAdministration({
               />
             </label>
             <label className="field-label">
-              Recovery reason
+              {t("Recovery reason")}
               <select
                 className="text-input"
                 value={reason}
@@ -120,21 +123,21 @@ export function DeletionAdministration({
               </select>
             </label>
             <button className="button secondary" disabled={busy}>
-              Resume failed account deletion
+              {t("Resume failed account deletion")}
             </button>
           </form>
           {status && (
             <p role="status">
-              Request {status.id} · {status.status}
+              {t("Request {id} · {status}", { id: status.id, status: status.status })}
             </p>
           )}
         </>
       ) : (
-        <p>Account deletion recovery requires an administrator session.</p>
+        <p>{t("Account deletion recovery requires an administrator session.")}</p>
       )}
       {error && (
         <p role="alert" className="notice">
-          {error}
+          {t(error)}
         </p>
       )}
     </details>

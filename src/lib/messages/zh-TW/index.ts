@@ -8,6 +8,7 @@ import { common } from "./common";
 import { dashboard } from "./dashboard";
 import { learning } from "./learning";
 import { learningWorkspace } from "./learning-workspace";
+import { operationsAdmin } from "./operations-admin";
 import { profile } from "./profile";
 import { profileWorkspace } from "./profile-workspace";
 import { resume } from "./resume";
@@ -37,6 +38,7 @@ export const zhTWSections = {
   architecture,
   assessmentMatching,
   profileWorkspace,
+  operationsAdmin,
 } satisfies Record<string, Messages>;
 
 export const zhTW: Messages = Object.assign({}, ...Object.values(zhTWSections));
