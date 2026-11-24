@@ -38,7 +38,8 @@
     "i18n:check": "node --import tsx scripts/check-i18n.ts",
     "theme:generate": "node scripts/generate-dark-theme.mjs",
     "theme:check": "node scripts/generate-dark-theme.mjs --check",
-    "gateway:calibrate": "node --import tsx apps/gateway-eval/src/calibrate.ts"
+    "gateway:calibrate": "node --import tsx apps/gateway-eval/src/calibrate.ts",
+    "gateway:skills": "node --import tsx apps/gateway-eval/src/skills.ts"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.7",

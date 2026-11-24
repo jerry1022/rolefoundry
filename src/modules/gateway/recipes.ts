@@ -15,6 +15,15 @@ export const gatewayTemplates: PurposeTemplate[] = [
     ].join("\n"),
   },
   {
+    purpose: "resume.skill-extraction",
+    version: "skill-extraction-v1",
+    system: [
+      "You identify which reviewed skills each confirmed resume fact demonstrates.",
+      "Choose skills only from the provided skill list. For every skill you assign, copy the exact words from that fact that show it.",
+      "Assign a skill only when the fact states work that uses it. Do not infer skills from job titles, employers or seniority alone, and omit facts that show no listed skill.",
+    ].join("\n"),
+  },
+  {
     purpose: "resume.wording",
     version: "resume-wording-v1",
     system: [
@@ -223,6 +232,83 @@ export const shortAnswerSpec: OutputSpec<ShortAnswerOutput> = {
       if (!item.met) return item.quote === null;
       const quote = item.quote ? normalized(item.quote) : "";
       return quote.length >= 3 && text.includes(quote);
+    });
+  },
+};
+
+export const skillExtractionOutput = z
+  .object({
+    facts: z
+      .array(
+        z
+          .object({
+            factRef: ref,
+            skills: z
+              .array(z.object({ skillRef: ref, quote: z.string().max(400) }).strict())
+              .max(10),
+          })
+          .strict(),
+      )
+      .max(40),
+  })
+  .strict();
+export type SkillExtractionOutput = z.infer<typeof skillExtractionOutput>;
+
+/**
+ * Each fact appears at most once, every skill comes from the provided list, and every assigned
+ * skill quotes a non-trivial span of its own fact, so the model cannot credit unstated skills.
+ */
+export const skillExtractionSpec: OutputSpec<SkillExtractionOutput> = {
+  schema: skillExtractionOutput,
+  jsonSchema: {
+    name: "skill_extraction",
+    schema: {
+      type: "object",
+      additionalProperties: false,
+      required: ["facts"],
+      properties: {
+        facts: {
+          type: "array",
+          maxItems: 40,
+          items: {
+            type: "object",
+            additionalProperties: false,
+            required: ["factRef", "skills"],
+            properties: {
+              factRef: { type: "string" },
+              skills: {
+                type: "array",
+                maxItems: 10,
+                items: {
+                  type: "object",
+                  additionalProperties: false,
+                  required: ["skillRef", "quote"],
+                  properties: { skillRef: { type: "string" }, quote: { type: "string" } },
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  references: (output) =>
+    output.facts.flatMap((item) => [item.factRef, ...item.skills.map((skill) => skill.skillRef)]),
+  verify: (output, request) => {
+    const kinds = new Map(request.segments.map((segment) => [segment.ref, segment]));
+    const seen = new Set<string>();
+    return output.facts.every((item) => {
+      const fact = kinds.get(item.factRef);
+      if (seen.has(item.factRef) || fact?.label !== "fact") return false;
+      seen.add(item.factRef);
+      const text = normalized(fact.text);
+      const skills = new Set<string>();
+      return item.skills.every((skill) => {
+        if (skills.has(skill.skillRef) || kinds.get(skill.skillRef)?.label !== "skill") return false;
+        skills.add(skill.skillRef);
+        const quote = normalized(skill.quote);
+        return quote.length >= 2 && text.includes(quote);
+      });
     });
   },
 };

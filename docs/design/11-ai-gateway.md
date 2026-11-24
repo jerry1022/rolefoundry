@@ -6,7 +6,7 @@ Provide one controlled interface for model and embedding providers. Domain modul
 
 ## Current scaffold
 
-The [gateway core](../AI_GATEWAY_SETUP.md) in `src/modules/gateway` implements this flow with a deployment routing policy, OpenAI-compatible (OpenAI/LunaRoute header dialects) and fake adapters, bounded retry/fallback/repair, reference and fact-preservation checks, embedding-space isolation and a fixed bilingual evaluation set. The default policy disables every purpose and no domain worker calls the gateway yet; all visible analyses remain deterministic and labelled accordingly. The legacy demo `AIProvider.analyze<T>` port is unchanged.
+The [gateway core](../AI_GATEWAY_SETUP.md) in `src/modules/gateway` implements this flow with a deployment routing policy, OpenAI-compatible (OpenAI/LunaRoute header dialects) and fake adapters, bounded retry/fallback/repair, reference and fact-preservation checks, embedding-space isolation and a fixed bilingual evaluation set. The default policy disables every purpose. Matching (tie-only semantic ordering) and the resume studio (owner-applied wording suggestions) call the gateway inside their existing workers, but only for owners who opt in with consent and allowance, and they fall back to their deterministic results. Short-answer grading and skill extraction have calibration harnesses but no user path. The legacy demo `AIProvider.analyze<T>` port is unchanged.
 
 ## Request and result design
 

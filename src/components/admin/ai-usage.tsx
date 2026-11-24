@@ -19,6 +19,7 @@ const purposeLabels: Record<UsageReport["purposes"][number]["purpose"], string> 
   "resume.wording": msg("Resume wording"),
   "matching.semantic-rank": msg("Semantic ordering"),
   "assessment.short-answer": msg("Short-answer calibration"),
+  "resume.skill-extraction": msg("Skill extraction calibration"),
 };
 
 /** Estimated USD from micro-dollars; small amounts keep cents of a cent visible. */

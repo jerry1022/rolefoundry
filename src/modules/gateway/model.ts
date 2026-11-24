@@ -5,6 +5,7 @@ export const gatewayPurposes = [
   "matching.semantic-rank",
   "resume.wording",
   "assessment.short-answer",
+  "resume.skill-extraction",
 ] as const;
 export type GatewayPurpose = (typeof gatewayPurposes)[number];
 
