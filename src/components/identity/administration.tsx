@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import type { IdentityAdminClient, InvitationPage, QuotaPage } from "@/modules/identity/admin";
 import { featureSchema, utcWeekStart, type AnalysisFeature } from "@/modules/identity/core";
 import { ApplicationError } from "@/modules/platform/errors";
+import { useI18n } from "@/lib/i18n";
 export function IdentityAdministration({
   client,
   onChanged,
@@ -12,6 +13,7 @@ export function IdentityAdministration({
   onChanged?: () => Promise<void>;
   onUnavailable?: () => void;
 }) {
+  const { t } = useI18n();
   const [busy, setBusy] = useState(false),
     [error, setError] = useState(""),
     [message, setMessage] = useState(""),
@@ -36,7 +38,7 @@ export function IdentityAdministration({
     setError(
       error instanceof ApplicationError
         ? error.message
-        : "Identity administration is temporarily unavailable.",
+        : t("Identity administration is temporarily unavailable."),
     );
     if (error instanceof ApplicationError && [401, 403].includes(error.status)) {
       generation.current++;
@@ -84,11 +86,12 @@ export function IdentityAdministration({
     await onChanged?.();
   }
   return (
-    <section aria-label="Identity administration" className="section-block">
-      <h2>Administrator controls</h2>
+    <section aria-label={t("Identity administration")} className="section-block">
+      <h2>{t("Administrator controls")}</h2>
       <p>
-        Manage unused invitations and future weekly allowances. Refunding an eligible infrastructure
-        failure records an audit reason.
+        {t(
+          "Manage unused invitations and future weekly allowances. Refunding an eligible infrastructure failure records an audit reason.",
+        )}
       </p>
       {error && (
         <p className="notice" role="alert">
@@ -112,7 +115,10 @@ export function IdentityAdministration({
               if (mounted.current) {
                 setInviteEmail("");
                 setMessage(
-                  `Invitation ${receipt.id} saved. The recipient can sign in before ${receipt.expiresAt}.`,
+                  t("Invitation {id} saved. The recipient can sign in before {expiresAt}.", {
+                    id: receipt.id,
+                    expiresAt: receipt.expiresAt,
+                  }),
                 );
               }
               await changed();
@@ -120,9 +126,9 @@ export function IdentityAdministration({
           }}
         >
           <fieldset className="profile-form-fields" disabled={busy}>
-            <h3>Invite a member</h3>
+            <h3>{t("Invite a member")}</h3>
             <label>
-              Invite email
+              {t("Invite email")}
               <input
                 type="email"
                 className="text-input"
@@ -133,7 +139,7 @@ export function IdentityAdministration({
               />
             </label>
             <label>
-              Invitation expires (UTC)
+              {t("Invitation expires (UTC)")}
               <input
                 type="date"
                 className="text-input"
@@ -142,7 +148,7 @@ export function IdentityAdministration({
                 onChange={(event) => setInviteDate(event.target.value)}
               />
             </label>
-            <button className="button primary">Add invitation</button>
+            <button className="button primary">{t("Add invitation")}</button>
           </fieldset>
         </form>
         <form
@@ -156,27 +162,30 @@ export function IdentityAdministration({
               });
               if (mounted.current)
                 setMessage(
-                  `Quota policy scheduled for ${feature} from ${result.effectiveFrom}. Existing usage stays unchanged.`,
+                  t(
+                    "Quota policy scheduled for {feature} from {effectiveFrom}. Existing usage stays unchanged.",
+                    { feature, effectiveFrom: result.effectiveFrom },
+                  ),
                 );
               await changed();
             });
           }}
         >
           <fieldset className="profile-form-fields" disabled={busy}>
-            <h3>Schedule a future quota</h3>
+            <h3>{t("Schedule a future quota")}</h3>
             <label>
-              Analysis feature
+              {t("Analysis feature")}
               <select
                 className="text-input"
                 value={feature}
                 onChange={(event) => setFeature(featureSchema.parse(event.target.value))}
               >
-                <option value="assessment">Assessment</option>
-                <option value="resume">Resume</option>
+                <option value="assessment">{t("Assessment")}</option>
+                <option value="resume">{t("Resume")}</option>
               </select>
             </label>
             <label>
-              Weekly limit
+              {t("Weekly limit")}
               <input
                 type="number"
                 min={0}
@@ -188,7 +197,7 @@ export function IdentityAdministration({
               />
             </label>
             <label>
-              Effective Monday (UTC)
+              {t("Effective Monday (UTC)")}
               <input
                 type="date"
                 className="text-input"
@@ -197,7 +206,7 @@ export function IdentityAdministration({
                 onChange={(event) => setEffectiveDate(event.target.value)}
               />
             </label>
-            <button className="button primary">Schedule quota</button>
+            <button className="button primary">{t("Schedule quota")}</button>
           </fieldset>
         </form>
         <form
@@ -208,17 +217,17 @@ export function IdentityAdministration({
               if (mounted.current) {
                 setRefundTask("");
                 setRefundReason("");
-                setMessage("The infrastructure-failure refund was recorded in the audit log.");
+                setMessage(t("The infrastructure-failure refund was recorded in the audit log."));
               }
               await changed();
             });
           }}
         >
           <fieldset className="profile-form-fields" disabled={busy}>
-            <h3>Refund failed analysis</h3>
-            <p>Only consumed analyses that failed because of infrastructure are eligible.</p>
+            <h3>{t("Refund failed analysis")}</h3>
+            <p>{t("Only consumed analyses that failed because of infrastructure are eligible.")}</p>
             <label>
-              Task ID
+              {t("Task ID")}
               <input
                 className="text-input"
                 required
@@ -228,7 +237,7 @@ export function IdentityAdministration({
               />
             </label>
             <label>
-              Refund reason
+              {t("Refund reason")}
               <textarea
                 className="text-input"
                 required
@@ -237,47 +246,53 @@ export function IdentityAdministration({
                 onChange={(event) => setRefundReason(event.target.value)}
               />
             </label>
-            <button className="button secondary">Record audited refund</button>
+            <button className="button secondary">{t("Record audited refund")}</button>
           </fieldset>
         </form>
       </div>
       <button className="button secondary" disabled={busy} onClick={() => void perform(reload)}>
-        Refresh invitations and quota policies
+        {t("Refresh invitations and quota policies")}
       </button>
-      <section className="panel section-block" aria-label="Invitation records">
-        <h3>Invitation records</h3>
+      <section className="panel section-block" aria-label={t("Invitation records")}>
+        <h3>{t("Invitation records")}</h3>
         <p>
-          Records show identifiers and expiry only. Invitation email addresses and hashes are not
-          returned.
+          {t(
+            "Records show identifiers and expiry only. Invitation email addresses and hashes are not returned.",
+          )}
         </p>
         {invitations?.data.map((invitation) => (
           <article key={invitation.id} className="section-block">
             <strong>{invitation.id}</strong>
             <p>
-              {invitation.status} · expires {invitation.expiresAt}
+              {t("{status} · expires {expiresAt}", {
+                status: invitation.status,
+                expiresAt: invitation.expiresAt,
+              })}
             </p>
             {invitation.status === "available" && (
               <button
                 className="button secondary"
                 disabled={busy}
-                aria-label={`Revoke unused invitation ${invitation.id}`}
+                aria-label={t("Revoke unused invitation {id}", { id: invitation.id })}
                 onClick={() =>
                   void perform(async () => {
                     await client.revokeInvitation(invitation.id);
                     await changed();
                     if (mounted.current)
                       setMessage(
-                        "Unused invitation revoked. This does not deactivate a signed-in account.",
+                        t(
+                          "Unused invitation revoked. This does not deactivate a signed-in account.",
+                        ),
                       );
                   })
                 }
               >
-                Revoke unused invitation
+                {t("Revoke unused invitation")}
               </button>
             )}
           </article>
         ))}
-        {invitations?.data.length === 0 && <p>No invitations.</p>}
+        {invitations?.data.length === 0 && <p>{t("No invitations.")}</p>}
         {invitations?.nextCursor && (
           <button
             className="button secondary"
@@ -291,23 +306,27 @@ export function IdentityAdministration({
               })
             }
           >
-            Load older invitations
+            {t("Load older invitations")}
           </button>
         )}
       </section>
-      <section className="panel section-block" aria-label="Quota policy records">
-        <h3>Quota policy records</h3>
+      <section className="panel section-block" aria-label={t("Quota policy records")}>
+        <h3>{t("Quota policy records")}</h3>
         <p>
-          Changes begin on a future Monday at 00:00 UTC. Reusing a future feature/date updates that
-          unused policy through the same audited service.
+          {t(
+            "Changes begin on a future Monday at 00:00 UTC. Reusing a future feature/date updates that unused policy through the same audited service.",
+          )}
         </p>
         {policies?.data.map((policy) => (
           <article key={policy.id} className="section-block">
             <strong>
-              {policy.feature}: {policy.limit} per week
+              {t("{feature}: {limit} per week", { feature: policy.feature, limit: policy.limit })}
             </strong>
             <p>
-              From {policy.effectiveFrom} · policy {policy.id}
+              {t("From {effectiveFrom} · policy {id}", {
+                effectiveFrom: policy.effectiveFrom,
+                id: policy.id,
+              })}
             </p>
           </article>
         ))}
@@ -324,7 +343,7 @@ export function IdentityAdministration({
               })
             }
           >
-            Load older quota policies
+            {t("Load older quota policies")}
           </button>
         )}
       </section>

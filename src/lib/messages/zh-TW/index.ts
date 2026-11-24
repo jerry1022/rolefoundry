@@ -1,3 +1,4 @@
+import { account } from "./account";
 import { admin } from "./admin";
 import { applications } from "./applications";
 import { architecture } from "./architecture";
@@ -24,6 +25,7 @@ export const zhTWSections = {
   resume,
   applications,
   admin,
+  account,
   architecture,
 } satisfies Record<string, Messages>;
 
