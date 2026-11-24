@@ -62,6 +62,16 @@ const age = z.number().nonnegative().finite().nullable();
 export const telemetrySnapshotSchema = z
   .object({
     observedAt: z.iso.datetime({ offset: true }),
+    courseLinks: z
+      .object({
+        checked: z.number().int().nonnegative(),
+        uncertain: z.number().int().nonnegative(),
+        unprobed: z.number().int().nonnegative(),
+        pausedHosts: z.number().int().nonnegative(),
+        oldestCheckSeconds: age,
+      })
+      .strict()
+      .optional(),
     operations: operationsSummarySchema.extend({
       kinds: operationsSummarySchema.shape.kinds
         .max(taskKinds.length)

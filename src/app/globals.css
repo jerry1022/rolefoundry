@@ -3573,3 +3573,46 @@ tr:last-child td {
 .account-deletion-workspace .button { max-width: 100%; height: auto; white-space: normal; margin-block: 6px; }
 .account-deletion-workspace .button-row { display: flex; flex-wrap: wrap; gap: 12px; }
 .account-deletion-workspace input, .account-deletion-workspace select { min-width: 0; max-width: 100%; }
+
+/* Private course-link operations reuse the existing form and color system. */
+.course-link-panel {
+  display: grid;
+  gap: 16px;
+  min-width: 0;
+}
+.course-link-panel > p {
+  margin: 0;
+}
+.course-link-panel > .button {
+  justify-self: start;
+}
+.course-link-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr));
+  gap: 12px;
+}
+.course-link-card {
+  min-width: 0;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 16px;
+  overflow-wrap: anywhere;
+}
+.course-link-card > code {
+  display: block;
+  margin-top: 6px;
+  font-size: 11px;
+}
+.course-link-card dl {
+  display: grid;
+  gap: 10px;
+  margin: 14px 0 0;
+}
+.course-link-card dt {
+  font-size: 12px;
+  opacity: 0.7;
+}
+.course-link-card dd {
+  margin: 3px 0 0;
+  font-size: 13px;
+}

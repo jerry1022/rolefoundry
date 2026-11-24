@@ -54,6 +54,8 @@ Paths are under `/api/v1`. Public list responses are `{data, nextCursor, revisio
 | POST `/admin/courses` | Course draft | Created immutable version and revision |
 | PATCH `/admin/courses/{id}` | `{course, expectedRevision}` | New immutable draft; prior published version remains visible |
 | POST `/admin/courses/{id}/transition` | `{expectedRevision, action, reason}` | Audited review/publication/retirement/revalidation |
+| GET `/admin/courses/link-checks` | Optional `cursor`, `hostCursor` | Bounded [course link observations](COURSE_LINKS_SETUP.md) and host waits |
+| POST `/admin/courses/link-checks/resume` | `{host, expectedRevision, reason}` | Audited manual-pause clearance; never shortens a provider wait |
 | GET `/tasks/{id}` | Owner task UUID | Safe execution status/error/result reference |
 
 `weeklyHours` is 0–80. `durationOverrides` is required (use `[]`) and contains unique `{courseId, minutes}` entries, at most 100, with integer minutes 1–50,000. Same key and request return the original plan even after inputs change; a conflicting request under that key returns `409`. A fresh plan needs a new key. The UI retries uncertain submissions with the original key, polls for a bounded window and offers manual status checks. Delayed responses cannot undo known invalidation or newer progress/reference edits.

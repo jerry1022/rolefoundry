@@ -1,4 +1,6 @@
 import "server-only";
+import { CourseLinkAdminService } from "../course-links/admin";
+import { SupabaseCourseLinkAdmin } from "../course-links/adapters/supabase";
 import { identityContext } from "../identity/server";
 import { publicDatabase } from "../platform/public-database";
 import { ApplicationError } from "../platform/errors";
@@ -22,6 +24,10 @@ export async function privateLearningContext() {
   return {
     actor: await identity.service.currentActor(),
     config: identity.config,
+    links: new CourseLinkAdminService(
+      new SupabaseCourseLinkAdmin(identity.client),
+      identity.service,
+    ),
     service: new LearningService(new SupabaseLearningRepository(identity.client), identity.service),
     admin: new LearningAdministrationService(
       new SupabaseLearningAdministration(identity.client),

@@ -181,3 +181,19 @@ it("bounds hung reads and clears timers when a replacement store throws synchron
     vi.useRealTimers();
   }
 });
+it("distinguishes unavailable link schema from unprobed coverage and omits unknown link age", () => {
+  const snapshot = telemetrySnapshot();
+  expect(renderMetrics(snapshot)).toContain("rolefoundry_course_link_metrics_available 0\n");
+  snapshot.courseLinks = {
+    checked: 2,
+    uncertain: 1,
+    unprobed: 3,
+    pausedHosts: 1,
+    oldestCheckSeconds: null,
+  };
+  const text = renderMetrics(snapshot);
+  expect(text).toContain("rolefoundry_course_link_metrics_available 1\n");
+  expect(text).toContain("rolefoundry_course_links_uncertain 1\n");
+  expect(text).toContain("rolefoundry_course_links_unprobed 3\n");
+  expect(text).not.toMatch(/^rolefoundry_course_links_oldest_check_seconds \d/m);
+});

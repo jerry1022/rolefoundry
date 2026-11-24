@@ -71,3 +71,17 @@ groups:
           severity: warning
         annotations:
           summary: Published catalog metadata needs review
+      - alert: RoleFoundryCourseLinkReviewNeeded
+        expr: rolefoundry_course_links_uncertain > 0
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: Course HEAD observations need human review
+      - alert: RoleFoundryCourseLinkHostPaused
+        expr: rolefoundry_course_links_paused_hosts > 0
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: Course link host policy requires operator recovery

@@ -19,6 +19,8 @@ import { createTaskReplayClient } from "@/modules/operations/adapters/replay-cli
 import { createOperationsClient } from "@/modules/operations/adapters/http-client";
 import { ImportAdministration } from "../ingestion/administration";
 import { OperationsAdministration } from "../operations/administration";
+import { CourseLinkChecks } from "../learning/link-checks";
+import { createCourseLinkClient } from "@/modules/course-links/adapters/http-client";
 /** Deployment composition only; each screen consumes an independently replaceable client port. */
 export function AdminWorkspace() {
   if (process.env.NEXT_PUBLIC_IDENTITY_ENABLED !== "true") return <AdminScreen />;
@@ -26,21 +28,32 @@ export function AdminWorkspace() {
 }
 function PrivateAdminWorkspace() {
   const { access, verify: isAdmin, fetcher } = useAdminAccess();
-  const { client, feedClient, operations, replay, deletion, skills, skillAdmin, bank, identity } =
-    useMemo(
-      () => ({
-        client: createImportAdminClient(fetcher),
-        feedClient: createFeedAdminClient(fetcher),
-        operations: createOperationsClient(fetcher),
-        replay: createTaskReplayClient(fetcher),
-        deletion: createDeletionAdminClient(fetcher),
-        skills: createSkillClient(fetcher),
-        skillAdmin: createSkillAdminClient(fetcher),
-        bank: createAssessmentAdminClient(fetcher),
-        identity: createIdentityAdminClient(fetcher),
-      }),
-      [fetcher],
-    );
+  const {
+    client,
+    feedClient,
+    operations,
+    replay,
+    deletion,
+    skills,
+    skillAdmin,
+    bank,
+    identity,
+    courseLinks,
+  } = useMemo(
+    () => ({
+      client: createImportAdminClient(fetcher),
+      feedClient: createFeedAdminClient(fetcher),
+      operations: createOperationsClient(fetcher),
+      replay: createTaskReplayClient(fetcher),
+      deletion: createDeletionAdminClient(fetcher),
+      skills: createSkillClient(fetcher),
+      skillAdmin: createSkillAdminClient(fetcher),
+      bank: createAssessmentAdminClient(fetcher),
+      identity: createIdentityAdminClient(fetcher),
+      courseLinks: createCourseLinkClient(fetcher),
+    }),
+    [fetcher],
+  );
   return (
     <>
       <PageHeading
@@ -75,6 +88,9 @@ function PrivateAdminWorkspace() {
           </AdminSection>
           <AdminSection title="Invitations and allowances">
             <IdentityAdministration client={identity} />
+          </AdminSection>
+          <AdminSection title="Course link observations">
+            <CourseLinkChecks client={courseLinks} />
           </AdminSection>
           <OperationsAdministration client={operations} replayClient={replay} isAdmin={isAdmin} />
           <DeletionAdministration client={deletion} isAdmin={isAdmin} />

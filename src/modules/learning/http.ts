@@ -20,9 +20,13 @@ export async function learningHttp(
           !(
             resource === "courses"
               ? ["skill", "difficulty", "cursor"]
-              : resource === "plans" && !action.length
-                ? ["cursor"]
-                : []
+              : resource === "admin" &&
+                  action.join("/") === "link-checks" &&
+                  request.method === "GET"
+                ? ["cursor", "hostCursor"]
+                : resource === "plans" && !action.length
+                  ? ["cursor"]
+                  : []
           ).includes(key),
       )
     )
@@ -35,7 +39,7 @@ export async function learningHttp(
         });
       if (action.length === 1) return send(await catalog.find(action[0]));
     }
-    const { actor, config, service, admin } = await privateLearningContext();
+    const { actor, config, service, admin, links } = await privateLearningContext();
     requireSameOrigin(request, config.appOrigin);
     const body = () => readJsonBody(request, z.unknown(), 32768);
     if (resource === "plans") {
@@ -68,6 +72,12 @@ export async function learningHttp(
         return send(await service.courseProgress(actor, action[1], await body()));
     }
     if (resource === "admin") {
+      if (action.join("/") === "link-checks" && request.method === "GET")
+        return send(await links.list(actor, Object.fromEntries(params)));
+      if (action.join("/") === "link-checks/resume" && request.method === "POST") {
+        await links.resume(actor, await body());
+        return send({ updated: true });
+      }
       if (!action.length && request.method === "GET") return send(await admin.bank(actor));
       if (!action.length && request.method === "POST")
         return send(await admin.create(actor, await body()), 201);
