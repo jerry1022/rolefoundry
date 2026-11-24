@@ -6,6 +6,7 @@ import type { SkillClient, SkillAdminClient } from "@/modules/skills/ports";
 import type { SkillDictionary, SkillEntry, SkillResolution } from "@/modules/skills/model";
 import { normalizeSkillTerm, skillLabel } from "@/modules/skills/model";
 import { ApplicationError } from "@/modules/platform/errors";
+import { msg, useI18n } from "@/lib/i18n";
 import { SkillEditor } from "./skill-editor";
 import { MappingForms, MergeForm } from "./mapping-forms";
 export function DictionaryScreen({
@@ -19,6 +20,7 @@ export function DictionaryScreen({
   isAdmin: () => Promise<boolean>;
   embedded?: boolean;
 }) {
+  const { t } = useI18n();
   const [filter, setFilter] = useState("");
   const [dictionary, setDictionary] = useState<SkillDictionary | null>(null),
     [admin, setAdmin] = useState(false),
@@ -42,7 +44,7 @@ export function DictionaryScreen({
     setError(
       error instanceof ApplicationError
         ? error.message
-        : "Unable to load the dictionary. Try again.",
+        : msg("Unable to load the dictionary. Try again."),
     );
   }
   useEffect(() => {
@@ -74,7 +76,7 @@ export function DictionaryScreen({
       setEditor(null);
       setResolved(null);
       setMessage(
-        "Dictionary version published. Results based on an older dictionary need refreshing.",
+        msg("Dictionary version published. Results based on an older dictionary need refreshing."),
       );
     } catch (error) {
       failed(error);
@@ -95,19 +97,21 @@ export function DictionaryScreen({
     <>
       {!embedded && (
         <PageHeading
-          eyebrow="STABLE IDS · REVIEWED MEANING"
-          title="The shared language of skills."
-          description="Explore canonical concepts, exact aliases and their versions. Related concepts and completed courses do not automatically prove ability."
+          eyebrow={t("STABLE IDS · REVIEWED MEANING")}
+          title={t("The shared language of skills.")}
+          description={t(
+            "Explore canonical concepts, exact aliases and their versions. Related concepts and completed courses do not automatically prove ability.",
+          )}
           action={
             <Link className="button secondary" href="/skills/">
-              My private skill profile
+              {t("My private skill profile")}
             </Link>
           }
         />
       )}
       {error && (
         <div className="notice" role="alert">
-          <p>{error}</p>
+          <p>{t(error)}</p>
           <button
             className="button secondary"
             disabled={busy}
@@ -117,32 +121,32 @@ export function DictionaryScreen({
               void client.get().then(setDictionary).catch(failed);
             }}
           >
-            Reload current dictionary
+            {t("Reload current dictionary")}
           </button>
         </div>
       )}
       {message && (
         <p className="notice" role="status">
-          {message}
+          {t(message)}
         </p>
       )}
-      {!dictionary && !error && <p role="status">Loading the skill dictionary…</p>}
+      {!dictionary && !error && <p role="status">{t("Loading the skill dictionary…")}</p>}
       {dictionary && (
         <>
           <section className="panel">
             <div className="section-heading">
               <div>
-                <h2>Dictionary version {dictionary.version}</h2>
+                <h2>{t("Dictionary version {version}", { version: dictionary.version })}</h2>
                 <p className="muted">
                   {historical
-                    ? "Historical snapshot; editing is disabled."
-                    : "Published current snapshot."}{" "}
-                  Updated {dictionary.createdAt.slice(0, 10)}.
+                    ? t("Historical snapshot; editing is disabled.")
+                    : t("Published current snapshot.")}{" "}
+                  {t("Updated {date}.", { date: dictionary.createdAt.slice(0, 10) })}
                 </p>
               </div>
               {admin && !historical && (
                 <button className="button primary" disabled={busy} onClick={() => setEditor("new")}>
-                  Add canonical skill
+                  {t("Add canonical skill")}
                 </button>
               )}
             </div>
@@ -165,9 +169,9 @@ export function DictionaryScreen({
               }}
             >
               <label>
-                Historical version
+                {t("Historical version")}
                 <input
-                  aria-label="Historical dictionary version"
+                  aria-label={t("Historical dictionary version")}
                   className="text-input"
                   type="number"
                   min={1}
@@ -177,7 +181,7 @@ export function DictionaryScreen({
                 />
               </label>
               <button className="button secondary" disabled={busy}>
-                View snapshot
+                {t("View snapshot")}
               </button>
               <button
                 type="button"
@@ -189,15 +193,16 @@ export function DictionaryScreen({
                   void client.get().then(setDictionary).catch(failed);
                 }}
               >
-                Current version
+                {t("Current version")}
               </button>
             </form>
           </section>
           <section className="panel section-block">
-            <h2>Resolve an exact term</h2>
+            <h2>{t("Resolve an exact term")}</h2>
             <p className="muted">
-              Unresolved and ambiguous terms need review; this lookup does not guess with semantic
-              similarity.
+              {t(
+                "Unresolved and ambiguous terms need review; this lookup does not guess with semantic similarity.",
+              )}
             </p>
             <form
               className="dictionary-inline-form"
@@ -217,9 +222,9 @@ export function DictionaryScreen({
               }}
             >
               <label>
-                Term
+                {t("Term")}
                 <input
-                  aria-label="Skill term"
+                  aria-label={t("Skill term")}
                   className="text-input"
                   required
                   maxLength={200}
@@ -228,33 +233,36 @@ export function DictionaryScreen({
                 />
               </label>
               <label>
-                Language
+                {t("Language")}
                 <select
-                  aria-label="Resolution language"
+                  aria-label={t("Resolution language")}
                   className="text-input"
                   value={locale}
                   onChange={(event) => setLocale(event.target.value)}
                 >
-                  <option value="">Any language; show ambiguity</option>
-                  <option value="en">English</option>
-                  <option value="zh-TW">Traditional Chinese</option>
+                  <option value="">{t("Any language; show ambiguity")}</option>
+                  <option value="en">{t("English")}</option>
+                  <option value="zh-TW">{t("Traditional Chinese")}</option>
                 </select>
               </label>
               <button className="button primary" disabled={busy}>
-                Resolve term
+                {t("Resolve term")}
               </button>
             </form>
             {resolved && (
               <div className="notice section-block" role="status">
                 <strong>
                   {resolved.status === "resolved"
-                    ? `Resolved: ${skillLabel(resolved.skillId!, labels)}`
+                    ? t("Resolved: {skill}", { skill: skillLabel(resolved.skillId!, labels) })
                     : resolved.status === "ambiguous"
-                      ? "Ambiguous term; choose a language or review the candidates."
-                      : "No approved exact mapping. Keep this term unmapped for review."}
+                      ? t("Ambiguous term; choose a language or review the candidates.")
+                      : t("No approved exact mapping. Keep this term unmapped for review.")}
                 </strong>
                 <p>
-                  Normalized term: {resolved.normalizedTerm} · Dictionary {resolved.version}
+                  {t("Normalized term: {term} · Dictionary {version}", {
+                    term: resolved.normalizedTerm,
+                    version: resolved.version,
+                  })}
                 </p>
                 {resolved.candidates.length > 0 && (
                   <p>
@@ -265,16 +273,19 @@ export function DictionaryScreen({
                 )}
                 {resolved.redirectedFrom && (
                   <p>
-                    Retained ID {resolved.redirectedFrom} redirects to {resolved.skillId}.
+                    {t("Retained ID {from} redirects to {to}.", {
+                      from: resolved.redirectedFrom,
+                      to: resolved.skillId ?? "",
+                    })}
                   </p>
                 )}
               </div>
             )}
           </section>
           <label>
-            Filter skill concepts
+            {t("Filter skill concepts")}
             <input
-              aria-label="Filter skill concepts"
+              aria-label={t("Filter skill concepts")}
               className="text-input"
               value={filter}
               onChange={(event) => setFilter(event.target.value)}
@@ -290,7 +301,10 @@ export function DictionaryScreen({
                 <p>{skill.description}</p>
                 {skill.redirectTo && (
                   <p>
-                    Redirects to {skillLabel(skill.redirectTo, labels)} ({skill.redirectTo}).
+                    {t("Redirects to {skill} ({id}).", {
+                      skill: skillLabel(skill.redirectTo, labels),
+                      id: skill.redirectTo,
+                    })}
                   </p>
                 )}
                 <div className="tags">
@@ -307,18 +321,18 @@ export function DictionaryScreen({
                     className="button secondary"
                     disabled={busy}
                     onClick={() => setEditor(skill)}
-                    aria-label={`Edit ${skill.nameEn}`}
+                    aria-label={t("Edit {skill}", { skill: skill.nameEn })}
                   >
-                    Edit labels
+                    {t("Edit labels")}
                   </button>
                 )}
               </article>
             ))}
           </div>
           <section className="panel section-block">
-            <h2>Reviewed relationships and track mappings</h2>
+            <h2>{t("Reviewed relationships and track mappings")}</h2>
             {!dictionary.relations.length && (
-              <p className="muted">No reviewed relationships published yet.</p>
+              <p className="muted">{t("No reviewed relationships published yet.")}</p>
             )}
             {dictionary.relations.map((relation) => (
               <p key={`${relation.relation}-${relation.parentId}-${relation.childId}`}>
@@ -328,17 +342,18 @@ export function DictionaryScreen({
             ))}
             {dictionary.trackSkills.map((mapping) => (
               <p key={`${mapping.track}-${mapping.skillId}`}>
-                {mapping.track} · {skillLabel(mapping.skillId, labels)} · Priority{" "}
-                {mapping.priority}
+                {t(mapping.track)} · {skillLabel(mapping.skillId, labels)} ·{" "}
+                {t("Priority {priority}", { priority: mapping.priority })}
               </p>
             ))}
           </section>
           {admin && !historical && (
             <section className="section-block">
-              <h2>Dictionary administration</h2>
+              <h2>{t("Dictionary administration")}</h2>
               <p className="muted">
-                Publishing creates an immutable snapshot and an audit event. Existing source
-                evidence remains available under its original dictionary version.
+                {t(
+                  "Publishing creates an immutable snapshot and an audit event. Existing source evidence remains available under its original dictionary version.",
+                )}
               </p>
               {editor && (
                 <SkillEditor
@@ -366,11 +381,11 @@ export function DictionaryScreen({
                 onMutation={mutate}
               />
               <section className="panel section-block">
-                <h3>Remove an incorrect mapping</h3>
+                <h3>{t("Remove an incorrect mapping")}</h3>
                 <label>
-                  Removal reason
+                  {t("Removal reason")}
                   <input
-                    aria-label="Mapping removal reason"
+                    aria-label={t("Mapping removal reason")}
                     className="text-input"
                     maxLength={1000}
                     value={removalReason}
@@ -394,7 +409,10 @@ export function DictionaryScreen({
                         )
                       }
                     >
-                      Remove alias: {alias.alias} ({alias.locale})
+                      {t("Remove alias: {alias} ({locale})", {
+                        alias: alias.alias,
+                        locale: alias.locale,
+                      })}
                     </button>
                   ))}
                   {dictionary.relations.map((relation) => (
@@ -412,7 +430,11 @@ export function DictionaryScreen({
                         )
                       }
                     >
-                      Remove {relation.parentId} → {relation.childId} ({relation.relation})
+                      {t("Remove {parent} → {child} ({relation})", {
+                        parent: relation.parentId,
+                        child: relation.childId,
+                        relation: relation.relation,
+                      })}
                     </button>
                   ))}
                   {dictionary.trackSkills.map((mapping) => (
@@ -431,7 +453,10 @@ export function DictionaryScreen({
                         )
                       }
                     >
-                      Remove {mapping.skillId} from {mapping.track}
+                      {t("Remove {skill} from {track}", {
+                        skill: mapping.skillId,
+                        track: t(mapping.track),
+                      })}
                     </button>
                   ))}
                 </div>

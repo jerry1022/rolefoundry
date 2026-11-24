@@ -9,6 +9,7 @@ import { dashboard } from "./dashboard";
 import { learning } from "./learning";
 import { learningWorkspace } from "./learning-workspace";
 import { profile } from "./profile";
+import { profileWorkspace } from "./profile-workspace";
 import { resume } from "./resume";
 import { resumeTracking } from "./resume-tracking";
 import { shell } from "./shell";
@@ -35,6 +36,7 @@ export const zhTWSections = {
   account,
   architecture,
   assessmentMatching,
+  profileWorkspace,
 } satisfies Record<string, Messages>;
 
 export const zhTW: Messages = Object.assign({}, ...Object.values(zhTWSections));

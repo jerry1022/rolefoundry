@@ -207,7 +207,6 @@ export const resumeTracking = {
   "This listing is no longer available in the catalog. Your notes and history remain accessible.":
     "職缺目錄中已沒有這則職缺。你的備註與紀錄仍可存取。",
   "Fictional demonstration role": "虛構的示範職缺",
-  "Visit original source ↗": "前往原始來源 ↗",
   "Historical source · current link unavailable": "歷史來源 · 目前連結無法使用",
   "The saved source had uncertain availability. A failed check does not prove closure.":
     "儲存時這個來源的開放狀態不確定。檢查失敗不代表職缺已關閉。",

@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import type { BookmarkPage } from "@/modules/jobs/model";
 import type { BookmarkClient } from "@/modules/jobs/ports";
 import { ApplicationError } from "@/modules/platform/errors";
+import { msg, useI18n } from "@/lib/i18n";
 export function BookmarksPanel({
   client,
   onOpen,
@@ -13,12 +14,15 @@ export function BookmarksPanel({
   onOpen: (id: string) => Promise<void>;
   onChange: () => void;
 }) {
+  const { t } = useI18n();
   const [page, setPage] = useState<BookmarkPage | null>(null),
     [busy, setBusy] = useState(false),
     [error, setError] = useState("");
   const [signedOut, setSignedOut] = useState(false);
   function failed(error: unknown) {
-    setError(error instanceof ApplicationError ? error.message : "Unable to load saved roles.");
+    setError(
+      error instanceof ApplicationError ? error.message : msg("Unable to load saved roles."),
+    );
     setSignedOut(error instanceof ApplicationError && error.status === 401);
   }
   useEffect(() => {
@@ -50,16 +54,18 @@ export function BookmarksPanel({
   }
   return (
     <section className="section-block">
-      <h2>Your saved roles</h2>
+      <h2>{t("Your saved roles")}</h2>
       <p className="muted">
-        Private account bookmarks. Retired roles retain their saved title and source reference.
+        {t(
+          "Private account bookmarks. Retired roles retain their saved title and source reference.",
+        )}
       </p>
       {error && (
         <div className="notice" role="alert">
-          <p>{error}</p>
+          <p>{t(error)}</p>
           {signedOut ? (
             <Link className="button secondary" href="/account/">
-              Sign in to see saved roles
+              {t("Sign in to see saved roles")}
             </Link>
           ) : (
             <button
@@ -70,16 +76,16 @@ export function BookmarksPanel({
                 void client.list({ limit: 20 }).then(setPage).catch(failed);
               }}
             >
-              Reload saved roles
+              {t("Reload saved roles")}
             </button>
           )}
         </div>
       )}
-      {!error && !page && <p role="status">Loading saved roles…</p>}
+      {!error && !page && <p role="status">{t("Loading saved roles…")}</p>}
       {page && !page.data.length && (
         <div className="panel">
-          <h3>No saved roles yet</h3>
-          <p>Browse published openings and save a role to this account.</p>
+          <h3>{t("No saved roles yet")}</h3>
+          <p>{t("Browse published openings and save a role to this account.")}</p>
         </div>
       )}
       <div className="catalog-results">
@@ -89,8 +95,8 @@ export function BookmarksPanel({
             <p>{bookmark.company}</p>
             <p className="muted">
               {bookmark.available
-                ? "Available in the catalog"
-                : "Retired or unavailable; saved snapshot retained"}
+                ? t("Available in the catalog")
+                : t("Retired or unavailable; saved snapshot retained")}
             </p>
             <div className="button-row">
               {bookmark.available && (
@@ -99,7 +105,7 @@ export function BookmarksPanel({
                   disabled={busy}
                   onClick={() => void onOpen(bookmark.jobId).catch(failed)}
                 >
-                  View current role
+                  {t("View current role")}
                 </button>
               )}
               <a
@@ -108,14 +114,14 @@ export function BookmarksPanel({
                 target="_blank"
                 rel="noopener noreferrer"
               >
-                Original source ↗
+                {t("Original source ↗")}
               </a>
               <button
                 className="button secondary"
                 disabled={busy}
                 onClick={() => void remove(bookmark.jobId)}
               >
-                Remove saved role
+                {t("Remove saved role")}
               </button>
             </div>
           </article>
@@ -134,7 +140,7 @@ export function BookmarksPanel({
               .finally(() => setBusy(false));
           }}
         >
-          Load more saved roles
+          {t("Load more saved roles")}
         </button>
       )}
     </section>

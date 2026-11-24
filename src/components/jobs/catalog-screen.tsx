@@ -15,7 +15,8 @@ import {
 } from "@/modules/jobs/model";
 import type { CatalogClient, BookmarkClient } from "@/modules/jobs/ports";
 import { ApplicationError } from "@/modules/platform/errors";
-import { JobCard } from "./job-card";
+import { msg, useI18n } from "@/lib/i18n";
+import { JobCard, levelLabels } from "./job-card";
 import { JobDetails } from "./job-details";
 import { BookmarksPanel } from "./bookmarks-panel";
 export function CatalogScreen({
@@ -29,6 +30,7 @@ export function CatalogScreen({
   initialPage?: CatalogPage;
   initialError?: string;
 }) {
+  const { t } = useI18n();
   const [filters, setFilters] = useState({
     q: "",
     track: "",
@@ -48,7 +50,9 @@ export function CatalogScreen({
   const [saved, setSaved] = useState<Set<string>>(new Set());
   function failed(error: unknown) {
     setError(
-      error instanceof ApplicationError ? error.message : "Unable to load the catalog. Try again.",
+      error instanceof ApplicationError
+        ? error.message
+        : msg("Unable to load the catalog. Try again."),
     );
     setLogin(error instanceof ApplicationError && error.status === 401);
   }
@@ -91,7 +95,7 @@ export function CatalogScreen({
     };
     const value = querySchema.safeParse(input);
     if (value.success) setQuery(value.data);
-    else setError("Check the search fields and try again.");
+    else setError(msg("Check the search fields and try again."));
   }
   async function open(id: string) {
     setError("");
@@ -116,8 +120,8 @@ export function CatalogScreen({
       });
       setNotice(
         already
-          ? "Saved role removed."
-          : "Role saved privately to your account. No application was sent.",
+          ? msg("Saved role removed.")
+          : msg("Role saved privately to your account. No application was sent."),
       );
     } catch (error) {
       failed(error);
@@ -131,30 +135,32 @@ export function CatalogScreen({
   return (
     <>
       <PageHeading
-        eyebrow="PUBLISHED ROLES · TRACEABLE SOURCES"
-        title="Find your kind of next."
-        description="Browse published AI roles without an account. Sources and unknown requirements stay visible; this catalog does not claim complete market coverage."
+        eyebrow={t("PUBLISHED ROLES · TRACEABLE SOURCES")}
+        title={t("Find your kind of next.")}
+        description={t(
+          "Browse published AI roles without an account. Sources and unknown requirements stay visible; this catalog does not claim complete market coverage.",
+        )}
       />
       <div className="button-row">
         <button
           className={`button ${tab === "catalog" ? "primary" : "secondary"}`}
           onClick={() => setTab("catalog")}
         >
-          Browse roles
+          {t("Browse roles")}
         </button>
         <button
           className={`button ${tab === "saved" ? "primary" : "secondary"}`}
           onClick={() => setTab("saved")}
         >
-          My saved roles
+          {t("My saved roles")}
         </button>
       </div>
       {error && (
         <div className="notice section-block" role="alert">
-          <p>{error}</p>
+          <p>{t(error)}</p>
           {login && (
             <Link className="button secondary" href="/account/">
-              Sign in to save roles
+              {t("Sign in to save roles")}
             </Link>
           )}
           <button
@@ -162,13 +168,13 @@ export function CatalogScreen({
             disabled={busy}
             onClick={() => setQuery({ ...query, cursor: undefined })}
           >
-            Reload catalog
+            {t("Reload catalog")}
           </button>
         </div>
       )}
       {notice && (
         <p className="notice" role="status">
-          {notice}
+          {t(notice)}
         </p>
       )}
       {tab === "saved" ? (
@@ -183,73 +189,79 @@ export function CatalogScreen({
             }}
           >
             <label>
-              Search jobs
+              {t("Search jobs")}
               <input
                 className="text-input"
-                aria-label="Search jobs"
+                aria-label={t("Search jobs")}
                 maxLength={200}
-                placeholder="Title, company, skills or specialization"
+                placeholder={t("Title, company, skills or specialization")}
                 value={filters.q}
                 onChange={(event) => setFilters({ ...filters, q: event.target.value })}
               />
             </label>
             <div className="catalog-filter-grid">
               <label>
-                Career track
+                {t("Career track")}
                 <select
                   className="text-input"
-                  aria-label="Career track"
+                  aria-label={t("Career track")}
                   value={filters.track}
                   onChange={(event) => setFilters({ ...filters, track: event.target.value })}
                 >
-                  <option value="">All tracks</option>
+                  <option value="">{t("All tracks")}</option>
                   {tracks.map((track) => (
-                    <option key={track}>{track}</option>
+                    <option key={track} value={track}>
+                      {t(track)}
+                    </option>
                   ))}
                 </select>
               </label>
               <label>
-                Workplace
+                {t("Workplace")}
                 <select
                   className="text-input"
-                  aria-label="Workplace"
+                  aria-label={t("Workplace")}
                   value={filters.workplace}
                   onChange={(event) => setFilters({ ...filters, workplace: event.target.value })}
                 >
-                  <option value="">Any workplace</option>
+                  <option value="">{t("Any workplace")}</option>
                   {workplaces.map((mode) => (
-                    <option key={mode}>{mode}</option>
+                    <option key={mode} value={mode}>
+                      {t(mode)}
+                    </option>
                   ))}
                 </select>
               </label>
               <label>
-                Location
+                {t("Location")}
                 <input
                   className="text-input"
-                  aria-label="Location"
+                  aria-label={t("Location")}
                   maxLength={200}
                   value={filters.location}
                   onChange={(event) => setFilters({ ...filters, location: event.target.value })}
                 />
               </label>
               <label>
-                Level
+                {t("Level")}
                 <select
                   className="text-input"
-                  aria-label="Level"
+                  aria-label={t("Level")}
                   value={filters.level}
                   onChange={(event) => setFilters({ ...filters, level: event.target.value })}
                 >
-                  <option value="">Any level</option>
+                  <option value="">{t("Any level")}</option>
                   {jobLevels.map((level) => (
-                    <option key={level}>{level}</option>
+                    <option key={level} value={level}>
+                      {t(levelLabels[level])}
+                    </option>
                   ))}
                 </select>
               </label>
             </div>
             <div className="button-row">
               <button className="button primary" type="submit">
-                Search published roles
+                {t("Search published roles")}
               </button>
               <button
                 className="button secondary"
@@ -259,7 +271,7 @@ export function CatalogScreen({
                   setQuery(querySchema.parse({}));
                 }}
               >
-                Reset filters
+                {t("Reset filters")}
               </button>
             </div>
           </form>
@@ -269,14 +281,15 @@ export function CatalogScreen({
             countLabel="published"
             onSelect={apply}
           />
-          <section className="section-block" aria-label="Published job results">
-            {loading && <p role="status">Loading published roles…</p>}
+          <section className="section-block" aria-label={t("Published job results")}>
+            {loading && <p role="status">{t("Loading published roles…")}</p>}
             {!loading && page && !page.data.length && (
               <div className="panel">
-                <h2>No published roles match these filters</h2>
+                <h2>{t("No published roles match these filters")}</h2>
                 <p>
-                  Try broader filters. Career guides stay available even when a specialization has
-                  no published opening.
+                  {t(
+                    "Try broader filters. Career guides stay available even when a specialization has no published opening.",
+                  )}
                 </p>
               </div>
             )}
@@ -306,7 +319,7 @@ export function CatalogScreen({
                     .finally(() => setBusy(false));
                 }}
               >
-                Load more roles
+                {t("Load more roles")}
               </button>
             )}
           </section>

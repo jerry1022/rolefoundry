@@ -70,7 +70,6 @@ export const assessmentMatching = {
     "請檢查各欄位、選擇評分準則，並提供 2–10 個答案選項。",
   "Question key": "題目代碼",
   "Question version": "題目版本",
-  Track: "方向",
   "Question track": "題目方向",
   "Question skill": "題目技能",
   Rubric: "評分準則",
@@ -111,8 +110,6 @@ export const assessmentMatching = {
   "Relevant experience years": "相關經驗年數",
   "Leaving a field unknown does not count as a conflict. Years alone do not verify relevant experience.":
     "欄位保留為未知不會被視為衝突。單憑年數無法證明具備相關經驗。",
-  Education: "學歷",
-  "Work authorization": "工作許可",
   "education confirmation": "學歷確認",
   "workAuthorization confirmation": "工作許可確認",
   "I am not sure": "我不確定",
@@ -134,7 +131,6 @@ export const assessmentMatching = {
   "{covered} / {total} fixture skills selected.": "已選擇 {covered} / {total} 項範例技能。",
   "Missing from the selected list: {skills}. Missing evidence does not prove inability.":
     "選擇清單中缺少：{skills}。缺少證據不代表做不到。",
-  None: "無",
   "Edit local demo skills": "編輯本機示範技能",
 
   // Matching reports
@@ -187,7 +183,6 @@ export const assessmentMatching = {
   "Strengthen the supporting evidence": "補強支持的證據",
   "Consider a longer-term target": "考慮作為較長期的目標",
   "Review an explicit condition conflict": "檢視明確的條件衝突",
-  Experience: "經驗",
   Seniority: "職級",
   confirmed: "已確認",
   conflict: "衝突",
@@ -200,10 +195,7 @@ export const assessmentMatching = {
     "支持來源可能是自述或未經審核的參考資料。這些數字不代表錄取機率，也不是經驗證的能力等級。",
   "The source could not recently confirm availability. Check the original role before planning an application.":
     "來源近期無法確認此職缺是否仍開放。規劃應徵前請先查看原始職缺。",
-  Conditions: "條件",
   "Requirements and their supporting sources": "職缺條件與其支持來源",
-  Mandatory: "必要",
-  Preferred: "加分",
   "This text has no reviewed skill mapping. Check it directly.":
     "這段文字沒有經審核的技能對應，請直接查看。",
   "No linked support. This does not prove inability.": "沒有連結的支持來源。這不代表做不到。",
@@ -212,10 +204,7 @@ export const assessmentMatching = {
   unverified: "未驗證",
   "No additional context supplied.": "未提供其他背景說明。",
   "Review this evidence in my profile": "在我的個人檔案中檢視這項證據",
-  "Plan learning for this role": "為這個職缺規劃學習",
-  "Review resume for this role": "針對這個職缺檢視履歷",
   "Useful next actions": "實用的下一步",
-  "Prepare a tracking record": "準備追蹤紀錄",
   "{skill}: {reason}": "{skill}：{reason}",
   "Inspect the original role and prepare examples that demonstrate the linked skills.":
     "查看原始職缺，並準備能展現相關技能的實例。",

@@ -3,11 +3,12 @@ import { useState } from "react";
 import Link from "next/link";
 import { skillLabel } from "@/modules/skills/model";
 import type { CapabilityEvidence } from "@/modules/profile/model";
+import { msg, useI18n } from "@/lib/i18n";
 const sourceLabels = {
-  "self-report": "Self-report",
-  "portfolio-reference": "Portfolio reference",
-  scenario: "Scenario response",
-  "resume-claim": "Resume claim",
+  "self-report": msg("Self-report"),
+  "portfolio-reference": msg("Portfolio reference"),
+  scenario: msg("Scenario response"),
+  "resume-claim": msg("Resume claim"),
 };
 export function EvidenceCard({
   evidence,
@@ -22,6 +23,7 @@ export function EvidenceCard({
   onDelete: () => Promise<void>;
   onHistory: () => Promise<CapabilityEvidence[]>;
 }) {
+  const { t } = useI18n();
   const [confirm, setConfirm] = useState(false);
   const [history, setHistory] = useState<CapabilityEvidence[] | null>(null);
   const [error, setError] = useState("");
@@ -29,9 +31,9 @@ export function EvidenceCard({
     <article className="panel profile-evidence-card">
       <div className="profile-evidence-header">
         <span className="pill">
-          {sourceLabels[evidence.source]} · {evidence.reviewState}
+          {t(sourceLabels[evidence.source])} · {evidence.reviewState}
         </span>
-        <small>Version {evidence.version}</small>
+        <small>{t("Version {version}", { version: evidence.version })}</small>
       </div>
       <h3>{evidence.label}</h3>
       <p className="profile-preserve-text">{evidence.context}</p>
@@ -43,8 +45,16 @@ export function EvidenceCard({
         ))}
       </div>
       <p className="muted">
-        Observed {evidence.observedAt.slice(0, 10)} · Source {evidence.sourceVersion}
-        {evidence.rubricVersion ? ` · Rubric ${evidence.rubricVersion}` : ""}
+        {evidence.rubricVersion
+          ? t("Observed {date} · Source {source} · Rubric {rubric}", {
+              date: evidence.observedAt.slice(0, 10),
+              source: evidence.sourceVersion,
+              rubric: evidence.rubricVersion,
+            })
+          : t("Observed {date} · Source {source}", {
+              date: evidence.observedAt.slice(0, 10),
+              source: evidence.sourceVersion,
+            })}
       </p>
       {evidence.outcome && <p className="profile-preserve-text">{evidence.outcome}</p>}
       {evidence.source === "resume-claim" &&
@@ -52,11 +62,15 @@ export function EvidenceCard({
           evidence.sourceVersion,
         ) && (
           <Link className="text-link" href={`/resume/?version=${evidence.sourceVersion}`}>
-            View confirmed resume source
+            {t("View confirmed resume source")}
           </Link>
         )}
       {evidence.claimedLevel !== null && (
-        <p>Self-reported experience: {evidence.claimedLevel}/3. This is a claim.</p>
+        <p>
+          {t("Self-reported experience: {level}/3. This is a claim.", {
+            level: evidence.claimedLevel,
+          })}
+        </p>
       )}
       {evidence.url && (
         <a
@@ -65,7 +79,7 @@ export function EvidenceCard({
           target="_blank"
           rel="noopener noreferrer"
         >
-          Open portfolio reference ↗
+          {t("Open portfolio reference ↗")}
         </a>
       )}
       <div className="button-row">
@@ -76,39 +90,40 @@ export function EvidenceCard({
             setError("");
             void onHistory()
               .then(setHistory)
-              .catch(() => setError("Unable to load evidence history."));
+              .catch(() => setError(msg("Unable to load evidence history.")));
           }}
         >
-          View history
+          {t("View history")}
         </button>
         {["self-report", "portfolio-reference"].includes(evidence.source) && (
           <button className="button secondary" disabled={busy} onClick={onEdit}>
-            Edit evidence
+            {t("Edit evidence")}
           </button>
         )}
         <button className="button secondary" disabled={busy} onClick={() => setConfirm(!confirm)}>
-          Delete evidence
+          {t("Delete evidence")}
         </button>
       </div>
       {confirm && (
         <div className="notice profile-delete">
           <p>
-            Delete this evidence and all its versions? Recommendations based on it will need
-            refreshing.
+            {t(
+              "Delete this evidence and all its versions? Recommendations based on it will need refreshing.",
+            )}
           </p>
           <button className="button secondary" disabled={busy} onClick={() => void onDelete()}>
-            Confirm deletion
+            {t("Confirm deletion")}
           </button>
         </div>
       )}
-      {error && <p role="alert">{error}</p>}
+      {error && <p role="alert">{t(error)}</p>}
       {history && (
         <div className="profile-history">
-          <h4>Evidence history</h4>
+          <h4>{t("Evidence history")}</h4>
           {history.map((version) => (
             <div key={version.versionId}>
               <strong>
-                Version {version.version} · {version.label}
+                {t("Version {version}", { version: version.version })} · {version.label}
               </strong>
               <p className="profile-preserve-text">{version.context}</p>
               <small>
@@ -117,7 +132,7 @@ export function EvidenceCard({
             </div>
           ))}
           <button className="text-link" onClick={() => setHistory(null)}>
-            Close history
+            {t("Close history")}
           </button>
         </div>
       )}

@@ -20,7 +20,6 @@ export const learningWorkspace = {
     "選擇目標職缺。規劃時會讀取最新的職缺與證據版本，不需要先完成評量或媒合報告。",
   "Learning target role": "學習目標職缺",
   "Load more learning target roles": "載入更多目標職缺",
-  "Weekly learning hours": "每週學習時數",
   "Adjust planning estimates to your pace": "依你的步調調整規劃時間",
   "Official and editorial durations remain visible in the catalog. These optional estimates affect only your new plan and do not confirm completion.":
     "官方與編輯提供的時長仍會顯示在課程目錄中。這些選填的估計只影響你的新計畫，不代表已完成。",
