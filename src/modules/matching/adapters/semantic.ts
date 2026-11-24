@@ -1,7 +1,6 @@
 import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { z } from "zod";
-import { IdentityWorkerGuard } from "../../identity/service";
+import { IdentityAnalysisLifecycle } from "../../gateway/adapters/identity-lifecycle";
 import { AIGateway } from "../../gateway/service";
 import type { GatewayRecorder } from "../../gateway/ports";
 import { gatewayTemplates, rankSpec } from "../../gateway/recipes";
@@ -10,28 +9,9 @@ import { adaptersFromEnvironment } from "../../gateway/adapters/registry";
 import { SupabaseGatewayAuthority, SupabaseGatewayRecorder } from "../../gateway/adapters/supabase";
 import type { SemanticStage } from "../handler";
 import type { SemanticRankingStore } from "../ports";
-import { SemanticRanker, type AnalysisLifecycle, type SemanticGateway } from "../semantic";
+import { SemanticRanker, type SemanticGateway } from "../semantic";
 
-/** Identity budget lifecycle through the existing trusted worker guard. */
-export class IdentityAnalysisLifecycle implements AnalysisLifecycle {
-  private readonly guard: IdentityWorkerGuard;
-  constructor(client: SupabaseClient) {
-    this.guard = new IdentityWorkerGuard(client);
-  }
-  async start(identityTaskId: string) {
-    const result = z.object({ status: z.string() }).parse(await this.guard.start(identityTaskId));
-    return result.status === "running" ? ("running" as const) : ("failed" as const);
-  }
-  async finish(identityTaskId: string, resultRef: string) {
-    await this.guard.finish(identityTaskId, resultRef);
-  }
-  async fail(identityTaskId: string, category: "infrastructure" | "validation") {
-    await this.guard.fail(identityTaskId, category);
-  }
-  async release(identityTaskId: string) {
-    await this.guard.release(identityTaskId);
-  }
-}
+export { IdentityAnalysisLifecycle };
 
 /** Binds the gateway's ranking recipe and durable recorder to the matching port. */
 export class GatewaySemanticRanking implements SemanticGateway {

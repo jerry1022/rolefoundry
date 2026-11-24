@@ -1,4 +1,7 @@
+import type { AnalysisLifecycle } from "../gateway/analysis";
 import type { GatewayRequest, GatewayResult } from "../gateway/model";
+
+export type { AnalysisLifecycle };
 import type { RankOutput } from "../gateway/recipes";
 import type { MatchResult, MatchSnapshot } from "./model";
 import {
@@ -19,18 +22,6 @@ export type RankingRecord =
   | { recipe: "rules-v1"; state: "not-requested"; code: null; identityTaskId: null }
   | { recipe: "rules-v1"; state: "fallback"; code: string; identityTaskId: string | null }
   | { recipe: "rules-v1+semantic-rank-v1"; state: "applied"; code: null; identityTaskId: string };
-
-/** Identity budget lifecycle for the reserved analysis. */
-export interface AnalysisLifecycle {
-  start(identityTaskId: string, signal: AbortSignal): Promise<"running" | "failed">;
-  finish(identityTaskId: string, resultRef: string, signal: AbortSignal): Promise<void>;
-  fail(
-    identityTaskId: string,
-    category: "infrastructure" | "validation",
-    signal: AbortSignal,
-  ): Promise<void>;
-  release(identityTaskId: string, signal: AbortSignal): Promise<void>;
-}
 
 /** Narrow view of the AI gateway: the deployment may leave the purpose disabled. */
 export interface SemanticGateway {
