@@ -2,6 +2,7 @@ import { account } from "./account";
 import { admin } from "./admin";
 import { applications } from "./applications";
 import { architecture } from "./architecture";
+import { assessmentMatching } from "./assessment-matching";
 import { catalog } from "./catalog";
 import { dashboard } from "./dashboard";
 import { learning } from "./learning";
@@ -27,6 +28,7 @@ export const zhTWSections = {
   admin,
   account,
   architecture,
+  assessmentMatching,
 } satisfies Record<string, Messages>;
 
 export const zhTW: Messages = Object.assign({}, ...Object.values(zhTWSections));

@@ -2,102 +2,113 @@
 import Link from "next/link";
 import type { MatchRun } from "@/modules/matching/model";
 import { skillLabel } from "@/modules/skills/model";
+import { msg, useI18n } from "@/lib/i18n";
+type Result = MatchRun["data"][number];
 const actions = {
-  "explore-now": "Explore this opportunity",
-  "strengthen-evidence": "Strengthen the supporting evidence",
-  "longer-term-target": "Consider a longer-term target",
-  "condition-conflict": "Review an explicit condition conflict",
+  "explore-now": msg("Explore this opportunity"),
+  "strengthen-evidence": msg("Strengthen the supporting evidence"),
+  "longer-term-target": msg("Consider a longer-term target"),
+  "condition-conflict": msg("Review an explicit condition conflict"),
+};
+const conditionFields: Record<Result["conditions"][number]["field"], string> = {
+  experienceYears: msg("Experience"),
+  workAuthorization: msg("Work authorization"),
+  education: msg("Education"),
+  seniority: msg("Seniority"),
+  workplace: msg("Workplace"),
+};
+const conditionStatuses: Record<Result["conditions"][number]["status"], string> = {
+  confirmed: msg("confirmed"),
+  conflict: msg("conflict"),
+  unknown: msg("unknown"),
 };
 export function MatchingResultCard({
   result,
   historical,
   labels,
 }: {
-  result: MatchRun["data"][number];
+  result: Result;
   historical: boolean;
   labels: Record<string, string>;
 }) {
+  const { t } = useI18n();
   return (
     <article className="panel matching-result">
       <p className="mini-label">{result.company}</p>
       <h3>{result.title}</h3>
       <p className="pill">
         {!result.available
-          ? "Historical role · no longer available"
+          ? t("Historical role · no longer available")
           : historical
-            ? "Historical report · refresh before using"
-            : actions[result.action]}
+            ? t("Historical report · refresh before using")
+            : t(actions[result.action])}
       </p>
       <p>
-        Mandatory skills with linked support:{" "}
+        {t("Mandatory skills with linked support:")}{" "}
         <strong>
           {result.coverage.mandatory.covered} / {result.coverage.mandatory.total}
         </strong>
-        . Preferred:{" "}
+        . {t("Preferred:")}{" "}
         <strong>
           {result.coverage.preferred.covered} / {result.coverage.preferred.total}
         </strong>
         .
       </p>
       <p className="muted">
-        Support may be self-reported or an unreviewed reference. These counts are not hiring
-        probabilities or verified competency levels.
+        {t(
+          "Support may be self-reported or an unreviewed reference. These counts are not hiring probabilities or verified competency levels.",
+        )}
       </p>
       {result.freshness === "uncertain" && (
         <p className="notice">
-          The source could not recently confirm availability. Check the original role before
-          planning an application.
+          {t(
+            "The source could not recently confirm availability. Check the original role before planning an application.",
+          )}
         </p>
       )}
-      <h4>Conditions</h4>
+      <h4>{t("Conditions")}</h4>
       <ul className="matching-conditions">
         {result.conditions.map((condition) => (
           <li key={condition.field}>
-            <span className="pill">{condition.status}</span>{" "}
-            <strong>
-              {condition.field === "experienceYears"
-                ? "Experience"
-                : condition.field === "workAuthorization"
-                  ? "Work authorization"
-                  : condition.field === "education"
-                    ? "Education"
-                    : condition.field === "seniority"
-                      ? "Seniority"
-                      : "Workplace"}
-            </strong>
-            : {condition.requirement || "Not supplied"}
+            <span className="pill">{t(conditionStatuses[condition.status])}</span>{" "}
+            <strong>{t(conditionFields[condition.field])}</strong>:{" "}
+            {condition.requirement || t("Not supplied")}
             <p className="muted">{condition.reason}</p>
           </li>
         ))}
       </ul>
-      <h4>Requirements and their supporting sources</h4>
+      <h4>{t("Requirements and their supporting sources")}</h4>
       {result.requirements.map((requirement) => (
         <section className="matching-requirement" key={requirement.ordinal}>
           <p>
-            <strong>{requirement.priority === "mandatory" ? "Mandatory" : "Preferred"}</strong> ·{" "}
-            {requirement.text}
+            <strong>
+              {requirement.priority === "mandatory" ? t("Mandatory") : t("Preferred")}
+            </strong>{" "}
+            · {requirement.text}
           </p>
           {!requirement.skills.length && (
-            <p className="muted">This text has no reviewed skill mapping. Check it directly.</p>
+            <p className="muted">
+              {t("This text has no reviewed skill mapping. Check it directly.")}
+            </p>
           )}
           {requirement.skills.map((skill) => (
             <div key={skill.skillId}>
               <strong>{skillLabel(skill.skillId, labels)}</strong>
               {!skill.support.length && (
-                <p className="muted">No linked support. This does not prove inability.</p>
+                <p className="muted">{t("No linked support. This does not prove inability.")}</p>
               )}
               {[...skill.support, ...skill.practice].map((reference) => (
                 <details key={reference.versionId} className="matching-reference">
                   <summary>
-                    {reference.label} · {reference.source}
+                    {reference.label} · {reference.source} ·{" "}
                     {reference.signal === "practice"
-                      ? " · needs practice"
+                      ? t("needs practice")
                       : reference.signal === "support"
-                        ? " · observed in one scenario"
-                        : " · unverified"}
+                        ? t("observed in one scenario")
+                        : t("unverified")}
                   </summary>
-                  <p>{reference.context || "No additional context supplied."}</p>
-                  <Link href="/skills/">Review this evidence in my profile</Link>
+                  <p>{reference.context || t("No additional context supplied.")}</p>
+                  <Link href="/skills/">{t("Review this evidence in my profile")}</Link>
                 </details>
               ))}
             </div>
@@ -106,36 +117,42 @@ export function MatchingResultCard({
       ))}
       {result.available && (
         <Link className="button secondary" href={`/learning/?job=${result.jobId}`}>
-          Plan learning for this role
+          {t("Plan learning for this role")}
         </Link>
       )}
       {result.available && (
         <Link className="button secondary" href={`/resume/?job=${result.jobId}`}>
-          Review resume for this role
+          {t("Review resume for this role")}
         </Link>
       )}
-      <h4>Useful next actions</h4>
+      <h4>{t("Useful next actions")}</h4>
       {result.available && (
         <Link className="button secondary" href={`/applications/?job=${result.jobId}`}>
-          Prepare a tracking record
+          {t("Prepare a tracking record")}
         </Link>
       )}
       <ul>
         {result.gaps.length ? (
           result.gaps.map((gap, index) => (
             <li key={index}>
-              {gap.skillId ? `${skillLabel(gap.skillId, labels)}: ` : ""}
-              {gap.reason}
+              {gap.skillId
+                ? t("{skill}: {reason}", {
+                    skill: skillLabel(gap.skillId, labels),
+                    reason: gap.reason,
+                  })
+                : gap.reason}
             </li>
           ))
         ) : (
           <li>
-            Inspect the original role and prepare examples that demonstrate the linked skills.
+            {t(
+              "Inspect the original role and prepare examples that demonstrate the linked skills.",
+            )}
           </li>
         )}
       </ul>
       <Link className="button secondary" href="/jobs/">
-        Review published roles and original sources
+        {t("Review published roles and original sources")}
       </Link>
     </article>
   );
