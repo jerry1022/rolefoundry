@@ -98,10 +98,9 @@ export class SupabaseProviderSlots implements ProviderSlots {
     return typeof data === "string" ? data : null;
   }
   async release(provider: string, token: string) {
-    const { error } = await this.client.rpc("gateway_slot_release", {
-      p_provider: provider,
-      p_token: token,
-    });
+    const { error } = await this.client
+      .rpc("gateway_slot_release", { p_provider: provider, p_token: token })
+      .abortSignal(AbortSignal.timeout(5000));
     if (error) throw new Error("Provider slot release failed.");
   }
 }
@@ -121,11 +120,13 @@ export class SupabaseProviderBudgets implements ProviderBudgets {
     return typeof data === "string" ? data : null;
   }
   async settle(provider: string, reservation: string, actualTokens: number) {
-    const { error } = await this.client.rpc("gateway_budget_settle", {
-      p_provider: provider,
-      p_id: reservation,
-      p_actual: actualTokens,
-    });
+    const { error } = await this.client
+      .rpc("gateway_budget_settle", {
+        p_provider: provider,
+        p_id: reservation,
+        p_actual: actualTokens,
+      })
+      .abortSignal(AbortSignal.timeout(5000));
     if (error) throw new Error("Provider budget settlement failed.");
   }
 }

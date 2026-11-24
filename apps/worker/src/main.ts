@@ -31,8 +31,10 @@ import { declareTaskResources } from "../../../src/modules/tasks/resources";
 import { SupabaseTaskQueue } from "../../../src/modules/tasks/adapters/supabase";
 import { SupabaseAssessmentGrader } from "../../../src/modules/assessment/adapters/supabase";
 import { MatchingHandler } from "../../../src/modules/matching/handler";
-import { semanticStageFromEnvironment } from "../../../src/modules/matching/adapters/semantic";
-import { wordingStageFromEnvironment } from "../../../src/modules/resume/adapters/wording";
+import { semanticStage } from "../../../src/modules/matching/adapters/semantic";
+import { gatewayRuntimeFromEnvironment } from "../../../src/modules/gateway/adapters/runtime";
+import { wordingStage } from "../../../src/modules/resume/adapters/wording";
+import { sweepAnalyses } from "../../../src/modules/gateway/adapters/identity-lifecycle";
 import { SupabaseMatchingExecutionStore } from "../../../src/modules/matching/adapters/supabase";
 import { LearningHandler } from "../../../src/modules/learning/handler";
 import { SupabaseLearningExecutionStore } from "../../../src/modules/learning/adapters/supabase";
@@ -123,6 +125,8 @@ const deletionJanitor = new LateDeletionJanitor(
 );
 const matchingStore = new SupabaseMatchingExecutionStore(client);
 const revisionStore = new SupabaseResumeRevisionStore(client);
+// One gateway for every purpose so per-adapter concurrency is shared; invalid policy fails startup.
+const gatewayRuntime = gatewayRuntimeFromEnvironment(client);
 const controller = new AbortController();
 const invalidationDispatcher = new InvalidationDispatcher(new SupabaseInvalidationStore(client));
 for (const signal of ["SIGINT", "SIGTERM"] as const) process.on(signal, () => controller.abort());
@@ -130,6 +134,7 @@ const feedRegistry = deploymentFeedRegistry(),
   feedStore = new SupabaseFeedExecutionStore(client),
   feedScheduler = new FeedScheduler(feedStore, feedRegistry);
 let nextFeedScheduleAt = 0;
+let nextAnalysisSweepAt = 0;
 const handlers = {
   "account.delete": new AccountDeletionHandler(
     new SupabaseDeletionExecution(client),
@@ -158,7 +163,7 @@ const handlers = {
   "resume.revise": new ResumeRevisionHandler(
     revisionStore,
     new ConfirmedFactOrderReviser(),
-    wordingStageFromEnvironment(client, revisionStore),
+    wordingStage(client, revisionStore, gatewayRuntime),
   ),
   "resume.export": new ResumeExportHandler(
     new SupabaseResumeExportStore(client, resumeStorage, resumeDigest),
@@ -168,7 +173,7 @@ const handlers = {
   "assessment.grade": new SupabaseAssessmentGrader(client),
   "matches.refresh": new MatchingHandler(
     matchingStore,
-    semanticStageFromEnvironment(client, matchingStore),
+    semanticStage(client, matchingStore, gatewayRuntime),
   ),
   "learning.plan": new LearningHandler(
     new SupabaseLearningExecutionStore(client),
@@ -241,6 +246,18 @@ try {
           if (!controller.signal.aborted)
             console.error(
               JSON.stringify({ event: "feed.schedule_unavailable", code: "RF_UNAVAILABLE" }),
+            );
+        }
+      }
+      if (Date.now() >= nextAnalysisSweepAt) {
+        nextAnalysisSweepAt = Date.now() + 300000;
+        try {
+          const reclaimed = await sweepAnalyses(client, controller.signal);
+          if (reclaimed) console.log(JSON.stringify({ event: "analysis.swept", reclaimed }));
+        } catch {
+          if (!controller.signal.aborted)
+            console.error(
+              JSON.stringify({ event: "analysis.sweep_unavailable", code: "RF_UNAVAILABLE" }),
             );
         }
       }

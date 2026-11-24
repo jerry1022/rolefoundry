@@ -236,7 +236,7 @@ describe("resume wording reservation", () => {
       reservations,
     ).revise(actor, id(91), { ...body, wording: true }, "key-12345678");
     expect(order).toEqual([
-      "reserve:resume:resume-wording:key-12345678:resume-wording-key:key-12345678",
+      "reserve:resume:resume-wording:key-12345678:ai:resume-wording-key:key-12345678:ai",
       "revise",
     ]);
     expect(ok.wording).toEqual({ state: "reserved", code: null });

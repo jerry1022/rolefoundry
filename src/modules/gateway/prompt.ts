@@ -13,6 +13,8 @@ export function minimizeText(text: string) {
     .replace(url, "[link removed]")
     .replace(phone, (match) => {
       const digits = match.replace(/\D/g, "").length;
+      // Dated ranges such as "2019.01 - 2023.12" are facts, not phone numbers.
+      if (/(?:19|20)\d{2}\s*[./-]\s*\d{1,2}\b/.test(match)) return match;
       return digits >= 9 && digits <= 15 ? "[phone removed]" : match;
     })
     .replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/g, "");

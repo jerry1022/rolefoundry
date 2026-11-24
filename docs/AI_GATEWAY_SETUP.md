@@ -102,6 +102,19 @@ All gateway tables have RLS enabled and no client grants. Member and administrat
 
 Five integration cases run against the real local stack: administrator-only, audited approval with raw-table denial; admission for the exact started task, owner, version and approved recipients (including unapproved upstreams and queued tasks); a consent revocation during the call that blocks publication; idempotent content-free recording with attempt order, telemetry usage and cascade; and recipient revocation blocking later admission.
 
+## Optional-analysis lifecycle rules
+
+Both opt-in analyses (semantic ordering, resume wording) use `planOptionalAnalysis`, `withOptionalAnalysis` and `runOptionalAnalysis` in `src/modules/gateway/analysis.ts`:
+
+- **Keys:** opting in appends `:ai` to the domain idempotency key, so replaying an earlier plain request with the flag set creates a new record instead of reserving an allowance for one that already exists. A key that would not fit the 200-character identity limits keeps the plain key and reports AI as unavailable.
+- **Release on failure:** a reservation is returned only when the domain request was definitively rejected (4xx other than `RF_CONFLICT`). A conflict can mean another request with the same key owns the reservation, and transport or server errors are ambiguous, so those keep it.
+- **Never block the deterministic result:** if the identity task cannot start (revoked, swept or already finished), the domain report or proposal is still published with a fallback code (`RF_ANALYSIS_UNAVAILABLE` or `RF_CONSENT_REQUIRED`).
+- **Charging:** provider failures and rejections before any provider call (unapproved recipient, oversized input) are refundable `infrastructure` failures. Only output that failed validation after a provider call is a `validation` failure.
+- **Sweep:** the worker runs `identity_sweep_analyses` every five minutes. It releases reservations not started within an hour (for example, when domain work failed before the AI stage), and marks analyses still `running` after a day as refundable infrastructure failures.
+- **Bounded:** identity lifecycle calls, slot release, budget settlement and attempt recording each have a five-second deadline. Recording uses its own deadline so a cancelled task still records usage.
+- **Shared runtime:** the worker builds one gateway (`gatewayRuntimeFromEnvironment`) for every purpose, so per-adapter concurrency is shared.
+- Admission or publication-check errors report `RF_GATEWAY_UNAVAILABLE` instead of a timeout. Slot or budget store outages count as transient provider unavailability.
+
 ## Remaining gates
 
 - Provider selection from live evaluation with authorized credentials, plus reviewed retention/data-use terms for every recipient before approval.
