@@ -2,6 +2,7 @@ import { beforeAll, afterAll, afterEach, describe, it, expect } from "vitest";
 import { spawn } from "node:child_process";
 import { chromium, expect as webExpect } from "@playwright/test";
 import { LocalFixtures, type LocalMember } from "../support/local-fixtures";
+import { MatchingFixtures } from "../support/matching-fixtures";
 import { publicationFields, type JobDraft, type PublishedJob } from "../../src/modules/jobs/model";
 import type { CapabilityEvidence } from "../../src/modules/profile/model";
 import { rankMatches } from "../../src/modules/matching/rules";
@@ -15,10 +16,8 @@ import {
 let stack: LocalFixtures, admin: LocalMember;
 let remote: PublishedJob, onsite: PublishedJob, product: PublishedJob;
 const prefix = `rf-match-${crypto.randomUUID()}`;
-let sequence = 0;
-const jobIds: string[] = [],
-  sourceIds: string[] = [],
-  questionIds: string[] = [],
+let fixtures: MatchingFixtures;
+const questionIds: string[] = [],
   rubricIds: string[] = [];
 const constraints: MatchConstraints = { experienceYears: null, confirmations: [] };
 const claim = {
@@ -38,31 +37,9 @@ const preferences = {
 function checked(error: { message: string } | null) {
   if (error) throw Error(error.message);
 }
-async function createJob(overrides: Partial<JobDraft> = {}): Promise<PublishedJob> {
-  const source = await stack.request("admin/catalog/sources", admin, "POST", {
-    name: `${prefix}-${++sequence}`,
-    publisher: "Local matching fixtures",
-    authorizationBasis: "Authored fictional local fixtures",
-    rightsSummary: "Not a real opening",
-    allowedHosts: ["jobs.test.invalid"],
-    permittedFields: publicationFields,
-    isDemo: true,
-  });
-  expect(source.status).toBe(201);
-  const sourceId = (await source.json()).data.id;
-  sourceIds.push(sourceId);
-  const job: JobDraft = {
-    canonicalKey: `${prefix}-${++sequence}`,
-    company: prefix,
-    title: `${prefix} role ${sequence}`,
-    track: "Engineering & data",
-    specialization: "ai-llm-applications",
-    location: "Taipei",
-    workplace: "Remote",
-    level: "Mid",
-    salary: null,
-    summary: "An authored fictional role for matching checks",
-    responsibilities: ["Build useful tools"],
+/** Defaults match this suite's role: Python mandatory, SQL preferred, explicit conditions. */
+function createJob(overrides: Partial<JobDraft> = {}): Promise<PublishedJob> {
+  return fixtures.publishJob({
     requirements: [
       { text: "Build Python services", priority: "mandatory", skills: ["python"] },
       { text: "Query SQL datasets", priority: "preferred", skills: ["sql"] },
@@ -72,48 +49,10 @@ async function createJob(overrides: Partial<JobDraft> = {}): Promise<PublishedJo
       education: "A degree or equivalent practice",
       experienceYears: 2,
     },
-    expiresAt: null,
     ...overrides,
-  };
-  const created = await stack.request("admin/catalog/jobs", admin, "POST", {
-    job,
-    source: {
-      sourceId,
-      externalId: `${prefix}-${sequence}`,
-      url: `https://jobs.test.invalid/${sequence}`,
-    },
   });
-  expect(created.status).toBe(201);
-  const record = (await created.json()).data;
-  jobIds.push(record.id);
-  for (const status of ["review", "published"]) {
-    const response = await stack.request(`admin/catalog/jobs/${record.id}/status`, admin, "POST", {
-      expectedRevision: record.revision,
-      status,
-    });
-    expect(response.status).toBe(200);
-    record.revision = (await response.json()).data.revision;
-  }
-  return (await (await stack.request(`jobs/${record.id}`)).json()).data;
 }
-async function ownerWithEvidence(): Promise<{
-  owner: LocalMember;
-  evidence: CapabilityEvidence;
-  revision: number;
-}> {
-  const owner = await stack.member();
-  const profile = await stack.request("profile", owner, "PATCH", {
-    ...preferences,
-    expectedRevision: 0,
-  });
-  expect(profile.status).toBe(200);
-  const response = await stack.request("evidence", owner, "POST", {
-    expectedRevision: 1,
-    evidence: claim,
-  });
-  expect(response.status).toBe(201);
-  return { owner, ...(await response.json()).data };
-}
+const ownerWithEvidence = () => fixtures.ownerWithEvidence(claim.context);
 async function refresh(
   owner: LocalMember,
   jobId: string | null = remote.id,
@@ -135,26 +74,8 @@ async function find(owner: LocalMember, id: string) {
   expect(response.status).toBe(200);
   return matchRunSchema.parse((await response.json()).data);
 }
-async function lease(taskId: string) {
-  for (let count = 0; count < 10; count++) {
-    const result = await stack.privileged.rpc("task_read", {
-      p_worker: crypto.randomUUID(),
-      p_kinds: ["matches.refresh"],
-      p_seconds: 5,
-      p_quantity: 8,
-    });
-    checked(result.error);
-    const leases = result.data as { taskId: string; token: string; messageId: string }[];
-    for (const other of leases.filter((value) => value.taskId !== taskId))
-      checked(
-        (await stack.privileged.rpc("task_release", { p_task: other.taskId, p_token: other.token }))
-          .error,
-      );
-    const selected = leases.find((value) => value.taskId === taskId);
-    if (selected) return selected;
-  }
-  throw Error("Owned matching task was not visible");
-}
+// Short leases let the expiry cases run quickly.
+const lease = (taskId: string) => fixtures.lease(taskId, 5);
 async function load(task: { taskId: string; token: string }): Promise<MatchSnapshot> {
   const result = await stack.privileged.rpc("matching_load_task", {
     p_task: task.taskId,
@@ -211,6 +132,7 @@ async function worker() {
 beforeAll(async () => {
   stack = await LocalFixtures.open();
   admin = await stack.member(true);
+  fixtures = new MatchingFixtures(stack, admin, prefix);
   remote = await createJob();
   onsite = await createJob({ workplace: "On-site" });
   product = await createJob({
@@ -257,24 +179,7 @@ afterAll(async () => {
   await stack.sql.query("delete from public.assessment_audit where actor_id=any($1::uuid[])", [
     ids,
   ]);
-  await stack.sql.query("delete from public.bookmarks where job_id=any($1::uuid[])", [jobIds]);
-  await stack.sql.query(
-    "delete from public.job_skill_links where requirement_id in(select r.id from public.job_requirements r join public.job_versions v on v.id=r.job_version_id where v.job_id=any($1::uuid[]))",
-    [jobIds],
-  );
-  await stack.sql.query(
-    "delete from public.job_requirements where job_version_id in(select id from public.job_versions where job_id=any($1::uuid[]))",
-    [jobIds],
-  );
-  await stack.sql.query("delete from public.job_versions where job_id=any($1::uuid[])", [jobIds]);
-  await stack.sql.query("delete from public.job_sources where job_id=any($1::uuid[])", [jobIds]);
-  await stack.sql.query("delete from public.jobs where id=any($1::uuid[])", [jobIds]);
-  await stack.sql.query("delete from public.sources where id=any($1::uuid[])", [sourceIds]);
-  await stack.sql.query("delete from public.catalog_audit where actor_id=any($1::uuid[])", [ids]);
-  await stack.sql.query(
-    "delete from public.companies where name=$1 and not exists(select 1 from public.jobs where company_id=public.companies.id)",
-    [prefix],
-  );
+  await fixtures.cleanup(ids);
   await stack.close();
 });
 describe("module 06 private, versioned and deletion-safe matching", () => {

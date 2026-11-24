@@ -148,7 +148,7 @@ afterAll(async () => {
 });
 
 it("applies semantic order only within structural ties, records usage and consumes one allowance", async () => {
-  const owner = await fixtures.ownerWithEvidence();
+  const { owner } = await fixtures.ownerWithEvidence();
   await consent(owner);
   const task = await request(owner, true);
   expect(task.semantic).toEqual({ state: "reserved", code: null });
@@ -180,7 +180,7 @@ it("applies semantic order only within structural ties, records usage and consum
 });
 
 it("keeps the rules report when consent is missing and never reserves budget", async () => {
-  const owner = await fixtures.ownerWithEvidence();
+  const { owner } = await fixtures.ownerWithEvidence();
   const task = await request(owner, true);
   expect(task.semantic).toEqual({ state: "unavailable", code: "RF_CONSENT_REQUIRED" });
   await handler(reverseScores).execute(await fixtures.lease(task.taskId), signal());
@@ -194,7 +194,7 @@ it("keeps the rules report when consent is missing and never reserves budget", a
 });
 
 it("releases the reservation when the deployment has no ranking route", async () => {
-  const owner = await fixtures.ownerWithEvidence();
+  const { owner } = await fixtures.ownerWithEvidence();
   await consent(owner);
   const task = await request(owner, true);
   await handler(null).execute(await fixtures.lease(task.taskId), signal());
@@ -211,7 +211,7 @@ it("releases the reservation when the deployment has no ranking route", async ()
 });
 
 it("falls back to rules order on provider failure and marks the allowance refundable", async () => {
-  const owner = await fixtures.ownerWithEvidence();
+  const { owner } = await fixtures.ownerWithEvidence();
   await consent(owner);
   const task = await request(owner, true);
   await handler([{ fail: "unavailable" }]).execute(await fixtures.lease(task.taskId), signal());
@@ -232,7 +232,7 @@ it("falls back to rules order on provider failure and marks the allowance refund
 });
 
 it("rejects forged ranking metadata at publication", async () => {
-  const owner = await fixtures.ownerWithEvidence();
+  const { owner } = await fixtures.ownerWithEvidence();
   const task = await request(owner, false);
   const lease = await fixtures.lease(task.taskId);
   const forged = await stack.privileged.rpc("matching_publish_ranked", {
