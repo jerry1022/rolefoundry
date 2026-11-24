@@ -3746,7 +3746,8 @@ textarea:focus-visible {
   animation: rf-pulse 2.4s ease-in-out infinite;
 }
 .nav-label {
-  color: #5c6f65;
+  /* 5.8:1 on the always-dark sidebar (was 2.8:1). */
+  color: #8aa79a;
 }
 .nav-item {
   color: #b9cbc1;
@@ -4113,7 +4114,8 @@ h1 {
     0 18px 40px -10px rgb(200 241 105 / 75%);
 }
 .hero-footnote {
-  color: #8fb2a1;
+  /* At least 4.5:1 across the hero gradient behind it (was 3.8:1). */
+  color: #c6ddd1;
 }
 .orbit {
   border-color: rgb(255 255 255 / 14%);

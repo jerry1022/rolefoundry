@@ -466,7 +466,7 @@
   box-shadow: 0 0 0 3px rgb(200 241 105 / 18%);
 }
 :root[data-theme="dark"] .nav-label {
-  color: rgb(132 150 140);
+  color: #8aa79a;
 }
 :root[data-theme="dark"] .nav-item {
   color: #b9cbc1;
@@ -659,7 +659,7 @@
     0 18px 40px -10px rgb(200 241 105 / 75%);
 }
 :root[data-theme="dark"] .hero-footnote {
-  color: #8fb2a1;
+  color: #c6ddd1;
 }
 :root[data-theme="dark"] .orbit {
   border-color: rgb(255 255 255 / 14%);
