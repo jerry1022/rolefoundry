@@ -843,3 +843,110 @@ describe("provider-wide slots", () => {
     expect(adapter.calls).toHaveLength(0);
   });
 });
+
+describe("provider token budgets", () => {
+  const budgeted = (dailyTokens: number, fallback = false) =>
+    parseGatewayPolicy(
+      JSON.stringify({
+        providerLimits: { primary: { dailyTokens } },
+        routes: {
+          "resume.wording": {
+            primary: { adapter: "primary", model: "m", recipients: ["primary"] },
+            ...(fallback
+              ? {
+                  fallback: {
+                    adapter: "backup",
+                    model: "b",
+                    recipients: ["backup"],
+                    enabled: true,
+                  },
+                }
+              : {}),
+            deadlineMs: 5000,
+            primaryAttempts: 1,
+            maxInputChars: 4000,
+            maxOutputTokens: 400,
+            concurrency: 2,
+          },
+        },
+      }),
+    );
+  function memoryBudgets() {
+    const rows = new Map<string, { estimate: number; actual: number | null }>();
+    const used = () =>
+      [...rows.values()].reduce((sum, row) => sum + (row.actual ?? row.estimate), 0);
+    return {
+      rows,
+      used,
+      reserve: async (_provider: string, tokens: number, cap: number) => {
+        if (used() + tokens > cap) return null;
+        const id = crypto.randomUUID();
+        rows.set(id, { estimate: tokens, actual: null });
+        return id;
+      },
+      settle: async (_provider: string, id: string, actual: number) => {
+        const row = rows.get(id);
+        if (row && row.actual === null) row.actual = actual;
+      },
+    };
+  }
+
+  it("settles reported usage and keeps the estimate for a failed call", async () => {
+    const budgets = memoryBudgets();
+    const ok = new AIGateway({
+      policy: budgeted(100000),
+      adapters: [
+        new FakeAdapter("primary", [{ text: good, usage: { inputTokens: 70, outputTokens: 30 } }]),
+      ],
+      templates: gatewayTemplates,
+      authority: authority(),
+      clock: instant,
+      budgets,
+    });
+    expect((await run(ok)).state).toBe("succeeded");
+    expect(budgets.used()).toBe(100);
+    const failing = new AIGateway({
+      policy: budgeted(100000),
+      adapters: [new FakeAdapter("primary", [{ fail: "unavailable" }])],
+      templates: gatewayTemplates,
+      authority: authority(),
+      clock: instant,
+      budgets,
+    });
+    await run(failing);
+    const failed = [...budgets.rows.values()].find((row) => row.actual === null)!;
+    expect(failed.estimate).toBeGreaterThan(400);
+  });
+
+  it("treats an exhausted budget as quota: no provider call and no fallback", async () => {
+    const budgets = memoryBudgets();
+    const primary = new FakeAdapter("primary", [{ text: good }]);
+    const backup = new FakeAdapter("backup", [{ text: good }]);
+    const gateway = new AIGateway({
+      policy: budgeted(300, true),
+      adapters: [primary, backup],
+      templates: gatewayTemplates,
+      authority: authority(),
+      clock: instant,
+      budgets,
+    });
+    expect(await run(gateway)).toMatchObject({
+      state: "provider-failed",
+      code: "RF_PROVIDER_QUOTA",
+    });
+    expect(primary.calls).toHaveLength(0);
+    expect(backup.calls).toHaveLength(0);
+    expect(
+      () =>
+        new AIGateway({
+          policy: budgeted(300),
+          adapters: [primary],
+          templates: gatewayTemplates,
+          authority: authority(),
+        }),
+    ).toThrow(/budget store/);
+    expect(() =>
+      parseGatewayPolicy(JSON.stringify({ providerLimits: { primary: {} }, routes: {} })),
+    ).toThrow();
+  });
+});

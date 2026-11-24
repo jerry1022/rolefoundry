@@ -526,3 +526,74 @@ it("leases provider-wide slots with token-bound release and expiry reclaim", asy
     ]);
   }
 });
+
+it("reserves rolling provider token budgets and settles once", async () => {
+  const provider = `budget-${suffix}`;
+  const reserve = (tokens: number, cap = 1000) =>
+    stack.privileged.rpc("gateway_budget_reserve", {
+      p_provider: provider,
+      p_tokens: tokens,
+      p_daily_cap: cap,
+    });
+  try {
+    const first = await reserve(600);
+    expect(typeof first.data).toBe("string");
+    expect((await reserve(500)).data).toBeNull();
+    // Settling below the estimate frees budget; a second settle keeps the first value.
+    expect(
+      (
+        await stack.privileged.rpc("gateway_budget_settle", {
+          p_provider: provider,
+          p_id: first.data,
+          p_actual: 200,
+        })
+      ).data,
+    ).toBe(true);
+    expect(
+      (
+        await stack.privileged.rpc("gateway_budget_settle", {
+          p_provider: provider,
+          p_id: first.data,
+          p_actual: 900,
+        })
+      ).data,
+    ).toBe(false);
+    expect(typeof (await reserve(700)).data).toBe("string");
+    // Concurrent reservations never exceed the cap.
+    const burst = await Promise.all(Array.from({ length: 5 }, () => reserve(50)));
+    expect(burst.filter((result) => typeof result.data === "string")).toHaveLength(2);
+    // Usage older than 24 hours no longer counts.
+    await stack.sql.query(
+      "update public.gateway_token_reservations set created_at=now()-interval '25 hours' where provider=$1",
+      [provider],
+    );
+    expect(typeof (await reserve(900)).data).toBe("string");
+    for (const args of [{ p_tokens: 0 }, { p_daily_cap: 0 }, { p_provider: "Bad" }])
+      expect(
+        (
+          await stack.privileged.rpc("gateway_budget_reserve", {
+            p_provider: provider,
+            p_tokens: 1,
+            p_daily_cap: 10,
+            ...args,
+          })
+        ).error?.message,
+      ).toBe("RF_INVALID_INPUT");
+    for (const client of [owner.client, admin.client]) {
+      expect(
+        (
+          await client.rpc("gateway_budget_reserve", {
+            p_provider: provider,
+            p_tokens: 1,
+            p_daily_cap: 10,
+          })
+        ).error,
+      ).toBeTruthy();
+      expect((await client.from("gateway_token_reservations").select("*")).error).toBeTruthy();
+    }
+  } finally {
+    await stack.sql.query("delete from public.gateway_token_reservations where provider=$1", [
+      provider,
+    ]);
+  }
+});

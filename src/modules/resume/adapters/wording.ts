@@ -8,6 +8,7 @@ import { IdentityAnalysisLifecycle } from "../../gateway/adapters/identity-lifec
 import {
   SupabaseGatewayAuthority,
   SupabaseGatewayRecorder,
+  SupabaseProviderBudgets,
   SupabaseProviderSlots,
 } from "../../gateway/adapters/supabase";
 import type { WordingStageDependencies } from "../handler";
@@ -31,6 +32,7 @@ export function wordingStageFromEnvironment(
         templates: gatewayTemplates,
         authority: new SupabaseGatewayAuthority(client),
         slots: new SupabaseProviderSlots(client),
+        budgets: new SupabaseProviderBudgets(client),
       })
     : null;
   const recorder = new SupabaseGatewayRecorder(client);

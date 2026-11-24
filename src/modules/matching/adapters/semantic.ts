@@ -9,6 +9,7 @@ import { adaptersFromEnvironment } from "../../gateway/adapters/registry";
 import {
   SupabaseGatewayAuthority,
   SupabaseGatewayRecorder,
+  SupabaseProviderBudgets,
   SupabaseProviderSlots,
 } from "../../gateway/adapters/supabase";
 import type { SemanticStage } from "../handler";
@@ -50,6 +51,7 @@ export function semanticStageFromEnvironment(
           templates: gatewayTemplates,
           authority: new SupabaseGatewayAuthority(client),
           slots: new SupabaseProviderSlots(client),
+          budgets: new SupabaseProviderBudgets(client),
         }),
         new SupabaseGatewayRecorder(client),
       )

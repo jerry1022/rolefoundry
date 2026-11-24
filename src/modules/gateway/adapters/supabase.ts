@@ -3,7 +3,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { safeDatabaseError } from "../../platform/database-errors";
 import { recipientPageSchema, type RecipientChange, type RecipientStore } from "../admin";
 import type { GatewayRequest, GatewayResult } from "../model";
-import type { GatewayAuthority, GatewayRecorder, ProviderSlots } from "../ports";
+import type { GatewayAuthority, GatewayRecorder, ProviderBudgets, ProviderSlots } from "../ports";
 
 const bounded = (signal: AbortSignal) => AbortSignal.any([signal, AbortSignal.timeout(5000)]);
 
@@ -103,5 +103,29 @@ export class SupabaseProviderSlots implements ProviderSlots {
       p_token: token,
     });
     if (error) throw new Error("Provider slot release failed.");
+  }
+}
+
+/** Rolling 24-hour provider token budgets in PostgreSQL, shared by every worker instance. */
+export class SupabaseProviderBudgets implements ProviderBudgets {
+  constructor(private readonly client: SupabaseClient) {}
+  async reserve(provider: string, tokens: number, dailyCap: number, signal: AbortSignal) {
+    const { data, error } = await this.client
+      .rpc("gateway_budget_reserve", {
+        p_provider: provider,
+        p_tokens: tokens,
+        p_daily_cap: dailyCap,
+      })
+      .abortSignal(bounded(signal));
+    if (error) throw new Error("Provider budget store is unavailable.");
+    return typeof data === "string" ? data : null;
+  }
+  async settle(provider: string, reservation: string, actualTokens: number) {
+    const { error } = await this.client.rpc("gateway_budget_settle", {
+      p_provider: provider,
+      p_id: reservation,
+      p_actual: actualTokens,
+    });
+    if (error) throw new Error("Provider budget settlement failed.");
   }
 }
