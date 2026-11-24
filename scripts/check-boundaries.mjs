@@ -17,6 +17,7 @@ async function files(directory) {
 const violations = [];
 for (const file of [
   ...(await files("src/modules/identity")),
+  ...(await files("src/modules/invalidation")),
   ...(await files("src/modules/profile")),
   ...(await files("src/modules/skills")),
   ...(await files("src/modules/jobs")),
@@ -54,6 +55,7 @@ for (const file of [
   );
   const domain =
     /^src\/modules\/identity\/(admin|admin-service)\.ts$/.test(file) ||
+    /^src\/modules\/invalidation\/(model|ports|dispatcher)\.ts$/.test(file) ||
     /src\/modules\/((?:profile|jobs|skills|assessment|tasks|matching|learning|resume|applications|ingestion|operations|account-data|account-deletion)\/(model|ports|service|specializations|catalog|worker|rules|handler|report-state|planner|plan-state|document-state|cleanup|record-state|input|csv|normalizer|review-service|feed-service|feed-handler|presence|replay))\.ts$/.test(
       file,
     );
@@ -76,5 +78,5 @@ for (const file of [
 }
 if (violations.length) throw new Error(violations.join("\n"));
 console.log(
-  "Profile/job/skill/assessment/task/matching/learning/resume/applications/ingestion/operations/account-data/account-deletion domain and UI dependency boundaries are valid.",
+  "Profile/job/skill/assessment/task/matching/learning/resume/applications/ingestion/operations/account-data/account-deletion/invalidation domain and UI dependency boundaries are valid.",
 );

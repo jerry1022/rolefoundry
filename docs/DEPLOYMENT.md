@@ -74,3 +74,5 @@ The design uses Google Fonts with system fallbacks. If external fonts are blocke
 [Administrator task recovery](TASK_REPLAY_SETUP.md) requires `20261114130000_admin_task_replay.sql` plus compatible web/worker code. Reuse existing secrets and matching approved feed definitions; deploy through the reviewed procedure. The HTTP request does not start a worker, reset an old task or apply migrations.
 
 The [consolidated administrator workspace](ADMIN_WORKSPACE_SETUP.md) requires the identity directory migration for paged invitation/quota reads and unused-invitation revocation. Existing identity/source/recovery settings remain sufficient; it adds no browser credential or privileged database editor.
+
+[Durable invalidation delivery](INVALIDATION_SETUP.md) requires the additive dispatch migration and compatible worker code. Review catch-up sizing for retained producer events in staging before hosted application. Existing secrets are sufficient. Failure-isolated maintenance leaves ordinary task processing and existing synchronous privacy/version guards in place; verify backlog, stale queued cancellation and safe retry after rollout.

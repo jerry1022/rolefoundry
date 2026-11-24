@@ -104,3 +104,7 @@ Apply the task-replay migration and deploy compatible web/worker code using exis
 ## Consolidated administration
 
 Apply `20261114140000_identity_admin_directory.sql` and use the existing verified administrator bootstrap and identity settings. No new account/key or model call is required. [The setup guide](ADMIN_WORKSPACE_SETUP.md) describes shared editor controls, invitation revocation, future quotas, refunds and the role-loss boundary. Hosted schema changes remain reviewed operator actions.
+
+## Invalidation dispatch
+
+Apply `20261114150000_invalidation_dispatch.sql` and run compatible worker code using existing Supabase worker settings. No new secret, browser flag or model call is introduced. The normal worker performs bounded profile/dictionary maintenance before task acquisition; producer/privacy/version guards remain independently effective during rollout. Review historical event counts before hosted catch-up. See [setup, retry/lease behavior and operator checks](INVALIDATION_SETUP.md).

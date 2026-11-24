@@ -145,3 +145,7 @@ GET `/api/v1/admin/operations/tasks/{taskId}/replay` returns minimized eligibili
 ## Identity administration directory
 
 GET `/api/v1/identity/admin/invitations` and GET `/api/v1/identity/admin/quota-policies` accept only an optional opaque cursor and return `{data,nextCursor}`, fixed 20. Invitations omit email/hashes/actor IDs; quota IDs are exact decimal strings. POST `/api/v1/identity/admin/invitations/{id}/revoke` accepts a same-origin strict empty JSON body (128 bytes), expires only an unused invitation and is idempotent for already expired unused records. Every route independently verifies administrator authority in the service and SQL, and successful reads/revocation are audited. See [directory schemas, paging, revocation and retained old controls](ADMIN_WORKSPACE_SETUP.md).
+
+## Worker-only invalidation RPCs
+
+There is no browser invalidation endpoint. The worker service role alone can execute `invalidation_claim(p_ids uuid[] default null)` (up to four opaque `{id,token}` leases), `invalidation_apply(p_id uuid,p_token uuid)` (`{completed,canceled}`) and `invalidation_retry(p_id uuid,p_token uuid)` (persisted backoff). Optional claim scope is bounded to four IDs for controlled operator/integration runs. Raw receipts and private consumer/task helpers are not granted even to the service role. Every apply/retry requires a current fenced lease. See [transaction, scope and retry contracts](INVALIDATION_SETUP.md).
