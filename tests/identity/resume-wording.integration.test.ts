@@ -50,8 +50,8 @@ function handler(step: FakeStep[] | ((call: AdapterCall) => FakeStep) | null) {
   const gateway =
     step === null
       ? null
-      : new AIGateway(
-          parseGatewayPolicy(
+      : new AIGateway({
+          policy: parseGatewayPolicy(
             JSON.stringify({
               routes: {
                 "resume.wording": {
@@ -65,10 +65,10 @@ function handler(step: FakeStep[] | ((call: AdapterCall) => FakeStep) | null) {
               },
             }),
           ),
-          [new FakeAdapter(recipient, step)],
-          gatewayTemplates,
-          new SupabaseGatewayAuthority(stack.privileged),
-        );
+          adapters: [new FakeAdapter(recipient, step)],
+          templates: gatewayTemplates,
+          authority: new SupabaseGatewayAuthority(stack.privileged),
+        });
   const recorder = new SupabaseGatewayRecorder(stack.privileged);
   return new ResumeRevisionHandler(store, new ConfirmedFactOrderReviser(), {
     store,

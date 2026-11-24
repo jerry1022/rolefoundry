@@ -53,6 +53,17 @@ export interface GatewayRecorder {
   record(result: GatewayResult<unknown>, signal: AbortSignal): Promise<void>;
 }
 
+/** Provider-wide concurrency shared by every worker instance (leased, crash-safe slots). */
+export interface ProviderSlots {
+  acquire(
+    provider: string,
+    limit: number,
+    leaseSeconds: number,
+    signal: AbortSignal,
+  ): Promise<string | null>;
+  release(provider: string, token: string): Promise<void>;
+}
+
 export interface GatewayClock {
   now(): number;
   sleep(ms: number, signal: AbortSignal): Promise<void>;

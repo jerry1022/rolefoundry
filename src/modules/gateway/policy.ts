@@ -49,6 +49,10 @@ export type GatewayRoute = z.infer<typeof route>;
 export const gatewayPolicySchema = z
   .object({
     routes: z.partialRecord(z.enum(gatewayPurposes), route),
+    /** Optional provider-wide concurrency across all worker instances and purposes. */
+    providerLimits: z
+      .record(adapterId, z.object({ concurrency: z.number().int().min(1).max(64) }).strict())
+      .optional(),
   })
   .strict();
 export type GatewayPolicy = z.infer<typeof gatewayPolicySchema>;

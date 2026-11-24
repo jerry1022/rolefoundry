@@ -110,13 +110,13 @@ function setup(
   const a = new FakeAdapter("primary", primary);
   const b = new FakeAdapter("backup", options.backup ?? [{ text: good }]);
   const auth = authority(options.auth);
-  const gateway = new AIGateway(
-    policy(options.route, options.fallback),
-    [a, b],
-    gatewayTemplates,
-    auth,
-    options.clock ?? instant,
-  );
+  const gateway = new AIGateway({
+    policy: policy(options.route, options.fallback),
+    adapters: [a, b],
+    templates: gatewayTemplates,
+    authority: auth,
+    clock: options.clock ?? instant,
+  });
   return { gateway, a, b, auth };
 }
 
@@ -129,13 +129,13 @@ const run = (
 describe("AI gateway execution", () => {
   it("fails closed when no route is configured and never calls an adapter", async () => {
     const a = new FakeAdapter("primary", [{ text: good }]);
-    const gateway = new AIGateway(
-      parseGatewayPolicy(undefined),
-      [a],
-      gatewayTemplates,
-      authority(),
-      instant,
-    );
+    const gateway = new AIGateway({
+      policy: parseGatewayPolicy(undefined),
+      adapters: [a],
+      templates: gatewayTemplates,
+      authority: authority(),
+      clock: instant,
+    });
     const result = await run(gateway);
     expect(result).toMatchObject({ state: "rejected", code: "RF_GATEWAY_DISABLED", output: null });
     expect(a.calls).toHaveLength(0);
@@ -372,13 +372,13 @@ describe("AI gateway execution", () => {
         return { text: good, reportedModel: null, usage: null };
       },
     };
-    const gateway = new AIGateway(
-      policy({ concurrency: 1 }),
-      [slow],
-      gatewayTemplates,
-      authority(),
-      instant,
-    );
+    const gateway = new AIGateway({
+      policy: policy({ concurrency: 1 }),
+      adapters: [slow],
+      templates: gatewayTemplates,
+      authority: authority(),
+      clock: instant,
+    });
     const results = await Promise.all([run(gateway), run(gateway), run(gateway)]);
     expect(results.every((result) => result.state === "succeeded")).toBe(true);
     expect(peak).toBe(1);
@@ -418,13 +418,13 @@ describe("AI gateway execution", () => {
       ],
     ];
     for (const [output, state] of cases) {
-      const gateway = new AIGateway(
-        rankPolicy,
-        [new FakeAdapter("primary", [{ text: JSON.stringify(output) }])],
-        gatewayTemplates,
-        authority(),
-        instant,
-      );
+      const gateway = new AIGateway({
+        policy: rankPolicy,
+        adapters: [new FakeAdapter("primary", [{ text: JSON.stringify(output) }])],
+        templates: gatewayTemplates,
+        authority: authority(),
+        clock: instant,
+      });
       expect(
         (
           await gateway.execute(
@@ -489,7 +489,13 @@ describe("AI gateway policy, minimization and embeddings", () => {
       "primary",
     ]);
     expect(
-      () => new AIGateway(policy(), [new FakeAdapter("other", [])], gatewayTemplates, authority()),
+      () =>
+        new AIGateway({
+          policy: policy(),
+          adapters: [new FakeAdapter("other", [])],
+          templates: gatewayTemplates,
+          authority: authority(),
+        }),
     ).toThrow(/unconfigured adapter/);
   });
 
@@ -688,7 +694,13 @@ describe("fixed bilingual evaluation", () => {
       };
     });
     const report = await runWordingEvaluation(
-      new AIGateway(evalPolicy(), [faithful], gatewayTemplates, authority(), instant),
+      new AIGateway({
+        policy: evalPolicy(),
+        adapters: [faithful],
+        templates: gatewayTemplates,
+        authority: authority(),
+        clock: instant,
+      }),
       new AbortController().signal,
     );
     expect(report.cases).toBe(wordingEvaluationSet.length);
@@ -709,10 +721,125 @@ describe("fixed bilingual evaluation", () => {
       };
     });
     const bad = await runWordingEvaluation(
-      new AIGateway(evalPolicy(), [fabricating], gatewayTemplates, authority(), instant),
+      new AIGateway({
+        policy: evalPolicy(),
+        adapters: [fabricating],
+        templates: gatewayTemplates,
+        authority: authority(),
+        clock: instant,
+      }),
       new AbortController().signal,
     );
     expect(bad.succeeded).toBe(0);
     expect(bad.invalidReference).toBe(bad.cases);
+  });
+});
+
+describe("provider-wide slots", () => {
+  /** In-memory stand-in for the leased PostgreSQL slot table. */
+  function memorySlots() {
+    const held = new Map<string, Set<string>>();
+    return {
+      acquire: async (provider: string, limit: number) => {
+        const tokens = held.get(provider) ?? new Set<string>();
+        held.set(provider, tokens);
+        if (tokens.size >= limit) return null;
+        const token = crypto.randomUUID();
+        tokens.add(token);
+        return token;
+      },
+      release: async (provider: string, token: string) => void held.get(provider)?.delete(token),
+    };
+  }
+  const limited = (concurrency: number, deadlineMs = 5000) =>
+    parseGatewayPolicy(
+      JSON.stringify({
+        providerLimits: { primary: { concurrency } },
+        routes: {
+          "resume.wording": {
+            primary: { adapter: "primary", model: "m", recipients: ["primary"] },
+            deadlineMs,
+            primaryAttempts: 1,
+            maxInputChars: 4000,
+            maxOutputTokens: 400,
+            concurrency: 4,
+          },
+        },
+      }),
+    );
+
+  it("caps concurrent provider calls across separate gateway instances", async () => {
+    let active = 0,
+      peak = 0;
+    const slow = {
+      id: "primary",
+      complete: async () => {
+        active++;
+        peak = Math.max(peak, active);
+        await new Promise((resolve) => setTimeout(resolve, 20));
+        active--;
+        return { text: good, reportedModel: null, usage: null };
+      },
+    };
+    const slots = memorySlots();
+    const realSleep = {
+      now: () => Date.now(),
+      sleep: (ms: number) => new Promise<void>((r) => setTimeout(r, ms)),
+    };
+    const workers = [0, 1].map(
+      () =>
+        new AIGateway({
+          policy: limited(1),
+          adapters: [slow],
+          templates: gatewayTemplates,
+          authority: authority(),
+          clock: realSleep,
+          slots,
+        }),
+    );
+    const results = await Promise.all([...workers, ...workers].map((gateway) => run(gateway)));
+    expect(results.every((result) => result.state === "succeeded")).toBe(true);
+    expect(peak).toBe(1);
+  });
+
+  it("requires a shared store when limits are configured and times out waiting for a slot", async () => {
+    expect(
+      () =>
+        new AIGateway({
+          policy: limited(1),
+          adapters: [new FakeAdapter("primary", [])],
+          templates: gatewayTemplates,
+          authority: authority(),
+        }),
+    ).toThrow(/shared slot store/);
+    const full = { acquire: async () => null, release: async () => {} };
+    const realSleep = {
+      now: () => Date.now(),
+      sleep: (ms: number, s: AbortSignal) =>
+        new Promise<void>((resolve, reject) => {
+          const t = setTimeout(resolve, ms);
+          s.addEventListener(
+            "abort",
+            () => {
+              clearTimeout(t);
+              reject(s.reason);
+            },
+            { once: true },
+          );
+        }),
+    };
+    const adapter = new FakeAdapter("primary", [{ text: good }]);
+    const result = await run(
+      new AIGateway({
+        policy: limited(1, 1000),
+        adapters: [adapter],
+        templates: gatewayTemplates,
+        authority: authority(),
+        clock: realSleep,
+        slots: full,
+      }),
+    );
+    expect(result).toMatchObject({ state: "provider-failed", code: "RF_PROVIDER_TIMEOUT" });
+    expect(adapter.calls).toHaveLength(0);
   });
 });

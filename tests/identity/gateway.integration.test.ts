@@ -42,12 +42,12 @@ function gateway(adapter = new FakeAdapter(primary, [{ text: good }]), recipient
       },
     }),
   );
-  return new AIGateway(
+  return new AIGateway({
     policy,
-    [adapter],
-    gatewayTemplates,
-    new SupabaseGatewayAuthority(stack.privileged),
-  );
+    adapters: [adapter],
+    templates: gatewayTemplates,
+    authority: new SupabaseGatewayAuthority(stack.privileged),
+  });
 }
 
 const request = (
@@ -378,12 +378,12 @@ it("admits semantic ranking only under its own registered matching consent", asy
         },
       }),
     );
-    const rank = new AIGateway(
+    const rank = new AIGateway({
       policy,
-      [new FakeAdapter(recipient, [{ text: ranking }])],
-      gatewayTemplates,
-      new SupabaseGatewayAuthority(stack.privileged),
-    );
+      adapters: [new FakeAdapter(recipient, [{ text: ranking }])],
+      templates: gatewayTemplates,
+      authority: new SupabaseGatewayAuthority(stack.privileged),
+    });
     const result = await rank.execute(
       {
         ...request(taskId, member.id, "profile:1"),
@@ -446,6 +446,83 @@ it("shows approved recipients for exactly the current consent version", async ()
   } finally {
     await stack.sql.query("delete from public.ai_recipient_approvals where recipient=$1", [
       recipient,
+    ]);
+  }
+});
+
+it("leases provider-wide slots with token-bound release and expiry reclaim", async () => {
+  const provider = `slot-${suffix}`;
+  const acquire = (limit = 1) =>
+    stack.privileged.rpc("gateway_slot_acquire", {
+      p_provider: provider,
+      p_limit: limit,
+      p_seconds: 30,
+    });
+  try {
+    const first = await acquire();
+    expect(first.error).toBeNull();
+    expect(typeof first.data).toBe("string");
+    expect((await acquire()).data).toBeNull();
+    // Concurrent attempts never exceed the limit.
+    const burst = await Promise.all(Array.from({ length: 6 }, () => acquire(3)));
+    expect(burst.filter((result) => typeof result.data === "string")).toHaveLength(2);
+    expect(
+      (
+        await stack.privileged.rpc("gateway_slot_release", {
+          p_provider: provider,
+          p_token: crypto.randomUUID(),
+        })
+      ).data,
+    ).toBe(false);
+    expect(
+      (
+        await stack.privileged.rpc("gateway_slot_release", {
+          p_provider: provider,
+          p_token: first.data,
+        })
+      ).data,
+    ).toBe(true);
+    expect(typeof (await acquire()).data).toBe("string");
+    // A crashed worker's slot frees itself when its lease expires.
+    await stack.sql.query(
+      "update public.gateway_provider_slots set expires_at=now()-interval '1 second' where provider=$1",
+      [provider],
+    );
+    expect(typeof (await acquire()).data).toBe("string");
+    for (const args of [
+      { p_limit: 0 },
+      { p_limit: 65 },
+      { p_seconds: 1 },
+      { p_provider: "Bad Provider" },
+    ])
+      expect(
+        (
+          await stack.privileged.rpc("gateway_slot_acquire", {
+            p_provider: provider,
+            p_limit: 1,
+            p_seconds: 30,
+            ...args,
+          })
+        ).error?.message,
+      ).toBe("RF_INVALID_INPUT");
+    const anonymous = createClient(stack.env.API_URL, stack.env.ANON_KEY, {
+      auth: { persistSession: false },
+    });
+    for (const client of [anonymous, owner.client, admin.client]) {
+      expect(
+        (
+          await client.rpc("gateway_slot_acquire", {
+            p_provider: provider,
+            p_limit: 1,
+            p_seconds: 30,
+          })
+        ).error,
+      ).toBeTruthy();
+      expect((await client.from("gateway_provider_slots").select("*")).error).toBeTruthy();
+    }
+  } finally {
+    await stack.sql.query("delete from public.gateway_provider_slots where provider=$1", [
+      provider,
     ]);
   }
 });
