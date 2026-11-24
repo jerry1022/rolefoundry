@@ -23,6 +23,7 @@ import { useState, type ReactNode } from "react";
 import { WorkspaceProvider, useWorkspace } from "@/lib/workspace";
 import { LocaleProvider, msg, useI18n } from "@/lib/i18n";
 import { LocaleSwitcher } from "./ui/locale-switcher";
+import { ThemeSwitcher } from "./ui/theme-switcher";
 
 const navigation = [
   { href: "/", label: msg("Overview"), icon: LayoutDashboard },
@@ -155,6 +156,7 @@ function ShellContent({ children }: { children: ReactNode }) {
             <strong>{current}</strong>
           </div>
           <div className="topbar-right">
+            <ThemeSwitcher />
             <LocaleSwitcher />
             <span className="demo-pill">
               <span className="status-dot" />
