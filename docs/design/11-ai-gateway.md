@@ -6,7 +6,7 @@ Provide one controlled interface for model and embedding providers. Domain modul
 
 ## Current scaffold
 
-`AIProvider.analyze<T>` is a TypeScript port with a Zod output schema. No SDK, API key lookup, provider request or hidden fallback is connected. All visible analyses are deterministic and labeled accordingly.
+The [gateway core](../AI_GATEWAY_SETUP.md) in `src/modules/gateway` implements this flow with a deployment routing policy, OpenAI-compatible (OpenAI/LunaRoute header dialects) and fake adapters, bounded retry/fallback/repair, reference and fact-preservation checks, embedding-space isolation and a fixed bilingual evaluation set. The default policy disables every purpose and no domain worker calls the gateway yet; all visible analyses remain deterministic and labelled accordingly. The legacy demo `AIProvider.analyze<T>` port is unchanged.
 
 ## Request and result design
 
