@@ -15,10 +15,19 @@ afterAll(async () => {
   await stack?.close();
 });
 
-/** Scans signed-in screens with axe (WCAG 2.1 AA) in both themes; returns readable failures. */
-async function scan(user: LocalMember, routes: string[]) {
+/**
+ * Scans signed-in screens with axe (WCAG 2.1 AA) in both themes and both languages; returns
+ * readable failures. `openSections` expands every collapsible admin section first, because closed
+ * sections unmount their editors and would otherwise never be scanned.
+ */
+async function scan(user: LocalMember, routes: string[], options: { openSections?: boolean } = {}) {
   const failures: string[] = [];
-  for (const theme of ["light", "dark"]) {
+  for (const [theme, locale] of [
+    ["light", "en"],
+    ["dark", "en"],
+    ["light", "zh-TW"],
+    ["dark", "zh-TW"],
+  ] as const) {
     const context = await browser.newContext({
       reducedMotion: "reduce",
       viewport: { width: 1280, height: 900 },
@@ -30,20 +39,27 @@ async function scan(user: LocalMember, routes: string[]) {
       }),
     );
     await context.addInitScript(
-      (value) => localStorage.setItem("rolefoundry.theme.v1", value),
-      theme,
+      ([themeValue, localeValue]) => {
+        localStorage.setItem("rolefoundry.theme.v1", themeValue);
+        localStorage.setItem("rolefoundry.locale.v1", localeValue);
+      },
+      [theme, locale],
     );
     const page = await context.newPage();
     for (const route of routes) {
       await page.goto(`${stack.origin}${route}`);
       await page.locator("h1").first().waitFor();
+      if (locale === "zh-TW") await page.locator('html[lang="zh-TW"]').waitFor();
+      if (options.openSections)
+        for (const summary of await page.locator("details.section-block > summary").all())
+          await summary.click();
       await page.waitForLoadState("networkidle");
       const result = await new AxeBuilder({ page })
         .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"])
         .analyze();
       for (const violation of result.violations)
         failures.push(
-          `${route} [${theme}] ${violation.id}: ${violation.nodes
+          `${route} [${theme}, ${locale}] ${violation.id}: ${violation.nodes
             .slice(0, 3)
             .map(
               (node) =>
@@ -57,7 +73,7 @@ async function scan(user: LocalMember, routes: string[]) {
   return failures;
 }
 
-it("keeps signed-in member screens accessible in light and dark themes", async () => {
+it("keeps signed-in member screens accessible in both themes and languages", async () => {
   expect(
     await scan(member, [
       "/account/",
@@ -71,8 +87,8 @@ it("keeps signed-in member screens accessible in light and dark themes", async (
       "/dictionary/",
     ]),
   ).toEqual([]);
-}, 120000);
+}, 240000);
 
-it("keeps the administrator workspace accessible in light and dark themes", async () => {
-  expect(await scan(admin, ["/admin/"])).toEqual([]);
-}, 120000);
+it("keeps every administrator section accessible in both themes and languages", async () => {
+  expect(await scan(admin, ["/admin/"], { openSections: true })).toEqual([]);
+}, 240000);

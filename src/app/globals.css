@@ -345,7 +345,8 @@ textarea:focus-visible {
   left: 20px;
   padding: 12px;
   background: var(--green);
-  color: white;
+  /* --bg is near-white in light mode and near-black in dark mode, opposite --green in both. */
+  color: var(--bg);
   z-index: 100;
 }
 .skip-link:focus {
@@ -3560,7 +3561,8 @@ tr:last-child td {
   font-size: 13px;
 }
 .operations-workspace th {
-  color: var(--green-dark);
+  /* --green is remapped for the dark theme; --green-dark is not. */
+  color: var(--green);
   font-size: 13px;
 }
 .account-data-workspace {
@@ -5126,6 +5128,8 @@ input[type="radio"] {
 .ai-usage-tiles small {
   display: block;
   margin-top: 6px;
+  font-size: 12px;
+  font-weight: 400;
   color: var(--muted);
   line-height: 1.5;
 }

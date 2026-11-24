@@ -157,9 +157,22 @@ const format = ({ rgb, alpha }) =>
     ? `rgb(${rgb.join(" ")})`
     : `rgb(${rgb.join(" ")} / ${Math.round(alpha * 1000) / 10}%)`;
 
+/**
+ * Light-theme tokens that the dark palette does not redefine, mapped per role. `--green-dark` is a
+ * dark ink on light surfaces; as text on a dark surface it becomes unreadable (1.3:1), so text
+ * uses the remapped `--green`. Lime-backed components that keep it are on the `keep` list.
+ */
+const tokenRoles = { text: [["var(--green-dark)", "var(--green)"]] };
+
 function transformValue(value, role) {
   let changed = false;
-  const next = value.replace(colorPattern, (token) => {
+  let next = value;
+  for (const [from, to] of tokenRoles[role] ?? [])
+    if (next.includes(from)) {
+      next = next.replaceAll(from, to);
+      changed = true;
+    }
+  next = next.replace(colorPattern, (token) => {
     const color = parse(token);
     if (!color) return token;
     changed = true;

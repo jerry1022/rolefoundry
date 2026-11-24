@@ -76,7 +76,7 @@
 }
 :root[data-theme="dark"] .skip-link {
   background: var(--green);
-  color: white;
+  color: var(--bg);
 }
 :root[data-theme="dark"] .brand-mark {
   border-radius: 11px;
@@ -599,6 +599,9 @@
     inset 0 1px 0 rgb(255 255 255 / 22%),
     0 14px 30px -10px rgb(13 58 45 / 60%);
 }
+:root[data-theme="dark"] .text-link:hover {
+  color: var(--green);
+}
 :root[data-theme="dark"] .hero-panel {
   background: var(--aurora);
   border: 1px solid rgb(255 255 255 / 8%);
@@ -845,10 +848,12 @@
 :root[data-theme="dark"] .answer-option.chosen {
   background: linear-gradient(90deg, rgb(26 33 29) 0%, rgb(25 29 23) 100%);
   box-shadow: 0 0 0 3px rgb(0 0 0 / 18%);
+  color: var(--green);
 }
 :root[data-theme="dark"] .skill-checklist label.checked {
   background: linear-gradient(90deg, rgb(26 33 29) 0%, rgb(25 29 23) 100%);
   box-shadow: 0 0 0 3px rgb(0 0 0 / 18%);
+  color: var(--green);
 }
 :root[data-theme="dark"] .answer-option.correct {
   border-color: rgb(48 105 73);
@@ -862,6 +867,9 @@
 }
 :root[data-theme="dark"] .segmented {
   background: rgb(32 35 29);
+}
+:root[data-theme="dark"] .segmented button.selected {
+  color: var(--green);
 }
 :root[data-theme="dark"] .kanban-column {
   background: linear-gradient(180deg, rgb(21 26 21 / 55%), rgb(21 26 21 / 25%));
