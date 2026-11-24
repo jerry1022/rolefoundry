@@ -1,5 +1,6 @@
 import { ApplicationError } from "../platform/errors";
 import type { Actor, AnalysisFeature } from "../identity/core";
+import type { GatewayRequest, GatewayResult } from "./model";
 
 /**
  * Shared plumbing for opt-in AI analyses that ride on an existing domain task: the owner's
@@ -96,4 +97,57 @@ export async function withOptionalAnalysis<T>(
       await reservations?.releaseAnalysis(analysis.taskId).catch(() => undefined);
     throw error;
   }
+}
+
+/** Gateway call plus its durable, content-free record. */
+export interface OptionalGateway<T> {
+  run(request: GatewayRequest, signal: AbortSignal): Promise<GatewayResult<T>>;
+  record(result: GatewayResult<T>, signal: AbortSignal): Promise<void>;
+}
+
+export type OptionalOutcome<T> =
+  | { kind: "not-requested" }
+  | { kind: "fallback"; code: string }
+  | { kind: "applied"; output: T; finalize(resultRef: string, signal: AbortSignal): Promise<void> };
+
+/**
+ * Worker-side lifecycle for a reserved analysis. Unused reservations are released (allowance
+ * returned); a started analysis consumes it. Provider failures are refundable (`infrastructure`),
+ * invalid output is `validation`, and a consent revocation mid-call publishes nothing. Callers
+ * keep their deterministic result for every non-applied outcome.
+ */
+export async function runOptionalAnalysis<T>(
+  dependencies: { lifecycle: AnalysisLifecycle; gateway: OptionalGateway<T> | null },
+  identityTaskId: string | null,
+  plan: { needed: boolean; notNeededCode: string; request: () => GatewayRequest },
+  signal: AbortSignal,
+): Promise<OptionalOutcome<T>> {
+  const { lifecycle, gateway } = dependencies;
+  if (!identityTaskId) return { kind: "not-requested" };
+  if (!gateway || !plan.needed) {
+    await lifecycle.release(identityTaskId, signal).catch(() => undefined);
+    return { kind: "fallback", code: gateway ? plan.notNeededCode : "RF_GATEWAY_DISABLED" };
+  }
+  if ((await lifecycle.start(identityTaskId, signal)) === "failed")
+    return { kind: "fallback", code: "RF_CONSENT_REQUIRED" };
+  const result = await gateway.run(plan.request(), signal);
+  // Recording is an audit/spend trail; its failure must not discard a valid result.
+  await gateway.record(result, signal).catch(() => undefined);
+  if (result.state === "cancelled") throw new Error("Optional analysis cancelled.");
+  if (result.state !== "succeeded" || result.output === null) {
+    if (result.state !== "stale")
+      await lifecycle
+        .fail(
+          identityTaskId,
+          result.state === "provider-failed" ? "infrastructure" : "validation",
+          signal,
+        )
+        .catch(() => undefined);
+    return { kind: "fallback", code: result.code ?? "RF_UNAVAILABLE" };
+  }
+  return {
+    kind: "applied",
+    output: result.output,
+    finalize: (resultRef, finalSignal) => lifecycle.finish(identityTaskId, resultRef, finalSignal),
+  };
 }

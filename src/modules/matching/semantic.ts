@@ -1,4 +1,4 @@
-import type { AnalysisLifecycle } from "../gateway/analysis";
+import { runOptionalAnalysis, type AnalysisLifecycle } from "../gateway/analysis";
 import type { GatewayRequest, GatewayResult } from "../gateway/model";
 
 export type { AnalysisLifecycle };
@@ -125,43 +125,46 @@ export class SemanticRanker {
     link: SemanticLink | null,
     signal: AbortSignal,
   ): Promise<SemanticOrder> {
-    if (!link) return { results: ranked, ranking: notRequested, finalize: nothing };
-    const id = link.identityTaskId;
-    const fallback = (code: string): SemanticOrder => ({
-      results: ranked,
-      ranking: { recipe: "rules-v1", state: "fallback", code, identityTaskId: id },
-      finalize: nothing,
-    });
     const tied = tiedJobs(ranked);
-    // Nothing to break or nowhere to send it: return the reservation unused.
-    if (!this.gateway || tied.length < 2) {
-      await this.lifecycle.release(id, signal).catch(() => undefined);
-      return fallback(this.gateway ? "RF_SEMANTIC_NOT_NEEDED" : "RF_GATEWAY_DISABLED");
-    }
-    if ((await this.lifecycle.start(id, signal)) === "failed")
-      return fallback("RF_CONSENT_REQUIRED");
-
-    const result = await this.gateway.rank(semanticRequest(snapshot, tied, link), signal);
-    // Recording is an audit/spend trail; its failure must not discard a valid report.
-    await this.gateway.record(result, signal).catch(() => undefined);
-    if (result.state === "cancelled") throw new Error("Semantic ranking cancelled.");
-    if (result.state !== "succeeded" || !result.output) {
-      if (result.state !== "stale")
-        await this.lifecycle
-          .fail(id, result.state === "provider-failed" ? "infrastructure" : "validation", signal)
-          .catch(() => undefined);
-      return fallback(result.code ?? "RF_UNAVAILABLE");
-    }
-    const scores = new Map(result.output.ranking.map((item) => [item.jobRef, item.score]));
+    const outcome = await runOptionalAnalysis(
+      {
+        lifecycle: this.lifecycle,
+        gateway: this.gateway && {
+          run: (request, runSignal) => this.gateway!.rank(request, runSignal),
+          record: (result, recordSignal) => this.gateway!.record(result, recordSignal),
+        },
+      },
+      link?.identityTaskId ?? null,
+      {
+        needed: tied.length >= 2,
+        notNeededCode: "RF_SEMANTIC_NOT_NEEDED",
+        request: () => semanticRequest(snapshot, tied, link!),
+      },
+      signal,
+    );
+    if (outcome.kind === "not-requested")
+      return { results: ranked, ranking: notRequested, finalize: nothing };
+    if (outcome.kind === "fallback")
+      return {
+        results: ranked,
+        ranking: {
+          recipe: "rules-v1",
+          state: "fallback",
+          code: outcome.code,
+          identityTaskId: link!.identityTaskId,
+        },
+        finalize: nothing,
+      };
+    const scores = new Map(outcome.output.ranking.map((item) => [item.jobRef, item.score]));
     return {
       results: withLimitation(applySemanticTiebreak(ranked, scores)),
       ranking: {
         recipe: "rules-v1+semantic-rank-v1",
         state: "applied",
         code: null,
-        identityTaskId: id,
+        identityTaskId: link!.identityTaskId,
       },
-      finalize: (resultRef, finalSignal) => this.lifecycle.finish(id, resultRef, finalSignal),
+      finalize: outcome.finalize,
     };
   }
 }
