@@ -4990,3 +4990,15 @@ input[type="radio"] {
     display: none;
   }
 }
+
+.ai-recipients {
+  display: grid;
+  gap: 16px;
+  min-width: 0;
+}
+.ai-recipient-form {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
+  gap: 12px;
+  align-items: end;
+}

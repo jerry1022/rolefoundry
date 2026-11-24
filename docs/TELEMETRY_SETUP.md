@@ -1,6 +1,6 @@
 # Private operations telemetry
 
-The optional telemetry module observes API handler latency/status, reads minimized queue/worker/outbox/catalog summaries and exposes OpenMetrics through an independent Node service. Prometheus and Alertmanager remain replaceable infrastructure; domain modules do not depend on either. Provider requests and provider spend are not implemented. [Course link observations](COURSE_LINKS_SETUP.md) contribute `rolefoundry_course_links_*` gauges and two warning alerts.
+The optional telemetry module observes API handler latency/status, reads minimized queue/worker/outbox/catalog summaries and exposes OpenMetrics through an independent Node service. Prometheus and Alertmanager remain replaceable infrastructure; domain modules do not depend on either. Provider requests are not enabled by default; recorded [AI gateway](AI_GATEWAY_SETUP.md) attempts produce `rolefoundry_ai_*_24h{provider}` usage gauges. [Course link observations](COURSE_LINKS_SETUP.md) contribute `rolefoundry_course_links_*` gauges and two warning alerts.
 
 ```mermaid
 flowchart LR
@@ -73,7 +73,7 @@ The Supabase adapter is isolated behind `TelemetryStore`. Only service authority
 - `rolefoundry_http_requests_total` and `rolefoundry_http_request_duration_seconds` are aggregate counters/histograms. Latency measures time to the handler's Response, excluding streamed transfer completion. No-series means no recorded observation, not measured zero traffic. Prometheus `rate`/`increase` handles ordinary restore/reset decreases; restore history is not an exact usage ledger.
 - `rolefoundry_tasks_*` exposes current counts, ready/lease ages, fresh worker coverage and retained rolling 24-hour success/failure/retry observations. The 24-hour values are gauges, not counters: do not apply `rate` to them or use them as billing totals. Worker freshness follows the existing 45-second operations contract.
 - `rolefoundry_invalidations_*` measures the three domain delivery consumers. `rolefoundry_catalog_*` measures reviewed published metadata, uncertainty and visibility. Unknown review ages are omitted rather than presented as fresh. Unavailable metadata does not prove a live HTTP link is broken; opt-in [HEAD-only course link observations](COURSE_LINKS_SETUP.md) are exported separately as `rolefoundry_course_links_*`.
-- `rolefoundry_provider_integration_enabled` is explicitly zero. No synthetic provider-cost, provider-error or AI-success series is emitted.
+- `rolefoundry_provider_integration_enabled` stays zero because the exporter cannot see the runtime routing policy. `rolefoundry_ai_{calls,failures,fallbacks,input_tokens,output_tokens}_24h` come only from recorded gateway attempts for approved recipients; no synthetic provider series or currency cost is emitted.
 
 `ops/observability/alerts.yml` defines sustained exporter outage, stale snapshot, queue age, missing worker coverage, expired leases, invalidation age, API 5xx ratio, API p95, repeated identity 4xx responses and catalog review alerts. API ratio/p95 alerts require at least 20 observed requests over five minutes. Identity 4xx is an investigation signal, not proof of an authentication attack. Thresholds are initial reviewable defaults; benchmark and tune them for the intended deployment.
 

@@ -1,5 +1,6 @@
 import "server-only";
 import { identityAdminDirectoryHttp } from "./admin-http";
+import { recipientAdminHttp } from "../gateway/http";
 import {
   readJsonBody as body,
   requireSameOrigin,
@@ -31,6 +32,8 @@ const quota = z
 const refund = z.object({ taskId: z.uuid(), reason: z.string().trim().min(1).max(1000) }).strict();
 
 export async function identityHttp(request: Request, action: string[]) {
+  if (action.length === 2 && action[0] === "admin" && action[1] === "ai-recipients")
+    return recipientAdminHttp(request);
   if (
     action[0] === "admin" &&
     ((request.method === "GET" &&

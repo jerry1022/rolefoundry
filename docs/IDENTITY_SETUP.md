@@ -99,6 +99,7 @@ All routes below are under `/api/v1/identity`:
 | POST `/admin/invitations` | Create/reissue an unused invitation |
 | POST `/admin/quota-policies` | Schedule a future Monday quota |
 | POST `/admin/refunds` | Refund consumed infrastructure failures with an audit reason |
+| GET/POST/DELETE `/admin/ai-recipients` | Administrator list, approve or revoke an [AI recipient](AI_GATEWAY_SETUP.md#identity-backed-authority-and-records) for the current consent version, with an audit reason |
 
 Mutations require `Content-Type: application/json` and an `Origin` matching the configured app origin. Bodies are limited to 8 KiB and reject unknown fields. Invalid sessions use 401, disallowed actions 403, private/missing resources 404, conflicts 409 and exhausted analysis quotas 429. Request IDs and safe error codes are returned without raw provider messages.
 

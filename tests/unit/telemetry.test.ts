@@ -197,3 +197,32 @@ it("distinguishes unavailable link schema from unprobed coverage and omits unkno
   expect(text).toContain("rolefoundry_course_links_unprobed 3\n");
   expect(text).not.toMatch(/^rolefoundry_course_links_oldest_check_seconds \d/m);
 });
+it("renders recorded gateway usage per approved provider and rejects free-form provider labels", () => {
+  const snapshot = telemetrySnapshot();
+  expect(renderMetrics(snapshot)).not.toMatch(/rolefoundry_ai_calls_24h\{/);
+  snapshot.gateway = [
+    {
+      provider: "openai",
+      calls: 4,
+      failures: 1,
+      fallbacks: 0,
+      inputTokens: 900,
+      outputTokens: 120,
+    },
+  ];
+  const text = renderMetrics(snapshot);
+  expect(text).toContain('rolefoundry_ai_calls_24h{provider="openai"} 4');
+  expect(text).toContain('rolefoundry_ai_failures_24h{provider="openai"} 1');
+  expect(text).toContain('rolefoundry_ai_input_tokens_24h{provider="openai"} 900');
+  snapshot.gateway = [
+    {
+      provider: 'x"} 1\nfake',
+      calls: 1,
+      failures: 0,
+      fallbacks: 0,
+      inputTokens: 0,
+      outputTokens: 0,
+    },
+  ];
+  expect(() => renderMetrics(snapshot)).toThrow();
+});

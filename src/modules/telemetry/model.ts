@@ -72,6 +72,22 @@ export const telemetrySnapshotSchema = z
       })
       .strict()
       .optional(),
+    /** Last-24h provider usage from recorded gateway attempts; providers are reviewed recipients. */
+    gateway: z
+      .array(
+        z
+          .object({
+            provider: z.string().regex(/^[a-z][a-z0-9-]{1,30}$/),
+            calls: z.number().int().nonnegative(),
+            failures: z.number().int().nonnegative(),
+            fallbacks: z.number().int().nonnegative(),
+            inputTokens: z.number().int().nonnegative(),
+            outputTokens: z.number().int().nonnegative(),
+          })
+          .strict(),
+      )
+      .max(16)
+      .optional(),
     operations: operationsSummarySchema.extend({
       kinds: operationsSummarySchema.shape.kinds
         .max(taskKinds.length)

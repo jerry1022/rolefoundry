@@ -2,7 +2,7 @@
 
 Module 11 now has an executable, provider-neutral core in `src/modules/gateway`. It implements the [design](design/11-ai-gateway.md) execution flow: domain authority checks, minimized and delimited input, deployment routing policy, bounded retries with at most one approved transient fallback, strict structured-output validation, one bounded repair, reference/fact checks and a publication guard. Every call is recorded as an attempt with provider, configured and reported model, latency, usage and fallback reason.
 
-**Status:** core, adapters and a fixed bilingual evaluation set are implemented and covered by fake-adapter tests. No provider is selected, no credentials are configured in the repository and no domain worker calls the gateway yet. Matching semantic ranking and resume wording still use their labelled deterministic recipes until a provider passes evaluation, consent text and quota reservations are connected, and the [audit gates](IMPLEMENTATION_AUDIT.md) are met.
+**Status:** core, adapters and a fixed bilingual evaluation set are implemented and covered by fake-adapter tests. No provider is selected, no credentials are configured in the repository and no domain worker calls the gateway yet. [Identity-backed admission, reviewed recipients and durable attempt records](#identity-backed-authority-and-records) are implemented. Matching semantic ranking and resume wording still use their labelled deterministic recipes until a provider passes evaluation, consent text and quota reservations are connected, and the [audit gates](IMPLEMENTATION_AUDIT.md) are met.
 
 ## Components
 
@@ -85,9 +85,23 @@ npm run architecture:check
 
 Twenty-four unit cases cover: the disabled default; minimization and the envelope; prompt injection with fabricated citations; one successful and one failed repair; absent fact IDs and invented numbers; quota, credential, permission, request and unsupported errors without retry or failover; transient retry plus exactly one fallback; disabled-fallback consent scope; consent denial before any call; stale and deleted owners; hung-provider deadlines; cancellation; Retry-After bounded by the deadline; request, template and size rejection; per-adapter concurrency; ranking references; strict policy parsing; minimization that keeps facts; embedding-space isolation; adapter header dialects, strict schema requests and error normalization; unsafe configuration; malformed embeddings; and the bilingual evaluation against faithful and fabricating adapters.
 
+## Identity-backed authority and records
+
+Migration `20261114190000_gateway_authority.sql` connects the gateway to module 01 consent and weekly quotas:
+
+- `SupabaseGatewayAuthority` (service role) calls `gateway_admit`. It admits only an identity task that is **started** (budget consumed through `identity_start_task`) for the asserted owner, the mapped consent feature (`resume.wording` → `resume`; other purposes return `RF_NOT_CONFIGURED`) and the exact input version, while the owner is active and consent unrevoked. Every route recipient must be approved for the owner's consent **version** (`RF_RECIPIENT_NOT_APPROVED`). `gateway_current` repeats the owner/version/status/consent checks before publication, so a revocation during a provider call returns `stale`.
+- `ai_recipient_approvals` is reviewed per consent purpose and version and is empty by default. Administrators manage it at `GET/POST/DELETE /api/v1/identity/admin/ai-recipients` or the **AI recipients** section of `/admin/`; each change needs a reason and writes `identity_audit`. A new consent version starts with no recipients. Approval alone sends nothing: the routing policy, provider credentials and owner consent are still required.
+- `SupabaseGatewayRecorder` stores one content-free `gateway_results` row and ordered `gateway_attempts` per identity task (state, code, versions, provider/model, latency, tokens, fallback reason). Replays of the same result are idempotent and a different replay conflicts. Rows cascade with the identity task and its owner. No prompt, input or output text is stored.
+- The telemetry snapshot adds a `gateway` section, built by wrapping the previous snapshot function rather than copying it. The exporter emits `rolefoundry_ai_{calls,failures,fallbacks,input_tokens,output_tokens}_24h{provider}`, with providers limited to approved recipients.
+
+All gateway tables have RLS enabled and no client grants. Member and administrator sessions cannot call the service RPCs.
+
+Five integration cases run against the real local stack: administrator-only, audited approval with raw-table denial; admission for the exact started task, owner, version and approved recipients (including unapproved upstreams and queued tasks); a consent revocation during the call that blocks publication; idempotent content-free recording with attempt order, telemetry usage and cascade; and recipient revocation blocking later admission.
+
 ## Remaining gates
 
-- Provider selection from live evaluation with authorized credentials, plus reviewed retention/data-use terms for every recipient.
-- Purpose-specific consent text and recipient binding in identity, quota/cost reservation and refund on provider failure, wired through `GatewayAuthority`.
-- Worker integration for semantic matching (with rule-only fallback retained) and resume wording proposals (individual acceptance unchanged), including task persistence of attempts and usage.
-- Provider spend metrics in telemetry, and an embedding index with isolated reindexing.
+- Provider selection from live evaluation with authorized credentials, plus reviewed retention/data-use terms for every recipient before approval.
+- Recipient-specific consent wording (the current consent text names "the configured AI provider") and a matching consent purpose for semantic ranking.
+- Worker integration for resume wording proposals (individual acceptance unchanged) and semantic matching (rule-only fallback retained), calling the recorder on every outcome and the existing administrator refund path for infrastructure failures.
+- Resume wording needs a reviewed data-model decision first. `resume-order-v1` proposals only reorder confirmed facts, and claim links point at exact confirmed fact text. An accepted rewording must create a new owner-confirmed fact version, keeping the original fact and claim history, and a `resume-wording-v1` recipe whose validation reuses `preservesFacts`. The owner must explicitly confirm the reworded text.
+- Provider cost in currency (tokens are recorded) and an embedding index with isolated reindexing.
