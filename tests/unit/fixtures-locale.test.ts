@@ -8,6 +8,8 @@ import {
   searchableDemoJobs,
 } from "../../src/lib/fixtures-locale";
 import { searchJobs } from "../../src/lib/domain";
+import { careerPaths } from "../../src/lib/career-paths";
+import { careerPathsZhTw, localizedCareerPath } from "../../src/lib/career-paths-zh-tw";
 
 const cjk = /[㐀-鿿]/;
 
@@ -46,5 +48,16 @@ describe("zh-TW demo fixture text", () => {
       searchJobs(searchableDemoJobs, query, "All tracks", "Any workplace", []).map((j) => j.id);
     expect(search("Growth Analyst")).toContain("rf-08");
     expect(search("成長分析師")).toContain("rf-08");
+  });
+
+  it("covers every career-path guide with aligned Chinese text", () => {
+    for (const path of careerPaths) {
+      const text = careerPathsZhTw[path.id];
+      expect(text.learning).toHaveLength(path.learning.length);
+      expect(text.evidence).toHaveLength(path.evidence.length);
+      for (const value of [text.work, text.project, ...text.evidence]) expect(value).toMatch(cjk);
+      expect(localizedCareerPath(path, "zh-TW").lang).toBe("zh-Hant");
+      expect(localizedCareerPath(path, "en").work).toBe(path.work);
+    }
   });
 });
