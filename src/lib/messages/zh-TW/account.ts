@@ -53,6 +53,8 @@ export const account = {
   "Weekly analysis allowance": "每週分析額度",
   "assessment analysis": "能力檢測分析",
   "resume analysis": "履歷分析",
+  "Semantic role ranking": "語意職缺排序",
+  "semantic ranking": "語意排序",
   "/ {limit} remaining": "/ {limit} 剩餘",
   "{reserved} reserved · {consumed} consumed": "保留 {reserved} · 已使用 {consumed}",
   "Resets Monday 00:00 UTC": "每週一 00:00 UTC 重設",

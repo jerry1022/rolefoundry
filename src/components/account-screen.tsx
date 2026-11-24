@@ -10,7 +10,7 @@ import { AccountDataEntry } from "./account-data/entry";
 import { IdentityAdministration } from "./identity/administration";
 import { createIdentityAdminClient } from "@/modules/identity/adapters/admin-client";
 import { z } from "zod";
-import { useI18n } from "@/lib/i18n";
+import { msg, useI18n } from "@/lib/i18n";
 import { CheckCircle2, LogOut, Mail, ShieldCheck } from "lucide-react";
 import {
   actorSchema,
@@ -18,7 +18,20 @@ import {
   policySchema,
   usageSchema,
   type Actor,
+  type AnalysisFeature,
 } from "@/modules/identity/core";
+
+/** Typed per purpose: a new consent purpose fails to compile until it has labels. */
+const purposeTitles: Record<AnalysisFeature, string> = {
+  assessment: msg("Assessment analysis"),
+  resume: msg("Resume analysis"),
+  matching: msg("Semantic role ranking"),
+};
+const allowanceLabels: Record<AnalysisFeature, string> = {
+  assessment: msg("assessment analysis"),
+  resume: msg("resume analysis"),
+  matching: msg("semantic ranking"),
+};
 
 const identityAdminClient = createIdentityAdminClient();
 const enabled = process.env.NEXT_PUBLIC_IDENTITY_ENABLED === "true";
@@ -302,11 +315,7 @@ export function AccountScreen() {
                         <span className="pill">
                           {granted ? t("Permission granted") : t("No current permission")}
                         </span>
-                        <h3>
-                          {policy.purpose === "assessment"
-                            ? t("Assessment analysis")
-                            : t("Resume analysis")}
-                        </h3>
+                        <h3>{t(purposeTitles[policy.purpose])}</h3>
                         <p>{policy.description}</p>
                         <small>{t("Policy version {version}", { version: policy.version })}</small>
                         <button
@@ -344,11 +353,7 @@ export function AccountScreen() {
                 <div className="account-usage">
                   {usage.map((item) => (
                     <article className="stat-card" key={item.feature}>
-                      <span className="mini-label">
-                        {item.feature === "assessment"
-                          ? t("assessment analysis")
-                          : t("resume analysis")}
-                      </span>
+                      <span className="mini-label">{t(allowanceLabels[item.feature])}</span>
                       <strong className="stat-number">
                         {Math.max(0, item.limit - item.reserved - item.consumed)}
                         <small> {t("/ {limit} remaining", { limit: item.limit })}</small>
