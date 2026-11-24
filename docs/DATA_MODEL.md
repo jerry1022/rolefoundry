@@ -128,3 +128,7 @@ The existing invitation/quota tables remain authoritative. New administrator-onl
 ### Resource-aware task acquisition
 
 The resource-reader migration adds a queue-message lookup index and private kind-to-resource mapping plus service-only `task_read_resources`; it creates no new table. The legacy task reader delegates to the same owner/erasure/retry/lease implementation. Queue/task metadata select eligible work before the normal pgmq conditional read, preserving paused-capacity messages and execution attempts. Per-instance resource counters live in the worker core; provider-wide durable admission is not introduced. See [scope and migration](WORKER_RESOURCE_SETUP.md).
+
+## Aggregate operational telemetry
+
+Migration `20261114170000_operations_telemetry.sql` adds `telemetry_http`: fixed family/method/status-class/latency-bucket primary key plus bigint sample/sum columns. It stores no subject, resource, timestamp, request ID, URL or content. Raw privileges are revoked from all client roles including service authority; only validated service RPCs record/read aggregates. `operations_snapshot_data` is private implementation detail; the administrator summary keeps its original authorization/audit wrapper. Counters have fixed cardinality and no subject-specific retention/deletion. Restores can reset observations; this is not an exact usage ledger. See [interpretation and release gates](TELEMETRY_SETUP.md).

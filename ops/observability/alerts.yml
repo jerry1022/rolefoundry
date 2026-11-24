@@ -1,0 +1,73 @@
+groups:
+  - name: rolefoundry
+    rules:
+      - alert: RoleFoundryExporterDown
+        expr: up{job="rolefoundry"} == 0
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: Private operations exporter is unavailable
+      - alert: RoleFoundrySnapshotStale
+        expr: time() - rolefoundry_snapshot_timestamp_seconds > 120
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: Operations database snapshot is stale
+      - alert: RoleFoundryQueueAge
+        expr: rolefoundry_tasks_oldest_ready_seconds > 300
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: Ready task backlog is accumulating
+      - alert: RoleFoundryMissingWorker
+        expr: (rolefoundry_tasks_ready > 0) and on(job, instance, kind) (rolefoundry_tasks_active_workers == 0)
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: Ready work has no fresh worker coverage
+      - alert: RoleFoundryExpiredLeases
+        expr: rolefoundry_tasks_expired_leases > 0
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: Expired task leases are not recovering
+      - alert: RoleFoundryInvalidationAge
+        expr: rolefoundry_invalidations_oldest_seconds > 300
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: Domain invalidation backlog is accumulating
+      - alert: RoleFoundryApiErrors
+        expr: (sum by(job, instance, family) (rate(rolefoundry_http_requests_total{status_class="5xx"}[5m])) / sum by(job, instance, family) (rate(rolefoundry_http_requests_total[5m])) > 0.05) and on(job, instance, family) (sum by(job, instance, family) (increase(rolefoundry_http_requests_total[5m])) >= 20)
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: API server-error ratio is elevated with sufficient traffic
+      - alert: RoleFoundryApiLatency
+        expr: (histogram_quantile(0.95, sum by(job, instance, family, le) (rate(rolefoundry_http_request_duration_seconds_bucket[5m]))) > 2) and on(job, instance, family) (sum by(job, instance, family) (increase(rolefoundry_http_requests_total[5m])) >= 20)
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: API handler p95 exceeds two seconds with sufficient traffic
+      - alert: RoleFoundryIdentityRejections
+        expr: sum by(job, instance) (increase(rolefoundry_http_requests_total{family="identity",status_class="4xx"}[5m])) >= 20
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: Repeated identity client rejections require investigation
+      - alert: RoleFoundryCatalogReviewNeeded
+        expr: (rolefoundry_catalog_uncertain > 0) or (rolefoundry_catalog_unreviewed > 0)
+        for: 30m
+        labels:
+          severity: warning
+        annotations:
+          summary: Published catalog metadata needs review

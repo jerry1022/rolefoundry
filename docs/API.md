@@ -153,3 +153,7 @@ There is no browser invalidation endpoint. The worker service role alone can exe
 ## Worker resource-aware acquisition
 
 Service-only `task_read_resources(p_worker uuid,p_kinds text[],p_seconds integer,p_quantity integer,p_limits jsonb)` accepts exactly `documents`, `fetch` and `general` integer ceilings 0–8. It returns the existing task lease DTOs, up to the total quantity (1–8), without issuing attempts to capacity-blocked work. The private pool mapper is not granted to callers. The existing four-argument `task_read` remains compatible through the same implementation. There is no new browser endpoint or global provider semaphore. See [acquisition, membership and execution contracts](WORKER_RESOURCE_SETUP.md).
+
+## Private metrics transport
+
+The independent exporter serves authenticated `GET /metrics` outside `/api/v1`. It is server-to-server operational infrastructure, not a user/session endpoint. See [HTTP status, authentication, privacy and freshness contract](TELEMETRY_SETUP.md#configuration-and-http-contract). Public/static deployments exclude it.

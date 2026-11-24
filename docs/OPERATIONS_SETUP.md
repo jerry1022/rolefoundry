@@ -59,3 +59,7 @@ Private `account.export` jobs and their resumable artifact janitor are now imple
 The [local recovery overlay](OPERATIONS_RECOVERY.md) now applies newer deletion intent to an ownership-checked disposable database and verifies actual isolated Auth/REST/Storage erasure of one controlled identity/PDF. This does not reconnect general workers or establish hosted backup delivery.
 
 The [profile/dictionary invalidation dispatcher](INVALIDATION_SETUP.md) now runs in the same independent process, with aggregate completion/cancellation or fixed unavailable logs. Task cancellations appear through existing safe task/event diagnostics. Delivery receipts/backlog are not a browser administration API; authorized database operators can use the aggregate backlog query in that runbook. External metric export/alert delivery remains pending.
+
+## Private monitoring transport
+
+[Operations telemetry](TELEMETRY_SETUP.md) supplies optional API observations, fixed-cardinality histogram storage, minimized metrics snapshots and a separate authenticated exporter. Its scrape/alert/recovery rehearsal uses an owned local receiver only. Existing administrator summary reads remain role-checked and audited; exporter reads do not create administrator audit noise. Provider cost, live URL checks and hosted notification/durability gates remain separate.

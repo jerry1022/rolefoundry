@@ -12,6 +12,7 @@ const child = spawn(
     env: {
       ...process.env,
       ROLEFOUNDRY_IDENTITY_ENABLED: "true",
+      ROLEFOUNDRY_TELEMETRY_ENABLED: process.env.ROLEFOUNDRY_TELEMETRY_ENABLED ?? "true",
       ROLEFOUNDRY_CATALOG_ENABLED: "true",
       SUPABASE_URL: env.API_URL,
       SUPABASE_ANON_KEY: env.ANON_KEY,
