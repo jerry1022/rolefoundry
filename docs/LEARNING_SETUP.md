@@ -74,7 +74,7 @@ The **Course translations** section of `/admin/` stores reviewed Traditional Chi
 - Saves need a review note, which becomes the `course_audit` reason (`course.translated`). Removal needs its own reason (`course.translation_removed`).
 - Public course JSON carries `translations["zh-TW"]`. `localizedCourseText` in `src/modules/learning/model.ts` uses it for zh-TW viewers, with `lang="zh-Hant"` and a note that it is a reviewed translation.
 
-Learning-plan steps keep the text snapshotted when the plan was built.
+Learning-plan steps keep the text snapshotted when the plan was built, and plan JSON adds the reviewed translation of the **exact** course version each step was planned from (migration `20261114360000`). A later course version's translation never rewrites an earlier plan. zh-TW viewers see the translated practice prompt, and the translated completion criteria for full-resource steps. Partial steps keep the planner's own wording. The planner's stored sentences (issues, notes, generated practice text) render through UI messages (`src/components/learning/planner-text.ts`), and `tests/unit/planner-text.test.ts` fails if the planner gains a sentence without a translation.
 
 ## Source policy and replacement boundaries
 

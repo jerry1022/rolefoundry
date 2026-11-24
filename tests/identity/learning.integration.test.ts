@@ -510,6 +510,35 @@ describe("module 07 reviewed courses and private learning plans", () => {
     expect(plan.output?.scheduledMinutes).toBeLessThanOrEqual(120);
     expect(plan.steps.map((step) => step.courseId)).toEqual([foundation.id, target.id]);
     expect(plan.output?.limitations.join(" ")).toContain("never changes capability evidence");
+    // Steps show the reviewed translation of the exact course version they were planned from.
+    const step = plan.steps[0];
+    const translate = await stack.request(
+      `admin/courses/${foundation.id}/translations`,
+      admin,
+      "POST",
+      {
+        versionId: step.courseVersionId,
+        locale: "zh-TW",
+        summary: "虛構的基礎課程",
+        practicePrompt: "做一個小範例並測試",
+        completionCriteria: "保留範例與測試結果",
+        reviewNote: "Synthetic fixture reviewed for plan display",
+      },
+    );
+    expect(translate.status).toBe(200);
+    try {
+      const translated = await find(owner, task.planId);
+      expect(translated.steps[0].translations?.["zh-TW"]?.practicePrompt).toBe(
+        "做一個小範例並測試",
+      );
+      expect(translated.steps[1].translations).toEqual({});
+    } finally {
+      await stack.request(`admin/courses/${foundation.id}/translations/remove`, admin, "POST", {
+        versionId: step.courseVersionId,
+        locale: "zh-TW",
+        reason: "Fixture cleanup",
+      });
+    }
   });
   it("isolates owner plans/progress and denies privileged worker RPCs", async () => {
     const owner = await stack.member(),

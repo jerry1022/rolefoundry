@@ -249,4 +249,43 @@ export const learningWorkspace = {
   "Clear manual pause for {host}": "解除 {host} 的手動暫停",
   "Next host limits": "下一頁主機限制",
   "Reviewed translation of RoleFoundry's editorial notes.": "RoleFoundry 編輯說明的審查翻譯。",
+  "The initial plan reached its 40-step review limit. Remaining work needs a later plan.":
+    "初始計畫已達 40 個步驟的審查上限，其餘工作需要之後的計畫。",
+  "A required foundation is missing, unavailable, cyclic or cannot finish inside this two-week budget.":
+    "必要的基礎資源缺少、無法使用、形成循環，或無法在這兩週的時間預算內完成。",
+  "No reviewed duration or owner estimate is available. Adjust the estimate before scheduling this resource.":
+    "沒有審查過的時長或你自己的估計。安排這項資源前，請先調整估計時間。",
+  "This resource needs a later stage because the two-week time budget is already allocated.":
+    "兩週的時間預算已分配完畢，這項資源需要留到之後的階段。",
+  "Course and step completion are self-reported progress, not verified ability.":
+    "課程與步驟的完成是自行回報的進度，不代表經過驗證的能力。",
+  "Only a portion fits in two weeks; later work remains explicit.":
+    "兩週內只能完成一部分，其餘工作會明確保留。",
+  "This duration is an estimate; review and adjust it to your pace.":
+    "這個時長是估計值，請依你的步調檢視並調整。",
+  "Prerequisite skill support may be self-reported or scoped; confirm it before relying on it.":
+    "先備技能的依據可能是自行回報或有範圍限制，依賴之前請先確認。",
+  "A related course is already reported complete. Build or assess evidence instead of repeating it automatically.":
+    "相關課程已回報完成。請建立或評估證據，而不是自動重複上課。",
+  "No reviewed, available resource covers this gap. This provider may not cover the domain.":
+    "沒有審查過且可用的資源涵蓋這個落差，這個提供者可能沒有涵蓋此領域。",
+  "Keep a reference and a short explanation, then request assessment or independent review. No ability is promoted automatically.":
+    "保留一份參考資料與簡短說明，再申請評估或獨立審查。能力不會自動提升。",
+  "This is an original editorial practice prompt, not a provider course or graded evidence.":
+    "這是原創的編輯練習題目，不是提供者的課程，也不是評分證據。",
+  "The initial plan reached its 40-step review limit. Remaining gaps need a later plan.":
+    "初始計畫已達 40 個步驟的審查上限，其餘落差需要之後的計畫。",
+  "No weekly time is allocated. Choose a positive time budget to schedule learning.":
+    "尚未分配每週時間。請選擇大於零的時間預算來安排學習。",
+  "This is an initial two-week plan, not a promise of course completion or professional proficiency.":
+    "這是初始的兩週計畫，並不保證完成課程或達到專業熟練。",
+  "Resource facts belong to the provider; summaries, mappings, estimates and practice prompts are editorial.":
+    "資源資訊屬於提供者；摘要、對應、估計與練習題目則是編輯內容。",
+  "Completing a course or submitting a reference never changes capability evidence.":
+    "完成課程或提交參考資料，都不會改變能力證據。",
+  "Complete the assigned {minutes} study minutes, keep notes and continue the remaining work in a later plan. This step does not mean course completion.":
+    "完成指定的 {minutes} 分鐘學習並做筆記，其餘內容留待之後的計畫。這個步驟不代表完成課程。",
+  "Practice {skill}": "練習 {skill}",
+  "Create a small example demonstrating {skill}; describe its limits and one test.":
+    "建立一個展示 {skill} 的小範例，說明它的限制並附上一個測試。",
 } satisfies Messages;
