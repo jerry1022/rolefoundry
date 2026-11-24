@@ -81,8 +81,79 @@ class Gate {
   }
 }
 
-type Failure = { failure: ProviderFailureKind; retryAfterMs: number | null };
-type Called = { response: AdapterResponse };
+/** Everything one execution shares, built once after admission. */
+interface Execution {
+  route: GatewayRoute;
+  messages: ChatMessage[];
+  jsonSchema: OutputSpec<unknown>["jsonSchema"];
+  attempts: GatewayAttempt[];
+  /** Caller cancellation combined with the shared task deadline. */
+  signal: AbortSignal;
+  startedAt: number;
+}
+
+/** Which provider is called, and why. */
+interface CallPlan {
+  target: { adapter: string; model: string };
+  phase: GatewayAttempt["phase"];
+  kind: GatewayAttempt["kind"];
+  fallbackReason: ProviderFailureKind | null;
+}
+
+type CallOutcome = { plan: CallPlan } & (
+  { response: AdapterResponse } | { failure: ProviderFailureKind; retryAfterMs: number | null }
+);
+
+/** Safe task codes; provider messages are never surfaced. */
+const failureCodes: Record<ProviderFailureKind, string> = {
+  timeout: "RF_PROVIDER_TIMEOUT",
+  throttled: "RF_PROVIDER_UNAVAILABLE",
+  unavailable: "RF_PROVIDER_UNAVAILABLE",
+  authentication: "RF_PROVIDER_CONFIGURATION",
+  permission: "RF_PROVIDER_CONFIGURATION",
+  quota: "RF_PROVIDER_QUOTA",
+  "invalid-request": "RF_PROVIDER_REJECTED",
+  unsupported: "RF_PROVIDER_UNSUPPORTED",
+  cancelled: "RF_CANCELLED",
+};
+
+/** Deadline aborts become `timeout`, caller aborts `cancelled`; unknown adapter errors never retry. */
+function classify(error: unknown, signal: AbortSignal): ProviderFailureKind {
+  if (signal.aborted) return signal.reason instanceof ProviderFailure ? "timeout" : "cancelled";
+  return error instanceof ProviderFailure ? error.kind : "invalid-request";
+}
+
+function resultBuilder<T>(
+  request: GatewayRequest | null,
+  attempts: GatewayAttempt[],
+  elapsed: () => number,
+) {
+  return (
+    state: GatewayResultState,
+    code: string | null,
+    output: T | null = null,
+    served: { adapter: string; model: string } | null = null,
+  ): GatewayResult<T> => ({
+    state,
+    output: state === "succeeded" ? output : null,
+    code,
+    purpose: request?.purpose ?? "resume.wording",
+    taskId: request?.taskId ?? "",
+    inputVersion: request?.inputVersion ?? "",
+    templateVersion: request?.templateVersion ?? "",
+    provider: served?.adapter ?? null,
+    model: served?.model ?? null,
+    attempts,
+    usage: attempts.reduce<GatewayUsage>(
+      (sum, attempt) => ({
+        inputTokens: sum.inputTokens + (attempt.usage?.inputTokens ?? 0),
+        outputTokens: sum.outputTokens + (attempt.usage?.outputTokens ?? 0),
+      }),
+      { inputTokens: 0, outputTokens: 0 },
+    ),
+    latencyMs: elapsed(),
+  });
+}
 
 /**
  * The single controlled path for model calls. Domain modules own the decision and the
@@ -114,35 +185,12 @@ export class AIGateway {
     spec: OutputSpec<T>,
     signal: AbortSignal,
   ): Promise<GatewayResult<T>> {
-    const started = this.clock.now();
-    const parsed = gatewayRequestSchema.safeParse(input);
+    const startedAt = this.clock.now();
     const attempts: GatewayAttempt[] = [];
-    const base = parsed.success ? parsed.data : null;
-    const finish = (
-      state: GatewayResultState,
-      code: string | null,
-      output: T | null = null,
-      served: { provider: string; model: string } | null = null,
-    ): GatewayResult<T> => ({
-      state,
-      output: state === "succeeded" ? output : null,
-      code,
-      purpose: base?.purpose ?? "resume.wording",
-      taskId: base?.taskId ?? "",
-      inputVersion: base?.inputVersion ?? "",
-      templateVersion: base?.templateVersion ?? "",
-      provider: served?.provider ?? null,
-      model: served?.model ?? null,
-      attempts,
-      usage: attempts.reduce<GatewayUsage>(
-        (sum, attempt) => ({
-          inputTokens: sum.inputTokens + (attempt.usage?.inputTokens ?? 0),
-          outputTokens: sum.outputTokens + (attempt.usage?.outputTokens ?? 0),
-        }),
-        { inputTokens: 0, outputTokens: 0 },
-      ),
-      latencyMs: Math.max(0, this.clock.now() - started),
-    });
+    const parsed = gatewayRequestSchema.safeParse(input);
+    const finish = resultBuilder<T>(parsed.success ? parsed.data : null, attempts, () =>
+      Math.max(0, this.clock.now() - startedAt),
+    );
     if (!parsed.success) return finish("rejected", "RF_INVALID_INPUT");
     const request = parsed.data;
     if (signal.aborted) return finish("cancelled", "RF_CANCELLED");
@@ -159,156 +207,108 @@ export class AIGateway {
       route.deadlineMs,
     );
     const shared = AbortSignal.any([signal, deadline.signal]);
+    const failed = (kind: ProviderFailureKind) =>
+      kind === "cancelled" || signal.aborted
+        ? finish("cancelled", "RF_CANCELLED")
+        : finish("provider-failed", failureCodes[kind]);
     try {
       const admission = await this.authority.admit(request, routeRecipients(route), shared);
       if (!admission.admitted) return finish("rejected", admission.code);
       const segments = minimizeSegments(request.segments);
       if (inputSize(segments, request.instructions) > route.maxInputChars)
         return finish("rejected", "RF_GATEWAY_INPUT_TOO_LARGE");
-      const messages = buildMessages(request, template.system, segments);
+      const execution: Execution = {
+        route,
+        messages: buildMessages(request, template.system, segments),
+        jsonSchema: spec.jsonSchema,
+        attempts,
+        signal: shared,
+        startedAt,
+      };
 
-      const first = await this.callRoute(route, messages, spec, attempts, shared, started);
-      if ("failure" in first.result) return this.failed(first.result.failure, signal, finish);
-      let target = first.target;
-      let response = first.result.response;
-      let checked = this.check(response.text, spec, request);
+      let outcome = await this.callRoute(execution);
+      if ("failure" in outcome) return failed(outcome.failure);
+      let checked = this.check(outcome.response.text, spec, request);
       if (!checked.ok && checked.repairable) {
         // One bounded repair on the same provider; the original failure stays in `attempts`.
         attempts[attempts.length - 1].outcome = checked.outcome;
-        const repaired = await this.callOnce(
-          target,
-          first.phase,
-          "repair",
-          first.fallbackReason,
-          repairMessages(messages, checked.problem),
-          route,
-          spec,
-          attempts,
-          shared,
+        outcome = await this.callOnce(
+          execution,
+          { ...outcome.plan, kind: "repair" },
+          repairMessages(execution.messages, checked.problem),
         );
-        if ("failure" in repaired) return this.failed(repaired.failure, signal, finish);
-        response = repaired.response;
-        checked = this.check(response.text, spec, request);
+        if ("failure" in outcome) return failed(outcome.failure);
+        checked = this.check(outcome.response.text, spec, request);
       }
       if (!checked.ok) {
         attempts[attempts.length - 1].outcome = checked.outcome;
-        return finish(
-          checked.outcome === "invalid-reference" ? "invalid-reference" : "invalid-output",
-          checked.outcome === "invalid-reference"
-            ? "RF_GATEWAY_INVALID_REFERENCE"
-            : "RF_GATEWAY_INVALID_OUTPUT",
-        );
+        return checked.outcome === "invalid-reference"
+          ? finish("invalid-reference", "RF_GATEWAY_INVALID_REFERENCE")
+          : finish("invalid-output", "RF_GATEWAY_INVALID_OUTPUT");
       }
       if (!(await this.authority.stillCurrent(request, shared))) return finish("stale", "RF_STALE");
       shared.throwIfAborted();
-      return finish("succeeded", null, checked.value, {
-        provider: target.adapter,
-        model: target.model,
-      });
+      return finish("succeeded", null, checked.value, outcome.plan.target);
     } catch {
-      return this.failed(signal.aborted ? "cancelled" : "timeout", signal, finish);
+      return failed(signal.aborted ? "cancelled" : "timeout");
     } finally {
       clearTimeout(timer);
     }
   }
 
-  private failed<T>(
-    kind: ProviderFailureKind,
-    outer: AbortSignal,
-    finish: (state: GatewayResultState, code: string | null) => GatewayResult<T>,
-  ) {
-    if (kind === "cancelled" || outer.aborted) return finish("cancelled", "RF_CANCELLED");
-    if (kind === "quota") return finish("provider-failed", "RF_PROVIDER_QUOTA");
-    if (kind === "authentication" || kind === "permission")
-      return finish("provider-failed", "RF_PROVIDER_CONFIGURATION");
-    if (kind === "unsupported") return finish("provider-failed", "RF_PROVIDER_UNSUPPORTED");
-    if (kind === "invalid-request") return finish("provider-failed", "RF_PROVIDER_REJECTED");
-    if (kind === "timeout") return finish("provider-failed", "RF_PROVIDER_TIMEOUT");
-    return finish("provider-failed", "RF_PROVIDER_UNAVAILABLE");
-  }
-
   /** Bounded primary attempts, then at most one policy-approved transient fallback. */
-  private async callRoute<T>(
-    route: GatewayRoute,
-    messages: ChatMessage[],
-    spec: OutputSpec<T>,
-    attempts: GatewayAttempt[],
-    signal: AbortSignal,
-    started: number,
-  ) {
-    let last: ProviderFailureKind = "unavailable";
-    for (let index = 0; index < route.primaryAttempts; index++) {
-      const result = await this.callOnce(
-        route.primary,
-        "primary",
-        "call",
-        null,
-        messages,
-        route,
-        spec,
-        attempts,
-        signal,
-      );
-      if ("response" in result)
-        return { result, target: route.primary, phase: "primary" as const, fallbackReason: null };
-      last = result.failure;
-      if (!transientFailures.includes(last) || signal.aborted)
-        return { result, target: route.primary, phase: "primary" as const, fallbackReason: null };
-      if (index + 1 < route.primaryAttempts) {
-        const retryAfter = result.retryAfterMs ?? 250 * 2 ** index;
-        const remaining = route.deadlineMs - (this.clock.now() - started);
-        // Never sleep past the shared deadline; a provider wait longer than that ends the task.
-        if (retryAfter >= remaining) break;
-        await this.clock.sleep(retryAfter, signal);
-      }
-    }
-    const fallback = route.fallback;
-    if (fallback?.enabled && transientFailures.includes(last) && !signal.aborted) {
-      const result = await this.callOnce(
-        fallback,
-        "fallback",
-        "call",
-        last,
-        messages,
-        route,
-        spec,
-        attempts,
-        signal,
-      );
-      return { result, target: fallback, phase: "fallback" as const, fallbackReason: last };
-    }
-    return {
-      result: { failure: last, retryAfterMs: null } as Failure,
+  private async callRoute(execution: Execution): Promise<CallOutcome> {
+    const { route, signal } = execution;
+    const primary: CallPlan = {
       target: route.primary,
-      phase: "primary" as const,
+      phase: "primary",
+      kind: "call",
       fallbackReason: null,
     };
+    let last: CallOutcome | null = null;
+    for (let index = 0; index < route.primaryAttempts; index++) {
+      last = await this.callOnce(execution, primary);
+      if ("response" in last || !transientFailures.includes(last.failure) || signal.aborted)
+        return last;
+      if (index + 1 < route.primaryAttempts) {
+        const wait = last.retryAfterMs ?? 250 * 2 ** index;
+        const remaining = route.deadlineMs - (this.clock.now() - execution.startedAt);
+        // Never sleep past the shared deadline; a provider wait longer than that ends retries.
+        if (wait >= remaining) break;
+        await this.clock.sleep(wait, signal);
+      }
+    }
+    const reason = last && "failure" in last ? last.failure : "unavailable";
+    if (route.fallback?.enabled && transientFailures.includes(reason) && !signal.aborted)
+      return this.callOnce(execution, {
+        target: route.fallback,
+        phase: "fallback",
+        kind: "call",
+        fallbackReason: reason,
+      });
+    return last ?? { plan: primary, failure: reason, retryAfterMs: null };
   }
 
-  private async callOnce<T>(
-    target: { adapter: string; model: string },
-    phase: GatewayAttempt["phase"],
-    kind: GatewayAttempt["kind"],
-    fallbackReason: ProviderFailureKind | null,
-    messages: ChatMessage[],
-    route: GatewayRoute,
-    spec: OutputSpec<T>,
-    attempts: GatewayAttempt[],
-    signal: AbortSignal,
-  ): Promise<Called | Failure> {
-    const adapter = this.adapters.get(target.adapter)!;
+  /** One adapter call under the adapter's concurrency gate, always recorded as an attempt. */
+  private async callOnce(
+    execution: Execution,
+    plan: CallPlan,
+    messages: ChatMessage[] = execution.messages,
+  ): Promise<CallOutcome> {
+    const { route, signal } = execution;
+    const adapter = this.adapters.get(plan.target.adapter)!;
     const gate = this.gates.get(adapter.id) ?? new Gate();
     this.gates.set(adapter.id, gate);
     const record: GatewayAttempt = {
       provider: adapter.id,
-      model: target.model,
+      model: plan.target.model,
       reportedModel: null,
-      phase,
-      kind,
+      phase: plan.phase,
+      kind: plan.kind,
       outcome: "ok",
       latencyMs: 0,
       usage: null,
-      fallbackReason,
+      fallbackReason: plan.fallbackReason,
     };
     let acquired = false;
     const begin = this.clock.now();
@@ -317,9 +317,9 @@ export class AIGateway {
       acquired = true;
       const response = await adapter.complete(
         {
-          model: target.model,
+          model: plan.target.model,
           messages,
-          jsonSchema: spec.jsonSchema,
+          jsonSchema: execution.jsonSchema,
           maxOutputTokens: route.maxOutputTokens,
         },
         signal,
@@ -327,24 +327,19 @@ export class AIGateway {
       signal.throwIfAborted();
       record.reportedModel = response.reportedModel;
       record.usage = response.usage;
-      return { response };
+      return { plan, response };
     } catch (error) {
-      const failure: ProviderFailureKind = signal.aborted
-        ? signal.reason instanceof ProviderFailure
-          ? "timeout"
-          : "cancelled"
-        : error instanceof ProviderFailure
-          ? error.kind
-          : "invalid-request";
+      const failure = classify(error, signal);
       record.outcome = failure;
       return {
+        plan,
         failure,
         retryAfterMs: error instanceof ProviderFailure ? error.retryAfterMs : null,
       };
     } finally {
       if (acquired) gate.release();
       record.latencyMs = Math.max(0, this.clock.now() - begin);
-      attempts.push(record);
+      execution.attempts.push(record);
     }
   }
 
