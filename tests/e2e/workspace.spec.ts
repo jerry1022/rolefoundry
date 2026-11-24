@@ -229,3 +229,39 @@ test("public demo labels identity as unavailable and fails closed", async ({ pag
   expect((await request.get("/api/v1/admin/assessments")).status()).toBe(503);
   expect((await request.get(`/api/v1/tasks/${crypto.randomUUID()}`)).status()).toBe(503);
 });
+
+test("Traditional Chinese persists across reloads, formats salaries and fits mobile", async ({
+  page,
+}) => {
+  await page.goto("/jobs/");
+  const language = page.getByRole("group", { name: "Language" });
+  await language.getByRole("button", { name: /中文/ }).click();
+  await expect(page.locator("html")).toHaveAttribute("lang", "zh-TW");
+  await expect(page.locator("h1")).toHaveText("找到屬於你的下一步。");
+  await expect(page.locator(".job-card").first()).toContainText("NT$10萬–16萬 / 月");
+  await expect(page.getByRole("link", { name: "探索職缺", exact: true })).toBeVisible();
+  // Filters keep English values internally while showing translated labels.
+  await page.getByRole("combobox", { name: "工作型態" }).selectOption({ label: "遠端" });
+  await expect(page.locator(".job-card").first()).toContainText("遠端");
+
+  await page.reload();
+  await expect(page.locator("h1")).toHaveText("找到屬於你的下一步。");
+  await page.setViewportSize({ width: 390, height: 844 });
+  for (const route of [
+    "/",
+    "/skills/",
+    "/assessments/",
+    "/learning/",
+    "/resume/",
+    "/applications/",
+  ]) {
+    await page.goto(route);
+    await expect(page.locator("h1")).toBeVisible();
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
+      true,
+    );
+  }
+  await page.getByRole("group", { name: "語言" }).getByRole("button", { name: /EN/ }).click();
+  await expect(page.locator("html")).toHaveAttribute("lang", "en");
+  await expect(page.locator("h1")).toHaveText("Keep your possibilities moving.");
+});

@@ -162,7 +162,7 @@ tests/               Domain tests and browser journeys
 - [Career journey playbook](AI_CAREER_PLAN.md)
 - [Deployment guide](docs/DEPLOYMENT.md) and [roadmap](docs/ROADMAP.md)
 
-All documentation is in English. The initial production market is Taiwan; Traditional Chinese localization is planned.
+All documentation is in English. The initial production market is Taiwan: the workspace UI can switch between English and Traditional Chinese (the EN / Chinese switch in the top bar), with locale-aware number, date and salary formatting. See [localization](docs/LOCALIZATION.md) for the translation workflow and `npm run i18n:check`.
 
 ## Development checks
 
@@ -170,6 +170,7 @@ All documentation is in English. The initial production market is Taiwan; Tradit
 npm run typecheck
 npm test
 npm run architecture:check
+npm run i18n:check
 npm run build
 npx playwright install chromium
 npm run test:e2e
