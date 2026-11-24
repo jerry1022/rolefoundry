@@ -35,6 +35,20 @@ export async function assessmentHttp(
           await admin.retire(actor, action[1], await body());
           return send({ retired: true });
         }
+        if (action[2] === "translations") {
+          await admin.translate(actor, action[1], await body());
+          return send({ translated: true });
+        }
+      }
+      if (
+        action.length === 4 &&
+        action[0] === "questions" &&
+        action[2] === "translations" &&
+        action[3] === "remove" &&
+        request.method === "POST"
+      ) {
+        await admin.removeTranslation(actor, action[1], await body());
+        return send({ removed: true });
       }
     } else if (resource === "assessment") {
       if (!action.length && request.method === "GET") {

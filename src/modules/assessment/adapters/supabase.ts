@@ -7,6 +7,8 @@ import {
   attemptPageSchema,
   attemptSummarySchema,
   questionBankSchema,
+  type QuestionTranslationInput,
+  type QuestionTranslationRemoval,
 } from "../model";
 import type { AssessmentRepository, AssessmentAdministrationRepository } from "../ports";
 import type { TaskHandler } from "../../tasks/ports";
@@ -97,6 +99,21 @@ export class SupabaseAssessmentAdministrationRepository implements AssessmentAdm
       p_id: id,
       p_reason: reason,
       p_reviewed: false,
+    });
+  }
+  async translate(id: string, input: QuestionTranslationInput) {
+    const { locale, ...text } = input;
+    await rpc(this.client, "assessment_question_translate", {
+      p_id: id,
+      p_locale: locale,
+      p_data: text,
+    });
+  }
+  async removeTranslation(id: string, input: QuestionTranslationRemoval) {
+    await rpc(this.client, "assessment_question_untranslate", {
+      p_id: id,
+      p_locale: input.locale,
+      p_reason: input.reason,
     });
   }
 }

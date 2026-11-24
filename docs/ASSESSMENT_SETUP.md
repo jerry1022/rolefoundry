@@ -48,10 +48,23 @@ All paths below are under `/api/v1`. Private reads are uncached and owner-scoped
 | POST `/admin/assessments/questions` | `{key, version, track, skillId, rubricId, prompt, options, correctIndex, explanation}` | `201` immutable draft question |
 | POST `/admin/assessments/questions/{id}/review` | `{reason}` | Reviewed for future selection; older reviewed versions of that key retire |
 | POST `/admin/assessments/questions/{id}/retire` | `{reason}` | Removed from future selection; historical attempts retained |
+| POST `/admin/assessments/questions/{id}/translations` | `{locale: "zh-TW", prompt, options, explanation, reviewNote}` | Reviewed translation of that immutable version |
+| POST `/admin/assessments/questions/{id}/translations/remove` | `{locale, reason}` | Audited removal |
 
 Tracks are the four values from the skill catalog. Questions have 2–10 options, zero-based answer indices and an existing active skill. Review validates the current canonical skill. Questions retain their original skill ID and dictionary version; canonical projections follow reviewed dictionary merges. Correct answer fields are unavailable to members until their own result completes. An administrator can inspect the bank to review it; this is a learning preview, not an examination security boundary against administrators.
 
 Draft edits use optimistic revisions; conflicting tabs must reload. Submission atomically seals responses, increments the attempt revision, creates an authoritative task and sends a task-ID-only pgmq message. Repeating a key with the same request returns the same task; changed input returns `409`. There are at most ten open drafts and twenty pending general tasks per owner. These protect the application independently of provider budgets.
+
+### Reviewed question translations
+
+Each question version in the administrator bank has a **Traditional Chinese translation** form (migration `20261114340000`). Question versions are immutable and attempts reference the exact version, so a translation keys on `question_version_translations(question_version_id, locale)`. It can be added after attempts have started.
+
+- Options are translated one-to-one in source order, and the database rejects a different count. `correctIndex`, grading and recorded answers therefore keep their meaning. The UI also falls back to the source text if the options ever fail to align.
+- Attempt JSON adds `translations["zh-TW"]` (prompt, options, reviewedAt) to each item. The translated **explanation** reveals the answer, so it is included only once the attempt is completed, matching the source explanation. The administrator bank always includes it.
+- Saves need a review note and removals need a reason. Both are recorded in `assessment_audit` (`question.translated`, `question.translation_removed`).
+- `localizedQuestion` in `src/modules/assessment/model.ts` renders translated prompts, options and explanations for zh-TW viewers with `lang="zh-Hant"`.
+
+Scenario evidence keeps the source-language label recorded at grading time.
 
 ## Storage and consistency
 

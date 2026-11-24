@@ -347,7 +347,7 @@ it("authors dictionary concepts and reviewed question versions through the conso
     const dictionary = page.getByLabel("Skills and aliases", { exact: true });
     await webExpect(dictionary).toBeVisible();
     expect(bankReads).toBe(0);
-    await dictionary.locator("summary").click();
+    await dictionary.locator(":scope > summary").click();
     await dictionary.getByRole("button", { name: "Add canonical skill", exact: true }).click();
     await dictionary.getByLabel("Stable skill ID", { exact: true }).fill(skill);
     await dictionary.getByLabel("English name", { exact: true }).fill(`${prefix} reviewed concept`);
@@ -360,9 +360,9 @@ it("authors dictionary concepts and reviewed question versions through the conso
     await dictionary.getByRole("button", { name: "Publish new skill", exact: true }).click();
     await webExpect(dictionary.getByRole("status")).toContainText("Dictionary version published");
     expect(await page.locator("h1").count()).toBe(1);
-    await dictionary.locator("summary").click();
+    await dictionary.locator(":scope > summary").click();
     const bank = page.getByLabel("Assessment questions and rubrics", { exact: true });
-    await bank.locator("summary").click();
+    await bank.locator(":scope > summary").click();
     await bank.getByLabel("Rubric key", { exact: true }).fill(prefix);
     await bank
       .getByLabel("Rubric description", { exact: true })
@@ -400,7 +400,7 @@ it("authors dictionary concepts and reviewed question versions through the conso
     await webExpect(question).toContainText("Reviewed for selection");
     await question.getByRole("button", { name: "Retire question version", exact: true }).click();
     await webExpect(question).toContainText("Draft or retired");
-    await bank.locator("summary").click();
+    await bank.locator(":scope > summary").click();
     await page.evaluate(() => window.scrollTo(0, 0));
     await page.screenshot({ path: "docs/assets/admin-workspace-desktop.png" });
   } finally {
@@ -415,7 +415,7 @@ it("manages invitations, future quotas and eligible refunds on mobile with share
     await cookie(page);
     await page.goto(`${stack.origin}/admin/`);
     const panel = page.getByLabel("Invitations and allowances", { exact: true });
-    await panel.locator("summary").click();
+    await panel.locator(":scope > summary").click();
     const email = `${prefix}-mobile@identity.test.invalid`;
     emails.push(email);
     await panel.getByLabel("Invite email", { exact: true }).fill(email);
@@ -527,9 +527,9 @@ it("clears every mounted private editor after role revocation", async () => {
     await cookie(page);
     await page.goto(`${stack.origin}/admin/`);
     const bank = page.getByLabel("Assessment questions and rubrics", { exact: true });
-    await bank.locator("summary").click();
+    await bank.locator(":scope > summary").click();
     await webExpect(
-      bank.getByText(`${prefix} private answer context`, { exact: true }),
+      bank.getByText(`${prefix} private answer context`, { exact: true }).first(),
     ).toBeVisible();
     await bank.getByLabel("Rubric key", { exact: true }).fill(`${prefix}-denied`);
     await bank
@@ -595,14 +595,14 @@ it("discards a delayed private bank reply after closing its editor and losing ad
       await route.fulfill({ response });
     });
     const bank = page.getByLabel("Assessment questions and rubrics", { exact: true });
-    await bank.locator("summary").click();
+    await bank.locator(":scope > summary").click();
     await Promise.race([
       loaded,
       new Promise<never>((_, reject) =>
         setTimeout(() => reject(new Error("Private bank request was not captured")), 8000),
       ),
     ]);
-    await bank.locator("summary").click();
+    await bank.locator(":scope > summary").click();
     await webExpect(
       bank.getByRole("heading", { name: "Question bank administration", exact: true }),
     ).toHaveCount(0);

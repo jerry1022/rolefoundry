@@ -9,6 +9,8 @@ import type {
   rubricInputSchema,
   questionInputSchema,
   attemptPageSchema,
+  QuestionTranslationInput,
+  QuestionTranslationRemoval,
 } from "./model";
 export interface AssessmentAuthorization {
   authorize(actor: Actor, action: string, ownerId?: string): Promise<void>;
@@ -34,6 +36,8 @@ export interface AssessmentAdministrationRepository {
   question(input: z.infer<typeof questionInputSchema>): Promise<{ id: string }>;
   review(id: string, reason: string): Promise<void>;
   retire(id: string, reason: string): Promise<void>;
+  translate(id: string, input: QuestionTranslationInput): Promise<void>;
+  removeTranslation(id: string, input: QuestionTranslationRemoval): Promise<void>;
 }
 export interface AssessmentClient extends AssessmentRepository {}
 export interface AssessmentAdminClient extends AssessmentAdministrationRepository {}

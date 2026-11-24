@@ -231,4 +231,9 @@ export const assessmentMatching = {
     "AI 排序未能完成，因此顯示規則順序。",
   "Equal rule results were ordered with AI assistance (semantic-rank-v1).":
     "評分相同的結果已使用 AI 輔助排序（semantic-rank-v1）。",
+  "Traditional Chinese translation · reviewed {date}": "繁體中文翻譯 · 審查於 {date}",
+  "Add a Traditional Chinese translation": "新增繁體中文翻譯",
+  "Prompt (Traditional Chinese)": "題目（繁體中文）",
+  "Option {number} (Traditional Chinese)": "選項 {number}（繁體中文）",
+  "Explanation (Traditional Chinese)": "解說（繁體中文）",
 } satisfies Messages;

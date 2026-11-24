@@ -215,6 +215,47 @@ describe("module 05 through real private attempts and durable workers", () => {
       ),
     ).toBe(true);
   });
+  it("serves reviewed question translations and withholds translated explanations until graded", async () => {
+    const owner = await stack.member();
+    const attempt = await start(owner);
+    const translate = (id: string, options: string[], user = admin) =>
+      stack.request(`admin/assessments/questions/${id}/translations`, user, "POST", {
+        locale: "zh-TW",
+        prompt: "情境題目",
+        options,
+        explanation: "已審查的解說",
+        reviewNote: "Synthetic fixture reviewed against the source question",
+      });
+    const options = ["有依據的來源查核", "沒有依據的捷徑", "有紀錄的釐清"];
+    const target = attempt.items[0].questionVersionId;
+    expect((await translate(target, options, owner)).status).toBe(403);
+    expect((await translate(target, options.slice(0, 2))).status).toBe(400);
+    for (const item of attempt.items)
+      expect((await translate(item.questionVersionId, options)).status).toBe(200);
+    const draft = (await (await stack.request(`assessments/${attempt.id}`, owner)).json()).data;
+    expect(draft.items[0].translations["zh-TW"]).toMatchObject({ prompt: "情境題目", options });
+    expect(JSON.stringify(draft)).not.toContain("已審查的解說");
+    await submit(owner, attempt);
+    await worker();
+    const graded = (await (await stack.request(`assessments/${attempt.id}`, owner)).json()).data;
+    expect(graded.status).toBe("completed");
+    expect(graded.items[0].translations["zh-TW"].explanation).toBe("已審查的解說");
+    const bank = (await (await stack.request("admin/assessments", admin)).json()).data;
+    expect(
+      bank.questions.find((question: { id: string }) => question.id === target).translations[
+        "zh-TW"
+      ].explanation,
+    ).toBe("已審查的解說");
+    const remove = await stack.request(
+      `admin/assessments/questions/${target}/translations/remove`,
+      admin,
+      "POST",
+      { locale: "zh-TW", reason: "Reviewer withdrew the translation" },
+    );
+    expect(remove.status).toBe(200);
+    const after = (await (await stack.request(`assessments/${attempt.id}`, owner)).json()).data;
+    expect(after.items[0].translations).toEqual({});
+  });
   it("round-trips partial drafts, serializes edits and rejects invalid/extra answer IDs", async () => {
     const owner = await stack.member();
     const attempt = await start(owner);

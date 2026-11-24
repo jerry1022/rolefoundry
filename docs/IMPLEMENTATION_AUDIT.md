@@ -31,7 +31,7 @@ The integration suite runs against actual local GoTrue, PostgREST, PostgreSQL an
 ## 05 — Assessment
 
 - Design: [05-assessment.md](design/05-assessment.md).
-- Status: Fixed-choice production path implemented and locally verified; [setup and evidence](ASSESSMENT_SETUP.md). Expert bank review remains a release gate. Short-answer grading has a grounded grading core, 32 reviewed synthetic examples and a [calibration gate](ASSESSMENT_SETUP.md#short-answer-calibration-not-enabled); it stays disconnected from learner attempts until live calibration passes.
+- Status: Fixed-choice production path implemented and locally verified; [setup and evidence](ASSESSMENT_SETUP.md). Question versions can carry [reviewed zh-TW translations](ASSESSMENT_SETUP.md#reviewed-question-translations) whose explanations stay hidden until grading. Expert bank review remains a release gate. Short-answer grading has a grounded grading core, 32 reviewed synthetic examples and a [calibration gate](ASSESSMENT_SETUP.md#short-answer-calibration-not-enabled); it stays disconnected from learner attempts until live calibration passes.
 - Required acceptance scope: Cover each track, full/partial/invalid submissions, duplicate submission, question version changes, retries, evidence provenance, answer confidentiality and deleted owners. Calibrate short-answer agreement with reviewed examples before enabling it publicly.
 
 ## 06 — Matching and gap analysis
