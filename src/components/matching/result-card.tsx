@@ -2,6 +2,7 @@
 import Link from "next/link";
 import type { MatchRun } from "@/modules/matching/model";
 import { skillLabel } from "@/modules/skills/model";
+import { matchingText } from "./matching-text";
 import { msg, useI18n } from "@/lib/i18n";
 type Result = MatchRun["data"][number];
 const actions = {
@@ -72,8 +73,8 @@ export function MatchingResultCard({
           <li key={condition.field}>
             <span className="pill">{t(conditionStatuses[condition.status])}</span>{" "}
             <strong>{t(conditionFields[condition.field])}</strong>:{" "}
-            {condition.requirement || t("Not supplied")}
-            <p className="muted">{condition.reason}</p>
+            {condition.requirement ? matchingText(condition.requirement, t) : t("Not supplied")}
+            <p className="muted">{matchingText(condition.reason, t)}</p>
           </li>
         ))}
       </ul>
@@ -138,9 +139,9 @@ export function MatchingResultCard({
               {gap.skillId
                 ? t("{skill}: {reason}", {
                     skill: skillLabel(gap.skillId, labels),
-                    reason: gap.reason,
+                    reason: matchingText(gap.reason, t),
                   })
-                : gap.reason}
+                : matchingText(gap.reason, t)}
             </li>
           ))
         ) : (

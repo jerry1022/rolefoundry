@@ -31,4 +31,14 @@ export const resume = {
   "Copy draft": "複製草稿",
   "Clipboard access unavailable. Select the draft text or use Export text.":
     "無法存取剪貼簿。請直接選取草稿文字，或使用「匯出文字」。",
+  "Place confirmed statements linked to the target's skills earlier in this section. Their wording and completion state are unchanged.":
+    "把與目標職缺技能相關的已確認陳述移到本段較前面。陳述的措辭與完成狀態都不變。",
+  "Do you have a real example for this requirement? Add it as a separately confirmed fact if appropriate; the requirement is not added as a claim.":
+    "你有這項要求的真實例子嗎？如果適合，請另外新增一項已確認的事實；這項要求不會被當成你的主張加入。",
+  "This deterministic fallback reorders existing confirmed statements only; it does not rewrite, measure ATS fit or certify ability.":
+    "這個確定性的備援做法只會重新排序已確認的陳述，不會改寫內容、評估 ATS 相符程度或認證能力。",
+  "Linked skills are owner-confirmed labels. Target requirements are not proof of personal experience.":
+    "連結的技能是你自己確認的標籤。目標職缺的要求不能證明你的個人經驗。",
+  "Model-assisted wording requires the separately evaluated AI Gateway integration.":
+    "模型輔助措辭需要另外經過評估的 AI Gateway 整合。",
 } satisfies Messages;
