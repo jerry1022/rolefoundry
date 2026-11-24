@@ -996,7 +996,7 @@ export function LearningScreen() {
           >
             {jobs.map((j) => (
               <option key={j.id} value={j.id}>
-                {j.title}
+                {localizedDemoJob(j, locale).title}
               </option>
             ))}
           </select>
@@ -1124,7 +1124,7 @@ export function LearningScreen() {
 
 export function ResumeScreen() {
   const { state, update } = useWorkspace();
-  const { t, fmt } = useI18n();
+  const { t, fmt, locale } = useI18n();
   const [targetId, setTargetId] = useState(jobs[0].id);
   const [review, setReview] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -1212,7 +1212,7 @@ export function ResumeScreen() {
             >
               {jobs.map((j) => (
                 <option key={j.id} value={j.id}>
-                  {j.title}
+                  {localizedDemoJob(j, locale).title}
                 </option>
               ))}
             </select>
@@ -1415,7 +1415,7 @@ export function ApplicationsScreen() {
             <select className="text-input" value={jobId} onChange={(e) => setJobId(e.target.value)}>
               {jobs.map((j) => (
                 <option key={j.id} value={j.id}>
-                  {j.title} · {j.company}
+                  {localizedDemoJob(j, locale).title} · {j.company}
                 </option>
               ))}
             </select>
