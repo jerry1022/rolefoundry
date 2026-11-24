@@ -25,6 +25,7 @@ import { courses } from "@/lib/fixtures";
 import { LocaleProvider, msg, useI18n } from "@/lib/i18n";
 import { LocaleSwitcher } from "./ui/locale-switcher";
 import { ThemeSwitcher } from "./ui/theme-switcher";
+import { PointerGlow } from "./ui/pointer-glow";
 
 const navigation = [
   { href: "/", label: msg("Overview"), icon: LayoutDashboard },
@@ -244,6 +245,7 @@ export function Shell({ children }: { children: ReactNode }) {
     <LocaleProvider>
       <WorkspaceProvider>
         <SkipLink />
+        <PointerGlow />
         <ShellContent>{children}</ShellContent>
       </WorkspaceProvider>
     </LocaleProvider>

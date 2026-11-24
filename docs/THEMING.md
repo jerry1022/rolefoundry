@@ -32,3 +32,10 @@ Write only standard properties in `globals.css`; the CSS compiler adds vendor pr
 Light-theme tokens that the dark palette does not redefine are remapped per role by the generator (`tokenRoles` in `scripts/generate-dark-theme.mjs`). For example, text set to `var(--green-dark)` becomes `var(--green)` in dark mode, because dark ink on a dark surface measured 1.3:1. Components on lime surfaces that keep the dark ink are on the `keep` list.
 
 axe cannot compute contrast over gradient backgrounds, and it reports those nodes as incomplete rather than as violations. The dark-theme browser test therefore checks the checked skill labels' colour directly. The signed-in accessibility suite scans member screens and **every expanded administrator section** in both themes and both languages, because collapsed sections unmount their editors.
+
+## Living surfaces
+
+- **Pointer spotlight.** Cards listed in `glowSurfaces` (`src/components/ui/pointer-glow.tsx`) show a soft radial glow that follows a fine pointer. One passive document listener, throttled to animation frames, sets `--glow-x` and `--glow-y` on the card under the pointer. It does nothing for touch-only devices or when the viewer prefers reduced motion. To add a surface, extend `glowSurfaces` and the matching selectors in `globals.css`.
+- **Scroll reveal.** Cards rise into view using CSS scroll-driven animations (`animation-timeline: view()`), with backwards fill only, so hover transforms still apply afterwards. Browsers without scroll timelines show the cards immediately. The reveal is disabled under reduced motion.
+- **Drifting aurora.** `body::before` holds three blurred colour fields that move slowly behind every page.
+- **Colours.** All of these colours are tokens (`--glow-*`, `--aurora-*`). The dark values are defined in the generator's token block, so the theme generator never darkens them.
