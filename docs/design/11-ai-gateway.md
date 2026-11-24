@@ -20,8 +20,8 @@ LunaRoute is an explicitly requested fallback candidate. This records a design c
 
 | Role | Candidate | Delivery status |
 | --- | --- | --- |
-| Primary candidate | Direct OpenAI integration | Pending credential/provider decision, adapter implementation and evaluation |
-| Fallback candidate | LunaRoute through its own gateway adapter | Included in the plan; pending credentials, capability/quality evaluation and implementation |
+| Primary candidate | Direct OpenAI integration | [OpenAI-compatible adapter](../AI_GATEWAY_SETUP.md) implemented (bearer header); credential/provider decision and live evaluation pending |
+| Fallback candidate | LunaRoute through its own gateway adapter | Same adapter with the `LUNAROUTE-API-KEY` dialect implemented; base URL, credentials and capability/quality evaluation pending |
 | Current executable behavior | Existing deterministic domain rules | Available as currently labelled; never presented as a successful model response |
 
 According to the [official API reference](https://docs.lunaroute.com/api/), LunaRoute serves OpenAI-shaped Chat Completions and Responses endpoints, plus embeddings and rerank, at `https://gw.lunaroute.com`. Its [authentication guide](https://docs.lunaroute.com/getting-started/authentication/) recommends a dedicated `LUNAROUTE-API-KEY` header. The future adapter should read a separate server/worker-only `LUNAROUTE_API_KEY`; do not repurpose `OPENAI_API_KEY` or forward an upstream key implicitly. Available chat model IDs and capabilities must be checked through the [Models API](https://docs.lunaroute.com/api/models/). An advertised endpoint does not establish support for every model, strict output schema or embedding configuration needed here.

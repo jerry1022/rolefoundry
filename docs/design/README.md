@@ -1,6 +1,6 @@
 # Detailed module designs
 
-These designs describe the production target. Modules 01–10 have server implementations; the durable worker core supports assessment grading, matching, learning plans, resume processing and ingestion; administrator task/worker diagnostics, private account exports and local database recovery are partially implemented; remaining modules have the partial/demo status documented in each design. See the [delivery order and dependency contract](../MODULE_DEVELOPMENT.md). The **current scaffold** sections identify executable behavior. Do not interpret a designed endpoint or database table as implemented.
+These designs describe the production target. Modules 01–10 have server implementations. Module 11 has a provider-neutral gateway with identity-backed admission, used by opt-in matching tie ordering and resume wording suggestions; no provider is configured by default. The durable worker core (12) supports grading, matching, learning, resume, ingestion and account work with shared provider concurrency and token budgets. Module 13 is partially implemented (diagnostics, recovery, exports, deletion, telemetry, course-link observations). Each design documents its own remaining gates. See the [delivery order and dependency contract](../MODULE_DEVELOPMENT.md). The **current scaffold** sections identify executable behavior. Do not interpret a designed endpoint or database table as implemented.
 
 | Design | Module |
 | --- | --- |

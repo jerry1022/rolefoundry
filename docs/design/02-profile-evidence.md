@@ -8,7 +8,7 @@ Store career direction, preferences and capability evidence without collapsing c
 
 Configured server deployments implement owner preferences and revision conflicts, private self-reports/portfolio references, immutable evidence history, a service-only source writer and a transactional invalidation outbox. The `/skills/` UI uses an injected client port; domain use cases use repository/authorization ports. See [setup and API](../PROFILE_SETUP.md) and [dependency rules](../MODULE_DEVELOPMENT.md).
 
-A minimal stable `skills` registry is seeded for foreign keys; the full module 04 dictionary remains planned. Resume confirmation, scored assessment production, derived report stores/embeddings and event dispatch belong to their later modules. No fake production integration is implied. Evidence deletion removes local versions/children and records removed version references; future consumers must enforce the documented stale/deletion contract before serving derived data.
+The stable `skills` registry seeded for foreign keys is now governed by the [module 04 dictionary](../SKILL_DICTIONARY_SETUP.md). Resume confirmation, scored assessments, matching/learning reports and [invalidation dispatch](../INVALIDATION_SETUP.md) consume this evidence through their own modules and enforce the stale/deletion contract: evidence deletion records removed version references and dependent reports purge copied content in the same transaction. Embedding stores remain unimplemented and would need their own registered consumer.
 
 ## Static/demo compatibility
 

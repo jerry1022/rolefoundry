@@ -36,9 +36,9 @@ RoleFoundry is an open-source AI career workspace. This documentation separates 
 1. [Product plan](../ai-career-platform-plan.md): audience, scope, capabilities, milestones and acceptance criteria.
 2. [High-level design](HLD.md): architecture, deployment, data ownership and technology choices.
 3. [Detailed design index](design/README.md): each module's responsibilities, interfaces, flows and failure cases.
-4. [API contract](API.md): planned domain resources plus a link to the implemented identity API.
-5. [Data model](DATA_MODEL.md): intended relational model, evidence provenance and access rules.
-6. [Deployment](DEPLOYMENT.md): local development, Vercel, GitHub Pages and the future worker.
+4. [API contract](API.md): implemented and planned domain resources, with links to each module's exact API.
+5. [Data model](DATA_MODEL.md): implemented and planned relational model, evidence provenance, AI gateway records and access rules.
+6. [Deployment](DEPLOYMENT.md): local development, Vercel, GitHub Pages, the worker and optional checker/gateway settings.
 7. [Roadmap](ROADMAP.md): implemented scope and production milestones.
 8. [Career playbook](../AI_CAREER_PLAN.md): the user journey that informed the product.
 
@@ -49,4 +49,4 @@ RoleFoundry is an open-source AI career workspace. This documentation separates 
 - **Contract:** a TypeScript interface or schema, with no production adapter yet.
 - **Planned:** design only. Requires implementation and validation before use.
 
-The public catalog inspector is a demo route, not an administrative security boundary. Identity admin operations live behind server verification in Account & privacy. Private document uploads and manual tracking are implemented in configured deployments. Live job feeds, model calls and external applications remain unconnected. Static exports do not include dynamic identity, profile or catalog APIs.
+The public catalog inspector is a demo route, not an administrative security boundary. Identity admin operations live behind server verification in Account & privacy. Private document uploads and manual tracking are implemented in configured deployments. No live job feed or model provider is enabled by default (the AI gateway stays disabled until a reviewed policy, credentials, approved recipients and consent exist), and external applications remain unconnected. Static exports do not include dynamic identity, profile or catalog APIs.
