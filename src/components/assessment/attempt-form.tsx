@@ -15,7 +15,9 @@ export function AttemptForm({
   onChanged: (attempt: AssessmentAttempt) => void;
   onReload: () => Promise<void>;
 }) {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
+  const skillName = (item: { skillLabel: string; skillLabelZhTw?: string }) =>
+    locale === "zh-TW" ? (item.skillLabelZhTw ?? item.skillLabel) : item.skillLabel;
   const [answers, setAnswers] = useState(initial.answers),
     [saved, setSaved] = useState(initial),
     [saving, setSaving] = useState(false),
@@ -110,7 +112,7 @@ export function AttemptForm({
             <legend>
               {index + 1}. {item.prompt}
             </legend>
-            <p className="muted">{item.skillLabel}</p>
+            <p className="muted">{skillName(item)}</p>
             {item.options.map((option, optionIndex) => (
               <label key={optionIndex}>
                 <input

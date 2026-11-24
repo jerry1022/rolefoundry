@@ -4,7 +4,7 @@ import Link from "next/link";
 import type { CourseClient } from "@/modules/learning/ports";
 import type { CoursePage, CourseProgress, CourseQuery } from "@/modules/learning/model";
 import type { SkillClient } from "@/modules/skills/ports";
-import { skillLabel } from "@/modules/skills/model";
+import { localizedSkillName, skillLabel } from "@/modules/skills/model";
 import { ApplicationError } from "@/modules/platform/errors";
 import { msg, useI18n } from "@/lib/i18n";
 const difficulties = [msg("Beginner"), msg("Intermediate"), msg("Advanced"), msg("Unknown")];
@@ -25,7 +25,7 @@ export function CourseCatalog({
   version: number;
   privateEnabled: boolean;
 }) {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const [page, setPage] = useState<CoursePage | null>(null),
     [query, setQuery] = useState<CourseQuery>({}),
     [labels, setLabels] = useState<Record<string, string>>({}),
@@ -66,7 +66,7 @@ export function CourseCatalog({
             Object.fromEntries(
               dictionary.skills
                 .filter((skill) => skill.status === "active")
-                .map((skill) => [skill.id, skill.nameEn]),
+                .map((skill) => [skill.id, localizedSkillName(skill, locale)]),
             ),
           );
       })
@@ -74,7 +74,7 @@ export function CourseCatalog({
     return () => {
       present = false;
     };
-  }, [skills, page?.dictionaryVersion]);
+  }, [skills, page?.dictionaryVersion, locale]);
   return (
     <section className="section-block">
       <h2>{t("Reviewed course resources")}</h2>

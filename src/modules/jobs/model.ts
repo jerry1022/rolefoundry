@@ -142,6 +142,7 @@ export const publishedJobSchema = jobDraftSchema.omit({ canonicalKey: true }).ex
     requirementSchema.extend({
       sourceSkills: z.array(skillSchema),
       skillLabels: z.record(z.string(), z.string()),
+      skillLabelsZhTw: z.record(z.string(), z.string()).optional(),
     }),
   ),
 });

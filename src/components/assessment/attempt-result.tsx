@@ -3,7 +3,9 @@ import Link from "next/link";
 import type { AssessmentAttempt } from "@/modules/assessment/model";
 import { useI18n } from "@/lib/i18n";
 export function AttemptResult({ attempt }: { attempt: AssessmentAttempt }) {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
+  const skillName = (item: { skillLabel: string; skillLabelZhTw?: string }) =>
+    locale === "zh-TW" ? (item.skillLabelZhTw ?? item.skillLabel) : item.skillLabel;
   const result = attempt.result;
   if (!result) return null;
   return (
@@ -35,7 +37,7 @@ export function AttemptResult({ attempt }: { attempt: AssessmentAttempt }) {
                 {t("Reviewed answer: {answer}", { answer: item.options[observation.correctIndex] })}
               </p>
               <p>{observation.explanation}</p>
-              <small>{t("Skill: {skill}", { skill: item.skillLabel })}</small>
+              <small>{t("Skill: {skill}", { skill: skillName(item) })}</small>
               <p className="muted">
                 {t(
                   "Next practice: explain the choice in your own words, then build a small example that shows when it applies.",

@@ -14,6 +14,7 @@ import type { CatalogPage, PublishedJob } from "@/modules/jobs/model";
 import type { ProfileClient } from "@/modules/profile/ports";
 import type { CareerProfile } from "@/modules/profile/model";
 import type { SkillClient } from "@/modules/skills/ports";
+import { localizedSkillName } from "@/modules/skills/model";
 import { ApplicationError } from "@/modules/platform/errors";
 import { msg, useI18n } from "@/lib/i18n";
 import { acceptMatchRead } from "@/modules/matching/report-state";
@@ -57,7 +58,7 @@ export function MatchingScreen({
   profile: ProfileClient;
   skills: SkillClient;
 }) {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const [history, setHistory] = useState<MatchHistory | null>(null),
     [jobs, setJobs] = useState<CatalogPage | null>(null),
     [target, setTarget] = useState<PublishedJob | null>(null),
@@ -143,7 +144,11 @@ export function MatchingScreen({
       .get(active.dictionaryVersion)
       .then((dictionary) => {
         if (present)
-          setLabels(Object.fromEntries(dictionary.skills.map((skill) => [skill.id, skill.nameEn])));
+          setLabels(
+            Object.fromEntries(
+              dictionary.skills.map((skill) => [skill.id, localizedSkillName(skill, locale)]),
+            ),
+          );
       })
       .catch(() => {
         if (present) setLabels({});
@@ -151,7 +156,7 @@ export function MatchingScreen({
     return () => {
       present = false;
     };
-  }, [active?.dictionaryVersion, skills]);
+  }, [active?.dictionaryVersion, skills, locale]);
   useEffect(() => {
     if (!active || !["queued", "running"].includes(active.status) || !polling) return;
     let present = true,

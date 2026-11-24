@@ -40,6 +40,7 @@ export const publicItemSchema = z.object({
   options: z.array(z.string()),
   skillId: skillIdSchema,
   skillLabel: z.string(),
+  skillLabelZhTw: z.string().optional(),
   dictionaryVersion: z.number().int().positive(),
 });
 export const assessmentResultSchema = z.object({

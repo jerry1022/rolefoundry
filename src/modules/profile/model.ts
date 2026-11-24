@@ -99,6 +99,7 @@ export const evidenceSchema = z.object({
   skills: z.array(skillSchema),
   canonicalSkills: z.array(skillSchema).optional(),
   skillLabels: z.record(z.string(), z.string()).optional(),
+  skillLabelsZhTw: z.record(z.string(), z.string()).optional(),
   dictionaryVersion: z.number().int().positive().optional(),
   claimedLevel: z.number().nullable(),
   url: z.string().nullable(),

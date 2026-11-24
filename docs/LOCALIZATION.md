@@ -24,8 +24,10 @@ Localized: the shell, overview, role discovery and job details, career-path brow
 
 Connected (signed-in) screens are localized too: account, consent and allowances, data export and deletion, profile and evidence, skill dictionary, job catalog and bookmarks, assessments and the question bank, matching, learning plans and course administration, resume studio and application tracking, plus administration (identity, AI recipients, course links, ingestion review/feeds, operations diagnostics/recovery and deletion recovery). Operations notices are translated in the UI by their stable domain code, so domain models stay free of UI i18n.
 
+Skill names follow the viewer's locale on connected screens: profile evidence, job requirements, assessment items and results, matching, the learning catalog, the resume fact editor and confirmed versions. They use the reviewed `nameZhTw` from the skill dictionary (see [localized skill labels](SKILL_DICTIONARY_SETUP.md#localized-skill-labels)). Administration and authoring screens keep the English name next to the stable skill ID so that reviewers see the canonical record.
+
 Still English, by design:
-- Authored or server content: job, course and question text, career-guide bodies, server error messages and consent policy descriptions. Localizing editorial content should add reviewed per-locale fields to the content records (the skill dictionary already stores `nameZhTw`), not more UI keys.
+- Authored or server content: job, course and question text, career-guide bodies, server error messages and consent policy descriptions. Localizing editorial content should add reviewed per-locale fields to the content records (as the skill dictionary already does with `nameZhTw`), not more UI keys.
 - Enum codes shown verbatim (for example task, report and review states), ISO dates (`YYYY-MM-DD`), explicitly UTC timestamps, and typed confirmation phrases such as `DELETE`.
 
 English output is byte-identical to the pre-localization UI, so English plural quirks such as "1 years" were kept. Fixing them is an English copy change, separate from localization.

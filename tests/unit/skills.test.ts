@@ -1,5 +1,11 @@
 import { describe, it, expect, vi } from "vitest";
-import { normalizeSkillTerm, skillIdSchema, skillLabel } from "../../src/modules/skills/model";
+import {
+  labelsForLocale,
+  localizedSkillName,
+  normalizeSkillTerm,
+  skillIdSchema,
+  skillLabel,
+} from "../../src/modules/skills/model";
 import {
   SkillDictionaryService,
   SkillAdministrationService,
@@ -28,6 +34,20 @@ describe("portable skill dictionary use cases", () => {
     expect(skillLabel("new-runtime-concept", { "new-runtime-concept": "A reviewed concept" })).toBe(
       "A reviewed concept",
     );
+  });
+  it("shows reviewed zh-TW names per skill and falls back to English when untranslated", () => {
+    const skill = { nameEn: "AI evaluation", nameZhTw: "AI 評估" };
+    expect(localizedSkillName(skill, "zh-TW")).toBe("AI 評估");
+    expect(localizedSkillName(skill, "en")).toBe("AI evaluation");
+    expect(localizedSkillName({ nameEn: "Python", nameZhTw: "  " }, "zh-TW")).toBe("Python");
+    const labels = labelsForLocale("zh-TW", {
+      en: { evaluation: "AI evaluation", python: "Python" },
+      zhTw: { evaluation: "AI 評估" },
+    });
+    expect(labels).toEqual({ evaluation: "AI 評估", python: "Python" });
+    expect(labelsForLocale("en", { en: { python: "Python" }, zhTw: { python: "派森" } })).toEqual({
+      python: "Python",
+    });
   });
   it("reads immutable versions and forwards exact ambiguous resolution without guessing", async () => {
     const result = {

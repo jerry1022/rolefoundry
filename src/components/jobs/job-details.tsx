@@ -2,10 +2,10 @@
 import { useEffect, useRef } from "react";
 import Link from "next/link";
 import type { PublishedJob } from "@/modules/jobs/model";
-import { skillLabel } from "@/modules/skills/model";
+import { labelsForLocale, skillLabel } from "@/modules/skills/model";
 import { useI18n } from "@/lib/i18n";
 export function JobDetails({ job, onClose }: { job: PublishedJob; onClose: () => void }) {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const dialog = useRef<HTMLDialogElement>(null);
   useEffect(() => {
     const element = dialog.current;
@@ -53,7 +53,13 @@ export function JobDetails({ job, onClose }: { job: PublishedJob; onClose: () =>
           <div className="tags">
             {requirement.skills.map((skill) => (
               <span key={skill} className="skill-tag">
-                {skillLabel(skill, requirement.skillLabels)}
+                {skillLabel(
+                  skill,
+                  labelsForLocale(locale, {
+                    en: requirement.skillLabels,
+                    zhTw: requirement.skillLabelsZhTw,
+                  }),
+                )}
               </span>
             ))}
           </div>

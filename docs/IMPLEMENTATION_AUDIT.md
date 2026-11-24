@@ -25,7 +25,7 @@ The integration suite runs against actual local GoTrue, PostgREST, PostgreSQL an
 ## 04 — Skill dictionary
 
 - Design: [04-skill-dictionary.md](design/04-skill-dictionary.md).
-- Status: Implemented; see [setup and verification scope](SKILL_DICTIONARY_SETUP.md). Consumer source/canonical joins are integrated; future reports must still bind dictionary versions.
+- Status: Implemented; see [setup and verification scope](SKILL_DICTIONARY_SETUP.md). Consumer source/canonical joins are integrated; future reports must still bind dictionary versions. Learner-facing responses carry [version-pinned zh-TW labels](SKILL_DICTIONARY_SETUP.md#localized-skill-labels), and connected screens show them for zh-TW viewers.
 - Required acceptance scope: Verify alias normalization, ambiguous input, English/Traditional Chinese labels, cycle rejection, merge redirects, historical dictionary versions and stable references across label changes. Audit mapping changes that materially alter matching results.
 
 ## 05 — Assessment

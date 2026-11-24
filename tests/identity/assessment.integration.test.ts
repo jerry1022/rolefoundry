@@ -205,6 +205,7 @@ describe("module 05 through real private attempts and durable workers", () => {
       expect(JSON.stringify(attempt)).not.toContain("correctIndex");
       expect(JSON.stringify(attempt)).not.toContain("explanation");
       expect(attempt.track).toBe(track);
+      for (const item of attempt.items) expect(item.skillLabelZhTw).toEqual(expect.any(String));
     }
     const first = await start(owner);
     const next = await start(owner);
