@@ -2,6 +2,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { PageHeading } from "../ui/page-heading";
+import { msg, useI18n } from "@/lib/i18n";
 import { ApplicationError } from "@/modules/platform/errors";
 import { uuid } from "@/modules/applications/model";
 import type { Application, ResumeChoicePage } from "@/modules/applications/model";
@@ -14,6 +15,8 @@ import { FollowUps } from "./follow-ups";
 import { EventHistory } from "./event-history";
 type Props = { client: ApplicationClient; catalog: CatalogClient; catalogEnabled: boolean };
 export function ApplicationTrackerScreen({ client, catalog, catalogEnabled }: Props) {
+  const { t } = useI18n();
+  // Error and notice state hold English keys (or server messages), translated when rendered.
   const [records, setRecords] = useState<Application[]>([]),
     [record, setRecord] = useState<Application | null>(null),
     [cursor, setCursor] = useState<string | null>(null),
@@ -47,7 +50,7 @@ export function ApplicationTrackerScreen({ client, catalog, catalogEnabled }: Pr
     setError(
       problem instanceof ApplicationError
         ? problem.message
-        : "The tracker is temporarily unavailable. Retry without changing your draft.",
+        : msg("The tracker is temporarily unavailable. Retry without changing your draft."),
     );
   }, []);
   const accept = useCallback(
@@ -58,7 +61,7 @@ export function ApplicationTrackerScreen({ client, catalog, catalogEnabled }: Pr
           new ApplicationError(
             "RF_UNAUTHORIZED",
             401,
-            "Your account changed. Refresh the private tracker.",
+            msg("Your account changed. Refresh the private tracker."),
           ),
         );
         return;
@@ -163,7 +166,7 @@ export function ApplicationTrackerScreen({ client, catalog, catalogEnabled }: Pr
       .catch(() => {
         if (active)
           setNotice(
-            "Published roles could not be loaded. Existing tracker records remain available.",
+            msg("Published roles could not be loaded. Existing tracker records remain available."),
           );
       });
     return () => {
@@ -219,7 +222,7 @@ export function ApplicationTrackerScreen({ client, catalog, catalogEnabled }: Pr
           new ApplicationError(
             "RF_UNAUTHORIZED",
             401,
-            "Your account changed. Refresh the private tracker.",
+            msg("Your account changed. Refresh the private tracker."),
           ),
         );
         return;
@@ -259,7 +262,7 @@ export function ApplicationTrackerScreen({ client, catalog, catalogEnabled }: Pr
       ]);
       setJobCursor(page.nextCursor);
     } catch {
-      setNotice("Reload published roles if the catalog changed.");
+      setNotice(msg("Reload published roles if the catalog changed."));
     } finally {
       setBusy(false);
     }
@@ -279,7 +282,7 @@ export function ApplicationTrackerScreen({ client, catalog, catalogEnabled }: Pr
       url.searchParams.delete("application");
       history.replaceState(null, "", url);
       setRemoveConfirm(false);
-      setNotice("The record, event history and follow-ups were deleted.");
+      setNotice(msg("The record, event history and follow-ups were deleted."));
     } catch (problem) {
       failed(problem);
     } finally {
@@ -290,50 +293,53 @@ export function ApplicationTrackerScreen({ client, catalog, catalogEnabled }: Pr
   return (
     <>
       <PageHeading
-        eyebrow="PRIVATE · MANUAL PROGRESS"
-        title="Keep your possibilities moving."
-        description="Track preparation, your reported applications and the next action. Visiting a source never changes a stage."
+        eyebrow={t("PRIVATE · MANUAL PROGRESS")}
+        title={t("Keep your possibilities moving.")}
+        description={t(
+          "Track preparation, your reported applications and the next action. Visiting a source never changes a stage.",
+        )}
       />
       {error && (
         <div role="alert" className="notice">
-          {error}{" "}
+          {t(error)}{" "}
           <button className="button secondary" disabled={busy} onClick={() => void load()}>
-            Refresh private tracker
+            {t("Refresh private tracker")}
           </button>
         </div>
       )}
       {notice && (
         <p role="status" className="notice">
-          {notice}
+          {t(notice)}
         </p>
       )}
-      {loading && <p role="status">Loading private tracker…</p>}
+      {loading && <p role="status">{t("Loading private tracker…")}</p>}
       {!loading && !privateReady && (
         <section className="panel">
-          <h2>Sign in for your private tracker</h2>
-          <p>Your browser-local demo is not uploaded automatically.</p>
+          <h2>{t("Sign in for your private tracker")}</h2>
+          <p>{t("Your browser-local demo is not uploaded automatically.")}</p>
           <Link className="button primary" href="/account/">
-            Account and sign in
+            {t("Account and sign in")}
           </Link>
         </section>
       )}
       {privateReady && (
         <>
           <section className="panel application-add">
-            <h2>Track a published role</h2>
+            <h2>{t("Track a published role")}</h2>
             <p className="muted">
-              This records preparation as Saved. A closed cycle stays closed until you explicitly
-              create a new one.
+              {t(
+                "This records preparation as Saved. A closed cycle stays closed until you explicitly create a new one.",
+              )}
             </p>
             <label>
-              Published role
+              {t("Published role")}
               <select
-                aria-label="Role to track"
+                aria-label={t("Role to track")}
                 disabled={busy || !jobs.length}
                 value={jobId}
                 onChange={(event) => setJobId(event.target.value)}
               >
-                {!jobs.length && <option value="">No published roles available</option>}
+                {!jobs.length && <option value="">{t("No published roles available")}</option>}
                 {jobs.map((job) => (
                   <option key={job.id} value={job.id}>
                     {job.title} · {job.company}
@@ -343,7 +349,7 @@ export function ApplicationTrackerScreen({ client, catalog, catalogEnabled }: Pr
             </label>
             {jobCursor && (
               <button className="button secondary" disabled={busy} onClick={moreJobs}>
-                Show more published roles
+                {t("Show more published roles")}
               </button>
             )}
             <button
@@ -354,36 +360,42 @@ export function ApplicationTrackerScreen({ client, catalog, catalogEnabled }: Pr
                 void mutate(() => client.track({ jobId }, requestKey(op)), op);
               }}
             >
-              Track selected role
+              {t("Track selected role")}
             </button>
           </section>
           {record && (
             <article
               className="application-detail"
-              aria-label="Selected application record"
+              aria-label={t("Selected application record")}
               key={record.id}
             >
               <section className="panel">
                 <h2>{record.title}</h2>
                 <p>
-                  {record.company} · cycle {record.cycle} ·{" "}
-                  {record.stage === "Saved"
-                    ? "Preparation only"
-                    : `${record.stage} (user-reported)`}{" "}
-                  · revision {record.revision}
+                  {t("{company} · cycle {cycle} · {stage} · revision {revision}", {
+                    company: record.company,
+                    cycle: record.cycle,
+                    stage:
+                      record.stage === "Saved"
+                        ? t("Preparation only")
+                        : t("{stage} (user-reported)", { stage: t(record.stage) }),
+                    revision: record.revision,
+                  })}
                 </p>
                 <p className="muted">
-                  Saved job snapshot.{" "}
+                  {t("Saved job snapshot.")}{" "}
                   {record.available
-                    ? "The catalog currently has this role; verify availability at its source."
-                    : "This listing is no longer available in the catalog. Your notes and history remain accessible."}
+                    ? t("The catalog currently has this role; verify availability at its source.")
+                    : t(
+                        "This listing is no longer available in the catalog. Your notes and history remain accessible.",
+                      )}
                 </p>
                 {record.sources.map((source) => (
                   <div key={source.id}>
                     <strong>
                       {source.publisher} · {source.name}
                     </strong>
-                    {source.isDemo && <p className="pill">Fictional demonstration role</p>}
+                    {source.isDemo && <p className="pill">{t("Fictional demonstration role")}</p>}
                     {source.available ? (
                       <a
                         className="text-link"
@@ -391,22 +403,24 @@ export function ApplicationTrackerScreen({ client, catalog, catalogEnabled }: Pr
                         target="_blank"
                         rel="noopener noreferrer"
                       >
-                        Visit original source ↗
+                        {t("Visit original source ↗")}
                       </a>
                     ) : (
-                      <p className="muted">Historical source · current link unavailable</p>
+                      <p className="muted">{t("Historical source · current link unavailable")}</p>
                     )}
                     {source.freshness === "uncertain" && (
                       <p className="muted">
-                        The saved source had uncertain availability. A failed check does not prove
-                        closure.
+                        {t(
+                          "The saved source had uncertain availability. A failed check does not prove closure.",
+                        )}
                       </p>
                     )}
                   </div>
                 ))}
                 <p className="muted">
-                  Opening a source does not submit an application. No automatic submission or
-                  outcome verification occurs.
+                  {t(
+                    "Opening a source does not submit an application. No automatic submission or outcome verification occurs.",
+                  )}
                 </p>
                 {record.stage === "Closed" && (
                   <button
@@ -420,7 +434,7 @@ export function ApplicationTrackerScreen({ client, catalog, catalogEnabled }: Pr
                       );
                     }}
                   >
-                    Start a new application cycle
+                    {t("Start a new application cycle")}
                   </button>
                 )}
               </section>
@@ -450,18 +464,19 @@ export function ApplicationTrackerScreen({ client, catalog, catalogEnabled }: Pr
                 onError={failed}
               />
               <section className="panel">
-                <h3>Remove this private record</h3>
+                <h3>{t("Remove this private record")}</h3>
                 <p>
-                  Deletes this cycle, its private notes, events and follow-ups. It does not delete
-                  the independent resume source.
+                  {t(
+                    "Deletes this cycle, its private notes, events and follow-ups. It does not delete the independent resume source.",
+                  )}
                 </p>
                 {removeConfirm ? (
-                  <div role="group" aria-label="Confirm application deletion">
+                  <div role="group" aria-label={t("Confirm application deletion")}>
                     <button className="button secondary" disabled={busy} onClick={remove}>
-                      Confirm record deletion
+                      {t("Confirm record deletion")}
                     </button>
                     <button className="button secondary" onClick={() => setRemoveConfirm(false)}>
-                      Keep record
+                      {t("Keep record")}
                     </button>
                   </div>
                 ) : (
@@ -470,19 +485,21 @@ export function ApplicationTrackerScreen({ client, catalog, catalogEnabled }: Pr
                     disabled={busy}
                     onClick={() => setRemoveConfirm(true)}
                   >
-                    Delete this record
+                    {t("Delete this record")}
                   </button>
                 )}
               </section>
             </article>
           )}
-          <section className="panel" aria-label="Tracked roles">
-            <h2>Your tracked roles</h2>
+          <section className="panel" aria-label={t("Tracked roles")}>
+            <h2>{t("Your tracked roles")}</h2>
             <p>
-              {records.length} loaded record{records.length === 1 ? "" : "s"}
-              {cursor ? " · more history available" : ""}
+              {records.length === 1
+                ? t("{count} loaded record", { count: records.length })
+                : t("{count} loaded records", { count: records.length })}
+              {cursor ? ` · ${t("more history available")}` : ""}
             </p>
-            {!records.length && <p>Choose a role to begin a private record.</p>}
+            {!records.length && <p>{t("Choose a role to begin a private record.")}</p>}
             <div className="application-record-list">
               {records.map((item) => (
                 <button
@@ -494,19 +511,23 @@ export function ApplicationTrackerScreen({ client, catalog, catalogEnabled }: Pr
                 >
                   <strong>{item.title}</strong>
                   <span>
-                    {item.company} · cycle {item.cycle} · {item.stage}
-                    {item.available ? "" : " · listing unavailable"}
+                    {t("{company} · cycle {cycle} · {stage}", {
+                      company: item.company,
+                      cycle: item.cycle,
+                      stage: t(item.stage),
+                    })}
+                    {item.available ? "" : ` · ${t("listing unavailable")}`}
                   </span>
                 </button>
               ))}
             </div>
             {cursor && (
               <button className="button secondary" disabled={busy} onClick={moreRecords}>
-                Show earlier tracked roles
+                {t("Show earlier tracked roles")}
               </button>
             )}
             <button className="text-link" disabled={busy} onClick={() => void load()}>
-              Refresh tracked roles
+              {t("Refresh tracked roles")}
             </button>
           </section>
         </>

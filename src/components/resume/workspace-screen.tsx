@@ -15,6 +15,7 @@ import type { SkillClient } from "@/modules/skills/ports";
 import type { SkillDictionary } from "@/modules/skills/model";
 import type { z } from "zod";
 import { ApplicationError } from "@/modules/platform/errors";
+import { msg, useI18n } from "@/lib/i18n";
 import { acceptResumeRead } from "@/modules/resume/document-state";
 import { PageHeading } from "../ui/page-heading";
 import { ResumeHistoryList } from "./history-list";
@@ -23,18 +24,31 @@ import { ResumeFactEditor } from "./fact-editor";
 import { ResumeProposalView } from "./proposal-view";
 import { ResumeVersionView } from "./version-view";
 const processingMessages: Record<string, string> = {
-  "empty-text": "No extractable text was found. Scanned documents can use the paste-text option.",
-  "password-protected": "Use an unencrypted text PDF, or paste the statements you want to review.",
-  "invalid-file":
+  "empty-text": msg(
+    "No extractable text was found. Scanned documents can use the paste-text option.",
+  ),
+  "password-protected": msg(
+    "Use an unencrypted text PDF, or paste the statements you want to review.",
+  ),
+  "invalid-file": msg(
     "This file could not be parsed safely. Its original is retained; try a text PDF/DOCX or paste text.",
-  "unsupported-file":
+  ),
+  "unsupported-file": msg(
     "This document contains unsupported content. Use a plain text PDF/DOCX or the paste option.",
-  "too-large": "The file or extracted content exceeds the processing limits. Try a smaller source.",
-  "unsupported-glyph":
+  ),
+  "too-large": msg(
+    "The file or extracted content exceeds the processing limits. Try a smaller source.",
+  ),
+  "unsupported-glyph": msg(
     "The PDF font cannot represent a character in this version. Review the text before creating another export.",
-  "parse-timeout": "Document processing exceeded its time limit. The original source is unchanged.",
-  "process-failed": "The document processor was unavailable. The original source is unchanged.",
-  "invalid-output": "The result did not pass validation. No partial result was published.",
+  ),
+  "parse-timeout": msg(
+    "Document processing exceeded its time limit. The original source is unchanged.",
+  ),
+  "process-failed": msg(
+    "The document processor was unavailable. The original source is unchanged.",
+  ),
+  "invalid-output": msg("The result did not pass validation. No partial result was published."),
 };
 export function ResumeWorkspaceScreen({
   client,
@@ -47,6 +61,8 @@ export function ResumeWorkspaceScreen({
   skills: SkillClient;
   catalogEnabled: boolean;
 }) {
+  const { t } = useI18n();
+  // Error and notice state hold English keys (or server messages), translated when rendered.
   const [history, setHistory] = useState<z.infer<typeof resumeListSchema> | null>(null),
     [active, setActive] = useState<ResumeDocument | null>(null),
     [version, setVersion] = useState<ResumeVersion | null>(null),
@@ -69,7 +85,7 @@ export function ResumeWorkspaceScreen({
     setError(
       error instanceof ApplicationError
         ? error.message
-        : "The private resume workspace is temporarily unavailable.",
+        : msg("The private resume workspace is temporarily unavailable."),
     );
     if (error instanceof ApplicationError && [401, 403].includes(error.status)) {
       setLogin(true);
@@ -405,8 +421,10 @@ export function ResumeWorkspaceScreen({
       setConfirmDelete(false);
       setNotice(
         result.cleanupPending
-          ? "Resume access and derived claims were removed. Private file cleanup is continuing in the background."
-          : "Resume and derived claims were removed.",
+          ? msg(
+              "Resume access and derived claims were removed. Private file cleanup is continuing in the background.",
+            )
+          : msg("Resume and derived claims were removed."),
       );
       await reloadHistory();
     } catch (error) {
@@ -418,16 +436,18 @@ export function ResumeWorkspaceScreen({
   return (
     <>
       <PageHeading
-        eyebrow="PRIVATE SOURCES · CONFIRMED FACTS"
-        title="Express your experience with facts you can stand behind."
-        description="Review extracted statements, save confirmed versions and choose how they fit a target role. Proposals preserve your facts; exports refer to a fixed version."
+        eyebrow={t("PRIVATE SOURCES · CONFIRMED FACTS")}
+        title={t("Express your experience with facts you can stand behind.")}
+        description={t(
+          "Review extracted statements, save confirmed versions and choose how they fit a target role. Proposals preserve your facts; exports refer to a fixed version.",
+        )}
       />
       {error && (
         <div className="notice" role="alert">
-          <p>{error}</p>
+          <p>{t(error)}</p>
           {login ? (
             <Link className="button secondary" href="/account/">
-              Sign in to your private workspace
+              {t("Sign in to your private workspace")}
             </Link>
           ) : (
             <button
@@ -438,17 +458,17 @@ export function ResumeWorkspaceScreen({
                 if (active) void refresh(active.id);
               }}
             >
-              Reload private resume data
+              {t("Reload private resume data")}
             </button>
           )}
         </div>
       )}
       {notice && (
         <p className="notice" role="status">
-          {notice}
+          {t(notice)}
         </p>
       )}
-      {!history && !login && !error && <p role="status">Loading private resume history…</p>}
+      {!history && !login && !error && <p role="status">{t("Loading private resume history…")}</p>}
       {history && !login && (
         <>
           <ResumeSourceForm
@@ -472,7 +492,10 @@ export function ResumeWorkspaceScreen({
           <section className="panel section-block">
             <h2 className="resume-file-title">{active.filename}</h2>
             <p className="muted">
-              {active.status} · {active.confirmedClaimCount} linked, unreviewed resume claims
+              {active.status} ·{" "}
+              {t("{count} linked, unreviewed resume claims", {
+                count: active.confirmedClaimCount,
+              })}
             </p>
             {active.status === "failed" && active.taskErrorCode === "RF_RETRY_EXHAUSTED" && (
               <button
@@ -480,18 +503,19 @@ export function ResumeWorkspaceScreen({
                 disabled={busy}
                 onClick={() => void retryParse()}
               >
-                Retry parsing this source
+                {t("Retry parsing this source")}
               </button>
             )}
             {active.processingError && (
               <p className="notice" role="status">
-                {processingMessages[active.processingError]}
+                {t(processingMessages[active.processingError])}
               </p>
             )}
             {["awaiting-upload", "uploading"].includes(active.status) && (
               <p>
-                The source upload is not complete. Choose a new source above or remove this
-                unfinished draft.
+                {t(
+                  "The source upload is not complete. Choose a new source above or remove this unfinished draft.",
+                )}
               </p>
             )}
             <div className="resume-actions">
@@ -503,36 +527,39 @@ export function ResumeWorkspaceScreen({
                   void refresh(active.id);
                 }}
               >
-                Check resume status
+                {t("Check resume status")}
               </button>
               <button
                 className="text-link"
                 disabled={busy}
                 onClick={() => setConfirmDelete((value) => !value)}
               >
-                Delete this private resume
+                {t("Delete this private resume")}
               </button>
             </div>
             {working && !polling && (
               <p className="muted">
-                Automatic status checks paused. You can check again while the worker continues.
+                {t(
+                  "Automatic status checks paused. You can check again while the worker continues.",
+                )}
               </p>
             )}
             {confirmDelete && (
               <div className="notice">
                 <p>
-                  Delete this source, its confirmed versions, proposals, exports and linked resume
-                  claims? Reports based on those claims will be invalidated.
+                  {t(
+                    "Delete this source, its confirmed versions, proposals, exports and linked resume claims? Reports based on those claims will be invalidated.",
+                  )}
                 </p>
                 <button className="button primary" disabled={busy} onClick={() => void remove()}>
-                  Delete source and derived data
+                  {t("Delete source and derived data")}
                 </button>
                 <button
                   className="button secondary"
                   disabled={busy}
                   onClick={() => setConfirmDelete(false)}
                 >
-                  Keep this source
+                  {t("Keep this source")}
                 </button>
               </div>
             )}
@@ -548,18 +575,20 @@ export function ResumeWorkspaceScreen({
           )}
           {active.currentVersion && (
             <section className="panel section-block">
-              <h2>Targeted review and fixed exports</h2>
+              <h2>{t("Targeted review and fixed exports")}</h2>
               <p className="muted">
-                Confirmed version {active.currentVersion.version}. New wording from a model is not
-                enabled; the current suggestion reorders existing statements only.
+                {t(
+                  "Confirmed version {version}. New wording from a model is not enabled; the current suggestion reorders existing statements only.",
+                  { version: active.currentVersion.version },
+                )}
               </p>
               {catalogEnabled && (
                 <>
                   <label>
-                    Target role
+                    {t("Target role")}
                     <select
                       className="text-input"
-                      aria-label="Resume target role"
+                      aria-label={t("Resume target role")}
                       disabled={busy}
                       value={target?.id || ""}
                       onChange={(event) => {
@@ -581,7 +610,7 @@ export function ResumeWorkspaceScreen({
                           });
                       }}
                     >
-                      <option value="">Choose a published role</option>
+                      <option value="">{t("Choose a published role")}</option>
                       {target && !jobs?.data.some((job) => job.id === target.id) && (
                         <option value={target.id}>{target.title}</option>
                       )}
@@ -605,7 +634,7 @@ export function ResumeWorkspaceScreen({
                           .finally(() => setBusy(false));
                       }}
                     >
-                      Load more resume target roles
+                      {t("Load more resume target roles")}
                     </button>
                   )}
                   <button
@@ -613,7 +642,7 @@ export function ResumeWorkspaceScreen({
                     disabled={busy || !target}
                     onClick={() => void startProposal()}
                   >
-                    Suggest a fact-preserving order
+                    {t("Suggest a fact-preserving order")}
                   </button>
                 </>
               )}
@@ -623,13 +652,13 @@ export function ResumeWorkspaceScreen({
                   disabled={busy}
                   onClick={() => void exportVersion(active.currentVersion!.id)}
                 >
-                  Create a fixed PDF export
+                  {t("Create a fixed PDF export")}
                 </button>
                 <Link className="text-link" href="/skills/">
-                  Review linked claims in your skill profile
+                  {t("Review linked claims in your skill profile")}
                 </Link>
               </div>
-              <h3>Confirmed version history</h3>
+              <h3>{t("Confirmed version history")}</h3>
               <div className="resume-actions">
                 {active.versions.map((saved) => (
                   <button
@@ -638,7 +667,7 @@ export function ResumeWorkspaceScreen({
                     disabled={busy}
                     onClick={() => void openVersion(saved.id)}
                   >
-                    View version {saved.version}
+                    {t("View version {version}", { version: saved.version })}
                   </button>
                 ))}
               </div>
@@ -646,20 +675,20 @@ export function ResumeWorkspaceScreen({
           )}
           {!!active.proposals.length && (
             <section className="section-block">
-              <h2>Private proposal history</h2>
+              <h2>{t("Private proposal history")}</h2>
               <div className="assessment-history">
                 {active.proposals.map((saved) => (
                   <article className="panel" key={saved.id}>
                     <p>
                       {saved.status}
-                      {saved.stale ? " · historical inputs" : ""}
+                      {saved.stale ? ` · ${t("historical inputs")}` : ""}
                     </p>
                     <button
                       className="button secondary"
                       disabled={busy}
                       onClick={() => void client.proposal(saved.id).then(setProposal).catch(fail)}
                     >
-                      Review proposal
+                      {t("Review proposal")}
                     </button>
                   </article>
                 ))}
@@ -683,38 +712,44 @@ export function ResumeWorkspaceScreen({
                 disabled={busy}
                 onClick={() => void exportVersion(version.id)}
               >
-                Export this historical version
+                {t("Export this historical version")}
               </button>
             </>
           )}
           {!!active.exports.length && (
             <section className="section-block">
-              <h2>Private PDF exports</h2>
+              <h2>{t("Private PDF exports")}</h2>
               <p className="muted">
-                Each PDF uses its selected confirmed version. Download authority expires and is
-                checked against your session and the source's current access.
+                {t(
+                  "Each PDF uses its selected confirmed version. Download authority expires and is checked against your session and the source's current access.",
+                )}
               </p>
               <div className="assessment-history">
-                {active.exports.map((saved) => (
-                  <article className="panel" key={saved.id}>
-                    <h3>
-                      PDF · version{" "}
-                      {active.versions.find((version) => version.id === saved.versionId)?.version ||
-                        "saved"}
-                    </h3>
-                    <p>{saved.status}</p>
-                    {saved.processingError && (
-                      <p className="notice">{processingMessages[saved.processingError]}</p>
-                    )}
-                    <button
-                      className="button secondary"
-                      disabled={busy || saved.status !== "succeeded"}
-                      onClick={() => void download(saved.id)}
-                    >
-                      Download fixed PDF
-                    </button>
-                  </article>
-                ))}
+                {active.exports.map((saved) => {
+                  const number = active.versions.find(
+                    (version) => version.id === saved.versionId,
+                  )?.version;
+                  return (
+                    <article className="panel" key={saved.id}>
+                      <h3>
+                        {number
+                          ? t("PDF · version {version}", { version: number })
+                          : t("PDF · version saved")}
+                      </h3>
+                      <p>{saved.status}</p>
+                      {saved.processingError && (
+                        <p className="notice">{t(processingMessages[saved.processingError])}</p>
+                      )}
+                      <button
+                        className="button secondary"
+                        disabled={busy || saved.status !== "succeeded"}
+                        onClick={() => void download(saved.id)}
+                      >
+                        {t("Download fixed PDF")}
+                      </button>
+                    </article>
+                  );
+                })}
               </div>
             </section>
           )}

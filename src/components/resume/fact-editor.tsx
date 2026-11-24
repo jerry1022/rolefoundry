@@ -1,8 +1,18 @@
 "use client";
 import { useState } from "react";
+import { msg, useI18n } from "@/lib/i18n";
 import { confirmedResumeSchema, resumeLimits } from "@/modules/resume/model";
 import type { ResumeDocument, ConfirmedResume, ResumeFact } from "@/modules/resume/model";
 import type { SkillDictionary } from "@/modules/skills/model";
+const kindLabels: Record<ResumeFact["kind"], string> = {
+  experience: msg("experience"),
+  project: msg("project"),
+  education: msg("education"),
+  credential: msg("credential"),
+  "skill-claim": msg("skill-claim"),
+  contact: msg("contact"),
+  other: msg("other"),
+};
 function initial(document: ResumeDocument): ConfirmedResume {
   if (document.currentVersion) return structuredClone(document.currentVersion.content);
   const facts = (document.draft?.blocks || []).map((block) => ({
@@ -35,6 +45,7 @@ export function ResumeFactEditor({
   dictionary: SkillDictionary | null;
   onConfirm: (content: ConfirmedResume, revision: number) => Promise<ResumeDocument>;
 }) {
+  const { t, fmt } = useI18n();
   const [draft, setDraft] = useState(() => initial(document)),
     [base, setBase] = useState(document.revision),
     [saving, setSaving] = useState(false),
@@ -146,17 +157,18 @@ export function ResumeFactEditor({
   let ordinal = 0;
   return (
     <section className="panel section-block">
-      <h2>Review and confirm the facts</h2>
+      <h2>{t("Review and confirm the facts")}</h2>
       <p className="muted">
-        Extracted text is a draft. Check each statement, completion state and linked skill.
-        Confirmed links become unreviewed resume claims in your private skill profile; learning
-        goals do not become ability evidence.
+        {t(
+          "Extracted text is a draft. Check each statement, completion state and linked skill. Confirmed links become unreviewed resume claims in your private skill profile; learning goals do not become ability evidence.",
+        )}
       </p>
       {base !== document.revision && (
         <div className="notice" role="status">
           <p>
-            A newer source version is available. Your unsaved edits are still here. Review it before
-            confirming again.
+            {t(
+              "A newer source version is available. Your unsaved edits are still here. Review it before confirming again.",
+            )}
           </p>
           <button
             className="button secondary"
@@ -167,7 +179,7 @@ export function ResumeFactEditor({
               setDirty(false);
             }}
           >
-            {dirty ? "Discard draft and load latest facts" : "Load latest confirmed facts"}
+            {dirty ? t("Discard draft and load latest facts") : t("Load latest confirmed facts")}
           </button>
           {dirty && (
             <button
@@ -176,13 +188,14 @@ export function ResumeFactEditor({
               disabled={busy || saving}
               onClick={() => setBase(document.revision)}
             >
-              Keep this draft for review
+              {t("Keep this draft for review")}
             </button>
           )}
           {dirty && (
             <p className="fine-print">
-              Keeping this draft allows a new confirmation against the latest revision. Review the
-              current version before replacing its claims.
+              {t(
+                "Keeping this draft allows a new confirmation against the latest revision. Review the current version before replacing its claims.",
+              )}
             </p>
           )}
         </div>
@@ -197,9 +210,9 @@ export function ResumeFactEditor({
           {draft.sections.map((section) => (
             <section className="resume-edit-section" key={section.id}>
               <label>
-                Section heading
+                {t("Section heading")}
                 <input
-                  aria-label="Resume section heading"
+                  aria-label={t("Resume section heading")}
                   className="text-input"
                   maxLength={120}
                   value={section.heading}
@@ -215,8 +228,9 @@ export function ResumeFactEditor({
               </label>
               {!section.factIds.length && (
                 <p className="muted">
-                  Move a statement here to use this section. Empty sections are omitted when
-                  confirming.
+                  {t(
+                    "Move a statement here to use this section. Empty sections are omitted when confirming.",
+                  )}
                 </p>
               )}
               {section.factIds.map((factId) => {
@@ -226,100 +240,98 @@ export function ResumeFactEditor({
                 return (
                   <article className="resume-fact-card" key={fact.id}>
                     <p className="mini-label">
-                      Statement {number} ·{" "}
+                      {t("Statement {number}", { number })} ·{" "}
                       {block
                         ? block.source.page
-                          ? `Extracted page ${block.source.page}`
-                          : "Extracted text"
-                        : "Owner-added statement"}
+                          ? t("Extracted page {page}", { page: block.source.page })
+                          : t("Extracted text")
+                        : t("Owner-added statement")}
                     </p>
                     <label>
-                      Statement text
+                      {t("Statement text")}
                       <textarea
-                        aria-label={`Statement ${number}`}
+                        aria-label={t("Statement {number}", { number })}
                         className="text-input resume-statement"
                         value={fact.text}
                         onChange={(event) => update(fact.id, { text: event.target.value })}
                       />
                     </label>
-                    <p className="fine-print">{fact.text.length} / 4,000 characters</p>
+                    <p className="fine-print">
+                      {t("{count} / {max} characters", {
+                        count: fact.text.length,
+                        max: fmt.number(4000),
+                      })}
+                    </p>
                     {fact.text.length > 4000 && (
                       <div className="notice">
                         <p>
-                          This statement is too long. Split it without dropping its text, or edit it
-                          before confirming.
+                          {t(
+                            "This statement is too long. Split it without dropping its text, or edit it before confirming.",
+                          )}
                         </p>
                         <button
                           type="button"
                           className="button secondary"
                           onClick={() => split(fact)}
                         >
-                          Split long statement
+                          {t("Split long statement")}
                         </button>
                       </div>
                     )}
                     <div className="resume-field-grid">
                       <label>
-                        Statement type
+                        {t("Statement type")}
                         <select
-                          aria-label={`Statement type ${number}`}
+                          aria-label={t("Statement type {number}", { number })}
                           className="text-input"
                           value={fact.kind}
                           onChange={(event) =>
                             update(fact.id, { kind: event.target.value as ResumeFact["kind"] })
                           }
                         >
-                          {[
-                            "experience",
-                            "project",
-                            "education",
-                            "credential",
-                            "skill-claim",
-                            "contact",
-                            "other",
-                          ].map((value) => (
+                          {Object.entries(kindLabels).map(([value, label]) => (
                             <option key={value} value={value}>
-                              {value}
+                              {t(label)}
                             </option>
                           ))}
                         </select>
                       </label>
                       <label>
-                        Completion state
+                        {t("Completion state")}
                         <select
-                          aria-label={`Completion state ${number}`}
+                          aria-label={t("Completion state {number}", { number })}
                           className="text-input"
                           value={fact.state}
                           onChange={(event) =>
                             update(fact.id, { state: event.target.value as ResumeFact["state"] })
                           }
                         >
-                          <option value="unspecified">Unspecified</option>
-                          <option value="completed">Completed</option>
-                          <option value="in-progress">In progress</option>
-                          <option value="learning">Learning goal</option>
+                          <option value="unspecified">{t("Unspecified")}</option>
+                          <option value="completed">{t("Completed")}</option>
+                          <option value="in-progress">{t("In progress")}</option>
+                          <option value="learning">{t("Learning goal")}</option>
                         </select>
                       </label>
                       <label>
-                        Section
+                        {t("Section")}
                         <select
-                          aria-label={`Section for statement ${number}`}
+                          aria-label={t("Section for statement {number}", { number })}
                           className="text-input"
                           value={section.id}
                           onChange={(event) => move(fact.id, event.target.value)}
                         >
                           {draft.sections.map((item) => (
                             <option key={item.id} value={item.id}>
-                              {item.heading || "Untitled section"}
+                              {item.heading || t("Untitled section")}
                             </option>
                           ))}
                         </select>
                       </label>
                       <label>
-                        Linked skills (up to 20)
+                        {t("Linked skills (up to 20)")}
                         <select
                           multiple
-                          aria-label={`Linked skills ${number}`}
+                          aria-label={t("Linked skills {number}", { number })}
                           className="text-input resume-skill-select"
                           value={fact.skillIds}
                           onChange={(event) =>
@@ -348,12 +360,12 @@ export function ResumeFactEditor({
                     </div>
                     {block && (
                       <details>
-                        <summary>Review the extracted source</summary>
+                        <summary>{t("Review the extracted source")}</summary>
                         <p className="resume-preserve-text">{block.text}</p>
                       </details>
                     )}
                     <button type="button" className="text-link" onClick={() => remove(fact.id)}>
-                      Remove statement
+                      {t("Remove statement")}
                     </button>
                   </article>
                 );
@@ -367,7 +379,7 @@ export function ResumeFactEditor({
               disabled={draft.facts.length >= resumeLimits.facts}
               onClick={add}
             >
-              Add a statement
+              {t("Add a statement")}
             </button>
             <button
               type="button"
@@ -383,28 +395,31 @@ export function ResumeFactEditor({
                 })
               }
             >
-              Add a section
+              {t("Add a section")}
             </button>
           </div>
           <p className="fine-print">
-            Removing a linked statement or changing it to a learning goal removes its profile claim
-            and can invalidate reports based on it. Your confirmation creates a new version; it
-            never edits an older one.
+            {t(
+              "Removing a linked statement or changing it to a learning goal removes its profile claim and can invalidate reports based on it. Your confirmation creates a new version; it never edits an older one.",
+            )}
           </p>
           {!valid.success && (
             <p role="status">
-              Review empty or oversized statements, section names and skill counts before
-              confirming.
+              {t(
+                "Review empty or oversized statements, section names and skill counts before confirming.",
+              )}
             </p>
           )}
           <button
             className="button primary"
             disabled={!valid.success || busy || saving || base !== document.revision}
           >
-            {saving ? "Confirming facts…" : "Confirm facts and linked claims"}
+            {saving ? t("Confirming facts…") : t("Confirm facts and linked claims")}
           </button>
           {dirty && (
-            <p className="fine-print">Unsaved edits stay in this tab until you confirm or leave.</p>
+            <p className="fine-print">
+              {t("Unsaved edits stay in this tab until you confirm or leave.")}
+            </p>
           )}
         </fieldset>
       </form>

@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
+import { msg, useI18n } from "@/lib/i18n";
 import type { Application, FollowUpInput, FollowUpEdit } from "@/modules/applications/model";
 import { localDateInput, localInputToUtc } from "@/modules/applications/record-state";
 type FollowUp = Application["followUps"][number];
@@ -23,6 +24,7 @@ function TaskForm({
   onSave: (input: FollowUpEdit) => Promise<boolean>;
   onCancel?: () => void;
 }) {
+  const { t } = useI18n();
   const [title, setTitle] = useState(item?.title ?? ""),
     [due, setDue] = useState(item ? localDateInput(item.dueAt) : ""),
     [completed, setCompleted] = useState(item?.completed ?? false),
@@ -40,7 +42,7 @@ function TaskForm({
         event.preventDefault();
         const dueAt = localInputToUtc(due);
         if (!dueAt) {
-          setInvalid("Choose an existing date and time in your device timezone.");
+          setInvalid(msg("Choose an existing date and time in your device timezone."));
           return;
         }
         if (await onSave({ expectedRevision: baseline, title, dueAt, completed })) {
@@ -52,23 +54,23 @@ function TaskForm({
     >
       {stale && (
         <div className="notice" role="status">
-          The record changed. Review the current tasks before saving this draft.{" "}
+          {t("The record changed. Review the current tasks before saving this draft.")}{" "}
           <button
             type="button"
             className="button secondary"
             disabled={busy}
             onClick={() => setBaseline(revision)}
           >
-            Use latest revision for this draft
+            {t("Use latest revision for this draft")}
           </button>
         </div>
       )}
-      {invalid && <p role="alert">{invalid}</p>}
+      {invalid && <p role="alert">{t(invalid)}</p>}
       <fieldset disabled={busy || stale}>
         <label>
-          Next step
+          {t("Next step")}
           <input
-            aria-label={item ? "Edit next step" : "Next step"}
+            aria-label={item ? t("Edit next step") : t("Next step")}
             required
             maxLength={200}
             value={title}
@@ -76,10 +78,10 @@ function TaskForm({
           />
         </label>
         <label>
-          Due date and time
+          {t("Due date and time")}
           <input
             type="datetime-local"
-            aria-label={item ? "Edit due date and time" : "Due date and time"}
+            aria-label={item ? t("Edit due date and time") : t("Due date and time")}
             required
             min="2000-01-01T00:00"
             max="2100-12-31T23:59"
@@ -94,13 +96,15 @@ function TaskForm({
               checked={completed}
               onChange={(event) => setCompleted(event.target.checked)}
             />
-            Completed
+            {t("Completed")}
           </label>
         )}
-        <button className="button secondary">{item ? "Save follow-up" : "Add follow-up"}</button>
+        <button className="button secondary">
+          {item ? t("Save follow-up") : t("Add follow-up")}
+        </button>
         {onCancel && (
           <button className="button secondary" type="button" onClick={onCancel}>
-            Cancel follow-up edit
+            {t("Cancel follow-up edit")}
           </button>
         )}
       </fieldset>
@@ -108,16 +112,18 @@ function TaskForm({
   );
 }
 export function FollowUps({ record, busy, onAdd, onEdit, onRemove }: Props) {
+  const { t } = useI18n();
   const [editing, setEditing] = useState<string | null>(null),
     [removing, setRemoving] = useState<string | null>(null);
   return (
-    <section className="panel" aria-label="Follow-up tasks">
-      <h3>Next actions</h3>
+    <section className="panel" aria-label={t("Follow-up tasks")}>
+      <h3>{t("Next actions")}</h3>
       <p className="muted">
-        Dates use your device timezone and are stored in UTC. These are private reminders on this
-        page; no email or calendar messages are sent.
+        {t(
+          "Dates use your device timezone and are stored in UTC. These are private reminders on this page; no email or calendar messages are sent.",
+        )}
       </p>
-      {!record.followUps.length && <p>No next action recorded.</p>}
+      {!record.followUps.length && <p>{t("No next action recorded.")}</p>}
       <ul className="application-follow-ups">
         {record.followUps.map((item) => (
           <li key={item.id}>
@@ -138,26 +144,28 @@ export function FollowUps({ record, busy, onAdd, onEdit, onRemove }: Props) {
                 <strong>{item.title}</strong>
                 <p>
                   <time dateTime={item.dueAt}>{new Date(item.dueAt).toLocaleString()}</time> ·{" "}
-                  {item.completed ? "Completed" : "Open"}
-                  {!item.completed && Date.parse(item.dueAt) < Date.now() ? " · Overdue" : ""}
+                  {item.completed ? t("Completed") : t("Open")}
+                  {!item.completed && Date.parse(item.dueAt) < Date.now()
+                    ? ` · ${t("Overdue")}`
+                    : ""}
                 </p>
                 <button
                   className="button secondary"
                   disabled={busy}
                   onClick={() => setEditing(item.id)}
                 >
-                  Edit follow-up
+                  {t("Edit follow-up")}
                 </button>
                 <button
                   className="button secondary"
                   disabled={busy}
                   onClick={() => setRemoving(item.id)}
                 >
-                  Remove follow-up
+                  {t("Remove follow-up")}
                 </button>
                 {removing === item.id && (
-                  <div role="group" aria-label="Confirm follow-up removal">
-                    <p>Remove this follow-up?</p>
+                  <div role="group" aria-label={t("Confirm follow-up removal")}>
+                    <p>{t("Remove this follow-up?")}</p>
                     <button
                       className="button secondary"
                       disabled={busy}
@@ -165,10 +173,10 @@ export function FollowUps({ record, busy, onAdd, onEdit, onRemove }: Props) {
                         if (await onRemove(item.id, record.revision)) setRemoving(null);
                       }}
                     >
-                      Confirm follow-up removal
+                      {t("Confirm follow-up removal")}
                     </button>
                     <button className="button secondary" onClick={() => setRemoving(null)}>
-                      Keep follow-up
+                      {t("Keep follow-up")}
                     </button>
                   </div>
                 )}

@@ -9,6 +9,7 @@ import { learning } from "./learning";
 import { learningWorkspace } from "./learning-workspace";
 import { profile } from "./profile";
 import { resume } from "./resume";
+import { resumeTracking } from "./resume-tracking";
 import { shell } from "./shell";
 import type { Messages } from "./types";
 import { vocabulary } from "./vocabulary";
@@ -27,6 +28,7 @@ export const zhTWSections = {
   learningWorkspace,
   resume,
   applications,
+  resumeTracking,
   admin,
   account,
   architecture,

@@ -1,5 +1,6 @@
 "use client";
 import { useRef, useState } from "react";
+import { msg, useI18n } from "@/lib/i18n";
 import { uploadIntentSchema, resumeLimits } from "@/modules/resume/model";
 import type { ResumeClient } from "@/modules/resume/ports";
 export function ResumeSourceForm({
@@ -17,6 +18,7 @@ export function ResumeSourceForm({
   onFailure: (error: unknown) => void;
   onFinish: () => void;
 }) {
+  const { t } = useI18n();
   const [file, setFile] = useState<File | null>(null),
     [text, setText] = useState(""),
     [message, setMessage] = useState("");
@@ -40,7 +42,7 @@ export function ResumeSourceForm({
       byteCount: file.size,
     });
     if (!input.success) {
-      setMessage("Choose a PDF or DOCX file no larger than 5 MiB.");
+      setMessage(msg("Choose a PDF or DOCX file no larger than 5 MiB."));
       return;
     }
     onBegin();
@@ -63,7 +65,7 @@ export function ResumeSourceForm({
   }
   async function paste() {
     if (!text.trim()) {
-      setMessage("Paste the text you want to review.");
+      setMessage(msg("Paste the text you want to review."));
       return;
     }
     onBegin();
@@ -81,16 +83,17 @@ export function ResumeSourceForm({
   }
   return (
     <section className="panel section-block">
-      <h2>Add a private source</h2>
+      <h2>{t("Add a private source")}</h2>
       <p className="muted">
-        Text PDF or DOCX, up to 5 MiB. Scanned or password-protected documents can use the paste
-        option. Your browser-local demo is imported only if you choose to copy and paste it.
+        {t(
+          "Text PDF or DOCX, up to 5 MiB. Scanned or password-protected documents can use the paste option. Your browser-local demo is imported only if you choose to copy and paste it.",
+        )}
       </p>
       <fieldset className="profile-form-fields" disabled={busy}>
         <label>
-          Resume file
+          {t("Resume file")}
           <input
-            aria-label="Resume file"
+            aria-label={t("Resume file")}
             ref={fileInput}
             className="text-input"
             type="file"
@@ -102,14 +105,14 @@ export function ResumeSourceForm({
           />
         </label>
         <button className="button primary" disabled={!file || busy} onClick={() => void upload()}>
-          {busy ? "Saving private source…" : "Upload private resume"}
+          {busy ? t("Saving private source…") : t("Upload private resume")}
         </button>
         <details>
-          <summary>Paste text instead</summary>
+          <summary>{t("Paste text instead")}</summary>
           <label>
-            Resume text
+            {t("Resume text")}
             <textarea
-              aria-label="Paste resume text"
+              aria-label={t("Paste resume text")}
               className="text-input resume-source-text"
               maxLength={resumeLimits.textCharacters}
               value={text}
@@ -117,19 +120,20 @@ export function ResumeSourceForm({
             />
           </label>
           <p className="fine-print">
-            Paste only the statements you want to review. This creates a separate private source; it
-            does not replace an uploaded file.
+            {t(
+              "Paste only the statements you want to review. This creates a separate private source; it does not replace an uploaded file.",
+            )}
           </p>
           <button
             className="button secondary"
             disabled={busy || !text.trim()}
             onClick={() => void paste()}
           >
-            Create a private text draft
+            {t("Create a private text draft")}
           </button>
         </details>
       </fieldset>
-      {message && <p role="alert">{message}</p>}
+      {message && <p role="alert">{t(message)}</p>}
     </section>
   );
 }
