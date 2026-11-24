@@ -51,6 +51,8 @@ Use a verified administrator session and JSON. All routes below are under `/api/
 | PATCH `/jobs/{id}` | `{expectedRevision, job}` → immutable new content version |
 | POST `/jobs/{id}/sources` | `{sourceId, externalId, url}` → attach another authorized source |
 | POST `/jobs/{id}/status` | `{expectedRevision, status}` → reviewed lifecycle transition |
+| POST `/jobs/{id}/translations` | `{versionId, locale: "zh-TW", title, summary, responsibilities, reviewNote}` → reviewed translation of the current version |
+| POST `/jobs/{id}/translations/remove` | `{versionId, locale}` → remove that translation |
 | POST `/observations/{jobSourceId}/record` | `{event: "confirmed_active" | "confirmed_closed" | "network_failure"}` |
 
 The job draft schema is defined in `src/modules/jobs/model.ts`. It contains a stable `canonicalKey`, company/title, assessment track, specialization, nullable location/workplace/level/salary, summary, responsibilities, structured requirements/conditions and optional expiry. Canonical keys prevent duplicate openings. Source/external IDs cannot be attached to two different canonical jobs. Multiple permitted sources produce one job result while retaining their own provenance.
@@ -60,6 +62,17 @@ A source's `authorizationBasis` is private operational text; `rightsSummary` is 
 Lifecycle: draft → review → published; review can return to draft or reject; published can return to review or expire; expired must return to review; rejected can return to draft. Published content edits return the job to review and preserve its former content version. Concurrent stale edits return 409. A revoked final authorized source immediately hides the job and returns it to review. Re-enabling rights never silently republishes it.
 
 A network failure preserves the last successful validation and marks an active source uncertain. It cannot reopen a source already confirmed closed. Closing one of several sources retains the job while another permitted source remains available; closing the final one expires it. Explicit expiry is checked at every public read. Admin actions and catalog revisions commit together with an audit reference; no job description or private permission document enters the audit row.
+
+### Reviewed translations
+
+Administrators add reviewed Traditional Chinese text in the **Job translations** section of `/admin/` (migration `20261114320000`). The rules:
+
+- A translation belongs to one immutable job version (`job_version_translations`). Saving requires the current `versionId`, so a stale form returns 409. A later revision hides the translation until someone reviews the new version, which means readers never see text that describes an older listing.
+- Only fields that the version itself publishes can be translated: the title, summary and responsibilities. Publication already requires every source to permit those fields, so a translation never exceeds the source's rights. Each published responsibility needs exactly one translated line.
+- Every save needs a review note and records the reviewer. Saves and removals write `catalog_audit` (`job.translated`, `job.translation_removed`) without any job text.
+- Public job responses carry `translations["zh-TW"]` (title, summary, responsibilities, reviewedAt) for the current version only. `localizedJobText` in `src/modules/jobs/model.ts` uses it for zh-TW viewers and sets `lang="zh-Hant"`. Job details note that the text is a reviewed translation. Everyone else, and any version without an aligned translation, sees the English source.
+
+Requirement text, company names, search and bookmark snapshots stay in the source language. Lexical search does not index translations yet.
 
 ## Architecture and verification
 

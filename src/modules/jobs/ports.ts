@@ -1,5 +1,13 @@
 import type { Actor } from "../identity/core";
-import type { JobQuery, CatalogPage, PublishedJob, BookmarkPage, JobDraft } from "./model";
+import type {
+  JobQuery,
+  CatalogPage,
+  PublishedJob,
+  BookmarkPage,
+  JobDraft,
+  JobTranslationInput,
+  JobTranslationLocale,
+} from "./model";
 import type { z } from "zod";
 import type { sourcePolicySchema, sourceLinkSchema } from "./model";
 export interface CatalogRepository {
@@ -35,6 +43,18 @@ export interface CatalogAdminRepository {
   observe(
     id: string,
     event: "confirmed_active" | "confirmed_closed" | "network_failure",
+  ): Promise<void>;
+  translate(id: string, input: JobTranslationInput): Promise<void>;
+  removeTranslation(
+    id: string,
+    input: { versionId: string; locale: JobTranslationLocale },
+  ): Promise<void>;
+}
+export interface CatalogTranslationClient {
+  translate(id: string, input: JobTranslationInput): Promise<void>;
+  removeTranslation(
+    id: string,
+    input: { versionId: string; locale: JobTranslationLocale },
   ): Promise<void>;
 }
 export interface CatalogClient {

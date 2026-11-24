@@ -23,6 +23,11 @@ import { OperationsAdministration } from "../operations/administration";
 import { CourseLinkChecks } from "../learning/link-checks";
 import { AiRecipientAdministration } from "./ai-recipients";
 import { AiUsageReport } from "./ai-usage";
+import { JobTranslationAdministration } from "../jobs/translation-admin";
+import {
+  createCatalogClient,
+  createCatalogTranslationClient,
+} from "@/modules/jobs/adapters/http-client";
 import { createRecipientClient, createUsageClient } from "@/modules/gateway/adapters/http-client";
 import { createCourseLinkClient } from "@/modules/course-links/adapters/http-client";
 /** Deployment composition only; each screen consumes an independently replaceable client port. */
@@ -46,6 +51,8 @@ function PrivateAdminWorkspace() {
     courseLinks,
     aiRecipients,
     aiUsage,
+    catalog,
+    jobTranslations,
   } = useMemo(
     () => ({
       client: createImportAdminClient(fetcher),
@@ -60,6 +67,8 @@ function PrivateAdminWorkspace() {
       courseLinks: createCourseLinkClient(fetcher),
       aiRecipients: createRecipientClient(fetcher),
       aiUsage: createUsageClient(fetcher),
+      catalog: createCatalogClient(fetcher),
+      jobTranslations: createCatalogTranslationClient(fetcher),
     }),
     [fetcher],
   );
@@ -98,6 +107,9 @@ function PrivateAdminWorkspace() {
           </AdminSection>
           <AdminSection title={t("Assessment questions and rubrics")}>
             <AssessmentBank client={bank} skills={skills} />
+          </AdminSection>
+          <AdminSection title={t("Job translations")}>
+            <JobTranslationAdministration catalog={catalog} translations={jobTranslations} />
           </AdminSection>
           <AdminSection title={t("Invitations and allowances")}>
             <IdentityAdministration client={identity} />

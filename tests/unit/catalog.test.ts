@@ -5,6 +5,7 @@ import {
   salarySchema,
   sourcePolicySchema,
   catalogUrl,
+  localizedJobText,
 } from "../../src/modules/jobs/model";
 import {
   JobCatalogService,
@@ -97,6 +98,8 @@ describe("catalog contracts and replaceable adapters", () => {
       link: vi.fn(),
       transition: vi.fn(),
       observe: vi.fn(),
+      translate: vi.fn(),
+      removeTranslation: vi.fn(),
     } satisfies CatalogAdminRepository;
     const service = new CatalogAdminService(repo, { authorize: async () => {} });
     await expect(
@@ -112,6 +115,63 @@ describe("catalog contracts and replaceable adapters", () => {
       ),
     ).rejects.toMatchObject({ status: 400 });
     expect(repo.create).not.toHaveBeenCalled();
+  });
+  it("validates reviewed translations before persisting them", async () => {
+    const repo = {
+      source: vi.fn(),
+      sourceStatus: vi.fn(),
+      create: vi.fn(),
+      revise: vi.fn(),
+      link: vi.fn(),
+      transition: vi.fn(),
+      observe: vi.fn(),
+      translate: vi.fn(),
+      removeTranslation: vi.fn(),
+    } satisfies CatalogAdminRepository;
+    const service = new CatalogAdminService(repo, { authorize: async () => {} });
+    const actor = { userId: crypto.randomUUID(), role: "admin" as const };
+    const job = crypto.randomUUID();
+    const input = {
+      versionId: crypto.randomUUID(),
+      locale: "zh-TW",
+      title: " AI 應用工程師 ",
+      summary: "打造可靠的 AI 產品。",
+      responsibilities: ["設計評估流程"],
+      reviewNote: "Reviewed by a bilingual editor",
+    };
+    await service.translate(actor, job, input);
+    expect(repo.translate).toHaveBeenCalledWith(job, { ...input, title: "AI 應用工程師" });
+    for (const bad of [
+      { ...input, locale: "ja" },
+      { ...input, reviewNote: " " },
+      { ...input, extra: true },
+      { ...input, responsibilities: [""] },
+    ])
+      await expect(service.translate(actor, job, bad)).rejects.toMatchObject({ status: 400 });
+    await expect(service.translate(actor, "not-a-job", input)).rejects.toMatchObject({
+      status: 400,
+    });
+    expect(repo.translate).toHaveBeenCalledTimes(1);
+  });
+  it("shows reviewed translations only to zh-TW viewers and only when aligned", () => {
+    const job = {
+      title: "AI Engineer",
+      summary: "Build reliable AI.",
+      responsibilities: ["Design evaluations"],
+      translations: {
+        "zh-TW": {
+          title: "AI 工程師",
+          summary: "打造可靠的 AI。",
+          responsibilities: ["設計評估"],
+          reviewedAt: "2026-11-24T00:00:00Z",
+        },
+      },
+    };
+    expect(localizedJobText(job, "zh-TW")).toMatchObject({ title: "AI 工程師", lang: "zh-Hant" });
+    expect(localizedJobText(job, "en")).toMatchObject({ title: "AI Engineer", lang: "en" });
+    expect(localizedJobText({ ...job, translations: undefined }, "zh-TW").lang).toBe("en");
+    const misaligned = { ...job, responsibilities: ["Design evaluations", "Ship"] };
+    expect(localizedJobText(misaligned, "zh-TW").title).toBe("AI Engineer");
   });
   it("transports cancellation without browser provider credentials and maps safe failures", async () => {
     const fetcher = vi.fn().mockResolvedValue(

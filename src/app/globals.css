@@ -5003,6 +5003,69 @@ input[type="radio"] {
   align-items: end;
 }
 
+.job-translations {
+  display: grid;
+  gap: 14px;
+  min-width: 0;
+}
+.job-translation-results {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 240px), 1fr));
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.job-translation-results button {
+  display: grid;
+  gap: 2px;
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--ink);
+  text-align: left;
+  cursor: pointer;
+}
+.job-translation-results button.selected {
+  border-color: var(--green);
+  box-shadow: 0 0 0 2px var(--mint);
+}
+.job-translation-results small {
+  color: var(--muted);
+}
+.job-translation-form {
+  display: grid;
+  gap: 12px;
+}
+.job-translation-pair {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr));
+  gap: 12px;
+  align-items: start;
+}
+.job-translation-pair .source {
+  margin: 0;
+  padding: 10px 12px;
+  border-left: 3px solid var(--lime);
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  background: var(--bg);
+  color: var(--ink);
+  line-height: 1.6;
+}
+.job-translation-pair label {
+  display: grid;
+  gap: 6px;
+}
+.job-translation-pair label span {
+  color: var(--muted);
+  font-size: 12px;
+}
+.job-translation-note {
+  font-size: 12px;
+}
+
 .ai-usage {
   display: grid;
   gap: 18px;

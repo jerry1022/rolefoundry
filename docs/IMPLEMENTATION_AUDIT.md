@@ -19,7 +19,7 @@ The integration suite runs against actual local GoTrue, PostgREST, PostgreSQL an
 ## 03 — Job catalog and search
 
 - Design: [03-job-catalog-search.md](design/03-job-catalog-search.md).
-- Status: Catalog, source governance and private bookmarks implemented; see [setup and evidence](CATALOG_SETUP.md). Full aliases/personalization/ingestion/application history depend on 04/06/09/10 and remain in this audit.
+- Status: Catalog, source governance and private bookmarks implemented; see [setup and evidence](CATALOG_SETUP.md). Full aliases/personalization/ingestion/application history depend on 04/06/09/10 and remain in this audit. Administrators can add [reviewed zh-TW translations](CATALOG_SETUP.md#reviewed-translations) bound to one published version.
 - Required acceptance scope: Verify bilingual aliases, combined filters, stable pagination, no duplicate canonical openings, undisclosed salaries, source closure and network failure. Check that retired jobs are excluded from recommendations while historical tracking remains readable. Ensure private bookmarks cannot be enumerated by another user.
 
 ## 04 — Skill dictionary
