@@ -239,6 +239,11 @@ test("Traditional Chinese persists across reloads, formats salaries and fits mob
   await expect(page.locator("html")).toHaveAttribute("lang", "zh-TW");
   await expect(page.locator("h1")).toHaveText("找到屬於你的下一步。");
   await expect(page.locator(".job-card").first()).toContainText("NT$10萬–16萬 / 月");
+  // Demo role text follows the locale and is marked as Traditional Chinese.
+  await expect(page.locator(".job-card h3[lang='zh-Hant']").first()).toBeVisible();
+  await page.locator(".search-input input").fill("成長分析師");
+  await expect(page.locator(".job-card h3")).toHaveText(["AI 成長分析師"]);
+  await page.locator(".search-input input").fill("");
   await expect(page.getByRole("link", { name: "探索職缺", exact: true })).toBeVisible();
   // Filters keep English values internally while showing translated labels.
   await page.getByRole("combobox", { name: "工作型態" }).selectOption({ label: "遠端" });
