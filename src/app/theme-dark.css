@@ -7,7 +7,7 @@
   --ink: #e8f1ec;
   --ink-2: #c9d8cf;
   --muted: #9cb0a5;
-  --muted-2: #7f9489;
+  --muted-2: #8fa398;
   --line: #24352e;
   --line-strong: #31473e;
   --mint: #16302a;
@@ -39,40 +39,40 @@
   background: rgb(30 32 26);
 }
 :root[data-theme="dark"] .career-path-card small {
-  color: rgb(105 116 94);
+  color: rgb(139 148 131);
 }
 :root[data-theme="dark"] .career-guide-heading > div > p:last-child {
-  color: rgb(111 126 100);
+  color: rgb(138 150 129);
 }
 :root[data-theme="dark"] .career-guide-columns ol {
-  color: rgb(111 126 100);
+  color: rgb(138 150 129);
 }
 :root[data-theme="dark"] .career-guide-columns ul {
-  color: rgb(111 126 100);
+  color: rgb(138 150 129);
 }
 :root[data-theme="dark"] .career-guide-columns > div > p {
-  color: rgb(111 126 100);
+  color: rgb(138 150 129);
 }
 :root[data-theme="dark"] .career-guide-note {
-  color: rgb(104 114 94);
+  color: rgb(139 147 132);
 }
 :root[data-theme="dark"] .job-specialization {
-  color: rgb(115 138 97);
+  color: rgb(133 153 118);
 }
 :root[data-theme="dark"] .account-demo > svg {
-  color: rgb(104 129 88);
+  color: rgb(132 152 120);
 }
 :root[data-theme="dark"] .account-demo > p {
-  color: rgb(111 129 101);
+  color: rgb(135 150 127);
 }
 :root[data-theme="dark"] .account-consent > p {
-  color: rgb(111 129 101);
+  color: rgb(135 150 127);
 }
 :root[data-theme="dark"] .account-consent > small {
-  color: rgb(102 117 92);
+  color: rgb(138 148 130);
 }
 :root[data-theme="dark"] .account-usage .stat-number small {
-  color: rgb(105 122 89);
+  color: rgb(137 150 125);
 }
 :root[data-theme="dark"] .skip-link {
   background: var(--green);
@@ -100,10 +100,10 @@
   border-radius: 50%;
 }
 :root[data-theme="dark"] .breadcrumb svg {
-  color: rgb(114 129 114);
+  color: rgb(135 147 135);
 }
 :root[data-theme="dark"] .slash {
-  color: rgb(87 93 84);
+  color: rgb(142 146 140);
 }
 :root[data-theme="dark"] .demo-pill {
   border: 1px solid rgb(56 60 52);
@@ -131,13 +131,13 @@
   border-radius: 5px;
 }
 :root[data-theme="dark"] .stat-icon {
-  color: rgb(122 142 117);
+  color: rgb(133 150 127);
 }
 :root[data-theme="dark"] .section-heading p {
-  color: rgb(111 119 107);
+  color: rgb(142 148 139);
 }
 :root[data-theme="dark"] .icon-button {
-  color: rgb(103 110 97);
+  color: rgb(141 146 137);
 }
 :root[data-theme="dark"] .skill-tag {
   border: 1px solid rgb(53 56 50);
@@ -149,21 +149,21 @@
   border-top: 1px solid rgb(53 56 49);
 }
 :root[data-theme="dark"] .next-step-top .mini-label {
-  color: rgb(127 115 92);
+  color: rgb(151 142 124);
 }
 :root[data-theme="dark"] .pill {
   border: 1px solid rgb(56 58 51);
 }
 :root[data-theme="dark"] .next-step-top .pill {
-  color: rgb(117 106 88);
+  color: rgb(152 143 130);
   border-color: rgb(63 60 53);
   background: rgb(26 32 27);
 }
 :root[data-theme="dark"] .provider-dot {
-  color: rgb(140 85 55);
+  color: rgb(171 133 112);
 }
 :root[data-theme="dark"] .provider-dot span {
-  color: rgb(122 117 104);
+  color: rgb(147 143 132);
 }
 :root[data-theme="dark"] .round-button {
   border-radius: 50%;
@@ -173,53 +173,53 @@
 }
 :root[data-theme="dark"] .search-input {
   border: 1px solid rgb(57 61 53);
-  color: rgb(107 117 98);
+  color: rgb(138 146 131);
 }
 :root[data-theme="dark"] .search-input input::placeholder {
-  color: rgb(103 111 95);
+  color: rgb(140 147 135);
 }
 :root[data-theme="dark"] .filter-row label {
-  color: rgb(111 122 100);
+  color: rgb(138 147 129);
 }
 :root[data-theme="dark"] .filter-row select {
-  color: rgb(125 142 114);
+  color: rgb(135 150 125);
 }
 :root[data-theme="dark"] .filter-button {
-  color: rgb(114 128 103);
+  color: rgb(138 150 130);
 }
 :root[data-theme="dark"] .filter-button.selected {
   background: rgb(32 36 28);
   border-color: rgb(62 70 54);
 }
 :root[data-theme="dark"] .results-heading {
-  color: rgb(111 123 102);
+  color: rgb(139 148 131);
 }
 :root[data-theme="dark"] .empty-state {
-  color: rgb(108 120 93);
+  color: rgb(138 149 128);
 }
 :root[data-theme="dark"] .empty-state h2 {
-  color: rgb(127 149 116);
+  color: rgb(130 152 120);
 }
 :root[data-theme="dark"] .empty-state h3 {
-  color: rgb(127 149 116);
+  color: rgb(130 152 120);
 }
 :root[data-theme="dark"] .modal {
   border: 1px solid rgb(57 61 53);
 }
 :root[data-theme="dark"] .muted {
-  color: rgb(113 125 103);
+  color: rgb(137 147 128);
 }
 :root[data-theme="dark"] .detail-summary {
-  color: rgb(122 137 111);
+  color: rgb(135 149 125);
 }
 :root[data-theme="dark"] .detail-list {
-  color: rgb(115 130 105);
+  color: rgb(135 149 127);
 }
 :root[data-theme="dark"] .fine-print {
-  color: rgb(106 116 95);
+  color: rgb(141 148 132);
 }
 :root[data-theme="dark"] .field-label {
-  color: rgb(114 129 100);
+  color: rgb(138 150 127);
 }
 :root[data-theme="dark"] .text-input {
   border: 1px solid rgb(57 60 53);
@@ -230,13 +230,13 @@
   border: 1px solid rgb(55 58 51);
 }
 :root[data-theme="dark"] .skill-checklist small {
-  color: rgb(101 113 90);
+  color: rgb(140 149 132);
 }
 :root[data-theme="dark"] .evidence-item {
   border-bottom: 1px solid rgb(53 55 49);
 }
 :root[data-theme="dark"] .evidence-item p {
-  color: rgb(106 115 95);
+  color: rgb(140 147 132);
 }
 :root[data-theme="dark"] .answer-option {
   border: 1px solid rgb(55 58 51);
@@ -244,22 +244,22 @@
 :root[data-theme="dark"] .answer-explanation {
   border-left: 3px solid rgb(68 82 55);
   background: rgb(27 29 23);
-  color: rgb(117 133 105);
+  color: rgb(137 151 127);
 }
 :root[data-theme="dark"] .large-icon {
   background: rgb(32 36 27);
 }
 :root[data-theme="dark"] .assessment-aside p {
-  color: rgb(108 120 95);
+  color: rgb(138 148 129);
 }
 :root[data-theme="dark"] .resume-review > p {
-  color: rgb(108 120 95);
+  color: rgb(138 148 129);
 }
 :root[data-theme="dark"] .assessment-aside small {
-  color: rgb(103 114 90);
+  color: rgb(138 147 129);
 }
 :root[data-theme="dark"] .plain-list {
-  color: rgb(108 122 94);
+  color: rgb(139 150 129);
 }
 :root[data-theme="dark"] .learning-hero {
   color: #f0f6e8;
@@ -271,58 +271,58 @@
   background: rgb(21 26 21);
 }
 :root[data-theme="dark"] .gap-strip {
-  color: rgb(111 123 98);
+  color: rgb(138 147 128);
 }
 :root[data-theme="dark"] .course-card {
   background: rgb(21 26 21);
 }
 :root[data-theme="dark"] .course-format {
-  color: rgb(101 110 91);
+  color: rgb(139 146 132);
 }
 :root[data-theme="dark"] .course-card > p {
-  color: rgb(108 122 94);
+  color: rgb(139 150 129);
 }
 :root[data-theme="dark"] .course-reason {
-  color: rgb(109 132 90);
+  color: rgb(133 152 118);
   background: rgb(28 31 25);
 }
 :root[data-theme="dark"] .exercise {
   border-top: 1px solid rgb(53 55 49);
 }
 :root[data-theme="dark"] .exercise strong {
-  color: rgb(105 122 86);
+  color: rgb(138 150 123);
 }
 :root[data-theme="dark"] .exercise p {
-  color: rgb(108 123 96);
+  color: rgb(136 148 127);
 }
 :root[data-theme="dark"] .course-actions {
   border-top: 1px solid rgb(53 55 49);
 }
 :root[data-theme="dark"] .completion-button {
-  color: rgb(101 111 90);
+  color: rgb(140 147 132);
 }
 :root[data-theme="dark"] .completion-button.done {
-  color: rgb(107 149 96);
+  color: rgb(119 157 108);
 }
 :root[data-theme="dark"] .resume-editor textarea {
   border: 1px solid rgb(56 59 52);
   background: rgb(21 27 22);
-  color: rgb(123 143 111);
+  color: rgb(134 151 122);
 }
 :root[data-theme="dark"] .editor-footer {
-  color: rgb(102 110 92);
+  color: rgb(140 146 134);
 }
 :root[data-theme="dark"] .review-item {
-  color: rgb(106 123 86);
+  color: rgb(137 151 122);
 }
 :root[data-theme="dark"] .pipeline-summary {
   border: 1px solid rgb(58 62 51);
 }
 :root[data-theme="dark"] .pipeline-summary span {
-  color: rgb(110 127 96);
+  color: rgb(135 148 124);
 }
 :root[data-theme="dark"] .pipeline-summary p {
-  color: rgb(108 123 96);
+  color: rgb(136 148 127);
 }
 :root[data-theme="dark"] .stage-dot {
   background: rgb(57 64 50);
@@ -340,39 +340,39 @@
   background: rgb(68 66 59);
 }
 :root[data-theme="dark"] .column-count {
-  color: rgb(100 113 87);
+  color: rgb(139 148 130);
 }
 :root[data-theme="dark"] .application-card {
   background: rgb(21 26 21);
   border: 1px solid rgb(56 60 52);
 }
 :root[data-theme="dark"] .application-card > small {
-  color: rgb(102 111 92);
+  color: rgb(140 147 133);
 }
 :root[data-theme="dark"] .application-card select {
   border: 1px solid rgb(56 60 51);
-  color: rgb(109 124 94);
+  color: rgb(136 149 124);
   background: rgb(23 28 23);
 }
 :root[data-theme="dark"] .application-card textarea {
   border: 1px solid rgb(55 57 51);
-  color: rgb(111 130 95);
+  color: rgb(135 151 123);
 }
 :root[data-theme="dark"] .kanban-empty {
   border: 1px dashed rgb(59 64 53);
-  color: rgb(97 108 85);
+  color: rgb(140 147 131);
 }
 :root[data-theme="dark"] td {
   border-bottom: 1px solid rgb(53 55 49);
 }
 :root[data-theme="dark"] .roadmap-item > svg {
-  color: rgb(103 121 82);
+  color: rgb(135 149 120);
 }
 :root[data-theme="dark"] .roadmap-item p {
-  color: rgb(107 120 91);
+  color: rgb(138 149 127);
 }
 :root[data-theme="dark"] .reset-panel p {
-  color: rgb(105 118 93);
+  color: rgb(140 149 131);
 }
 :root[data-theme="dark"] .architecture-map {
   border: 1px solid rgb(57 61 52);
@@ -380,7 +380,7 @@
 :root[data-theme="dark"] .arch-node {
   border: 1px solid rgb(57 62 51);
   background: rgb(21 26 21);
-  color: rgb(111 136 92);
+  color: rgb(132 153 117);
 }
 :root[data-theme="dark"] .primary-node {
   color: #c4dbaf;
@@ -466,7 +466,7 @@
   box-shadow: 0 0 0 3px rgb(200 241 105 / 18%);
 }
 :root[data-theme="dark"] .nav-label {
-  color: rgb(102 126 114);
+  color: rgb(132 150 140);
 }
 :root[data-theme="dark"] .nav-item {
   color: #b9cbc1;
@@ -728,27 +728,27 @@
 }
 :root[data-theme="dark"] .mint {
   background: rgb(26 37 31);
-  color: rgb(70 156 119);
+  color: rgb(88 164 130);
 }
 :root[data-theme="dark"] .lilac {
   background: rgb(35 33 43);
-  color: rgb(131 121 233);
+  color: rgb(135 126 238);
 }
 :root[data-theme="dark"] .peach {
   background: rgb(41 31 26);
-  color: rgb(189 89 52);
+  color: rgb(200 116 87);
 }
 :root[data-theme="dark"] .yellow {
   background: rgb(36 31 14);
-  color: rgb(152 121 26);
+  color: rgb(167 141 73);
 }
 :root[data-theme="dark"] .blue {
   background: rgb(29 35 41);
-  color: rgb(87 142 198);
+  color: rgb(96 148 201);
 }
 :root[data-theme="dark"] .rose {
   background: rgb(42 32 35);
-  color: rgb(202 94 121);
+  color: rgb(210 108 133);
 }
 :root[data-theme="dark"] .job-card::before {
   background: linear-gradient(
@@ -780,7 +780,7 @@
   border-color: rgb(66 58 49);
 }
 :root[data-theme="dark"] .next-step-panel > p {
-  color: rgb(149 131 111);
+  color: rgb(158 140 123);
 }
 :root[data-theme="dark"] .course-icon {
   background: linear-gradient(140deg, rgb(54 35 25), rgb(79 42 23));
