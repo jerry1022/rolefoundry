@@ -53,6 +53,9 @@ import { msg, useI18n } from "@/lib/i18n";
 import { careerPaths, getCareerPath, type CareerPathId } from "@/lib/career-paths";
 import { CareerPathBrowser } from "./career-path-browser";
 
+/** Gap recommendations show the best few; "All resources" lists the full catalog. */
+const recommendationLimit = 6;
+
 const workplaceOptions = [msg("Any workplace"), msg("Remote"), msg("Hybrid"), msg("On-site")];
 
 /** Fixture salaries are authored as "NT$90k–140k / month"; re-render them per locale. */
@@ -919,7 +922,7 @@ export function AssessmentsScreen() {
 
 export function LearningScreen() {
   const { state, update } = useWorkspace();
-  const { t } = useI18n();
+  const { t, fmt } = useI18n();
   const skillNames = useSkillNames();
   const [targetId, setTargetId] = useState(jobs[0].id);
   const [showAll, setShowAll] = useState(false);
@@ -932,7 +935,7 @@ export function LearningScreen() {
         addresses: course.skills.filter((s) => gaps.includes(s)),
         prerequisitesMissing: course.prerequisites.filter((s) => !state.knownSkills.includes(s)),
       }))
-    : recommended;
+    : recommended.slice(0, recommendationLimit);
   return (
     <>
       <PageHeading
@@ -1003,6 +1006,9 @@ export function LearningScreen() {
               </span>
               <h2>{course.title}</h2>
               <p>{course.summary}</p>
+              <small className="course-reviewed">
+                {t("Catalog details checked {date}", { date: fmt.date(course.reviewedAt) })}
+              </small>
               <div className="tags">
                 {course.skills.map((s) => (
                   <SkillTag key={s} skill={s} />
@@ -1055,6 +1061,17 @@ export function LearningScreen() {
           );
         })}
       </div>
+      {!showAll && recommended.length > recommendationLimit && (
+        <p className="muted section-block">
+          {t("Showing the {shown} best matches of {total}.", {
+            shown: recommendationLimit,
+            total: recommended.length,
+          })}{" "}
+          <button className="text-link" onClick={() => setShowAll(true)}>
+            {t("Browse all resources")}
+          </button>
+        </p>
+      )}
       {!display.length && (
         <div className="empty-state">
           <CheckCircle2 size={30} />
