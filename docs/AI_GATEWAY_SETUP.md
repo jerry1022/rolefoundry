@@ -101,7 +101,6 @@ Five integration cases run against the real local stack: administrator-only, aud
 ## Remaining gates
 
 - Provider selection from live evaluation with authorized credentials, plus reviewed retention/data-use terms for every recipient before approval.
-- Recipient-specific wording for the original `assessment`/`resume` consent text, which still names "the configured AI provider". The new `matching` policy already refers to approved recipients.
 - Worker integration for resume wording proposals (individual acceptance unchanged). [Semantic matching](MATCHING_SETUP.md#optional-semantic-ordering) is integrated as tie-only ordering with a rules fallback, recording and identity budget handling.
 - Resume wording needs a reviewed data-model decision first. `resume-order-v1` proposals only reorder confirmed facts, and claim links point at exact confirmed fact text. An accepted rewording must create a new owner-confirmed fact version, keeping the original fact and claim history, and a `resume-wording-v1` recipe whose validation reuses `preservesFacts`. The owner must explicitly confirm the reworded text.
 - Provider cost in currency (tokens are recorded) and an embedding index with isolated reindexing.
