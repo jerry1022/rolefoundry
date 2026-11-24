@@ -4,6 +4,7 @@ import { applications } from "./applications";
 import { architecture } from "./architecture";
 import { assessmentMatching } from "./assessment-matching";
 import { catalog } from "./catalog";
+import { common } from "./common";
 import { dashboard } from "./dashboard";
 import { learning } from "./learning";
 import { learningWorkspace } from "./learning-workspace";
@@ -20,6 +21,7 @@ import { vocabulary } from "./vocabulary";
  */
 export const zhTWSections = {
   vocabulary,
+  common,
   shell,
   catalog,
   dashboard,

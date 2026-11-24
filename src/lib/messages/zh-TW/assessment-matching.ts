@@ -72,7 +72,6 @@ export const assessmentMatching = {
   "Question version": "題目版本",
   Track: "方向",
   "Question track": "題目方向",
-  Skill: "技能",
   "Question skill": "題目技能",
   Rubric: "評分準則",
   "Question rubric": "題目評分準則",
@@ -93,7 +92,6 @@ export const assessmentMatching = {
   "Reviewed scenarios support a learning preview. Review does not claim professional calibration or certification. Correct-answer data in this panel is restricted to administrators.":
     "經審核的情境題用於學習預覽。審核不代表專業校準或認證。此面板中的正確答案資料僅限管理員查看。",
   "Review versions for selection": "審核可供選用的版本",
-  "Review reason": "審核原因",
   "Question review reason": "題目審核原因",
   "{key} version {version}": "{key} 第 {version} 版",
   "Reviewed for selection": "已審核可選用",
@@ -173,7 +171,6 @@ export const assessmentMatching = {
   "{count} source roles · Rule-based analysis · {date}. Conditions and evidence describe the saved inputs for this report.":
     "{count} 個來源職缺 · 規則式分析 · {date}。條件與證據描述的是這份報告已儲存的輸入。",
   "Saved relevant experience: {value}.": "已儲存的相關經驗：{value}。",
-  "Not supplied": "未提供",
   "{years} years (self-reported)": "{years} 年（自述）",
   "No published roles matched the selected direction. Try a specific target or review the catalog later.":
     "沒有公開職缺符合所選方向。請試著指定目標職缺，或稍後再查看職缺目錄。",

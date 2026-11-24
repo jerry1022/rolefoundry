@@ -13,7 +13,7 @@ The workspace shell and every demo screen are available in English and Tradition
 ## Adding or changing text
 
 1. Wrap UI text in `t("…")` inside components. For messages defined outside a component (navigation, option lists), wrap the literal in `msg("…")` and render it with `t(value)`.
-2. Add the Traditional Chinese entry to the matching area file in `src/lib/messages/zh-TW/` (`shell`, `catalog`, `dashboard`, `profile`, `learning`, `resume`, `applications`, `admin`, `architecture`, or `vocabulary` for short shared data labels). A newly localized screen gets its own file, registered in `index.ts`.
+2. Add the Traditional Chinese entry to the matching area file in `src/lib/messages/zh-TW/` (`shell`, `catalog`, `dashboard`, `profile`, `learning`, `resume`, `applications`, `admin`, `architecture`, `vocabulary` for short shared data labels, or `common` for generic UI words used by several areas). A newly localized screen gets its own file, registered in `index.ts`.
 3. Run `npm run i18n:check`. CI runs it too, and fails on missing, unused or duplicated keys. Unit tests also require every placeholder to appear in its translation.
 
 Keep `t()` arguments literal. The checker extracts literals, so `t(cond ? "A" : "B")` hides keys; write `cond ? t("A") : t("B")`.

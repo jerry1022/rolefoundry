@@ -27,7 +27,6 @@ export const resumeTracking = {
   "Confirmed version {version}. New wording from a model is not enabled; the current suggestion reorders existing statements only.":
     "已確認版本 {version}。尚未啟用模型產生的新措辭；目前的建議只會調整既有敘述的順序。",
   "Resume target role": "履歷目標職缺",
-  "Choose a published role": "選擇已發布的職缺",
   "Load more resume target roles": "載入更多目標職缺",
   "Suggest a fact-preserving order": "建議保留事實的排序",
   "Create a fixed PDF export": "建立固定版本的 PDF 匯出",

@@ -19,7 +19,6 @@ export const learningWorkspace = {
   "Choose a target role. Planning reads fresh job and evidence versions; it does not require a previous assessment or matching report.":
     "選擇目標職缺。規劃時會讀取最新的職缺與證據版本，不需要先完成評量或媒合報告。",
   "Learning target role": "學習目標職缺",
-  "Choose a published role": "選擇已發布的職缺",
   "Load more learning target roles": "載入更多目標職缺",
   "Weekly learning hours": "每週學習時數",
   "Adjust planning estimates to your pace": "依你的步調調整規劃時間",
@@ -41,7 +40,6 @@ export const learningWorkspace = {
   // Course catalog
   Unknown: "未知",
   Advanced: "進階",
-  Skill: "技能",
   Difficulty: "難度",
   "The course catalog is unavailable.": "課程目錄目前無法使用。",
   "Reviewed course resources": "審核過的課程資源",
@@ -64,7 +62,6 @@ export const learningWorkspace = {
   "Availability or metadata needs confirmation": "開放狀態或資料需要確認",
   "Retired resource": "已停用資源",
   "Last reviewed: {date}.": "最後審核：{date}。",
-  "Not supplied": "未提供",
   "Prerequisite skills: {skills}. Required foundation resources: {count}.":
     "先備技能：{skills}。必要基礎資源：{count} 項。",
   "None listed": "未列出",
@@ -197,7 +194,6 @@ export const learningWorkspace = {
   "Course draft editor selection": "課程草稿編輯選擇",
   "New course": "新課程",
   "Review and source status": "審核與來源狀態",
-  "Review reason": "審核原因",
   "Course review reason": "課程審核原因",
   "Draft version {version}": "草稿版本 {version}",
   Retired: "已停用",
