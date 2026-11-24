@@ -209,4 +209,26 @@ export const assessmentMatching = {
   "Inspect the original role and prepare examples that demonstrate the linked skills.":
     "查看原始職缺，並準備能展現相關技能的實例。",
   "Review published roles and original sources": "檢視公開職缺與原始來源",
+  // Optional AI-assisted ordering of equally rated roles.
+  "Use AI-assisted ordering for equal results": "對評分相同的職缺使用 AI 輔助排序",
+  "Needs your semantic ranking permission and uses one weekly allowance. It only orders roles the rules rate equally; strengths, gaps and conditions stay rule-based.":
+    "需要你的語意排序同意，並使用一次每週額度。只會排序規則評分相同的職缺；優勢、落差與條件仍以規則判斷。",
+  "Strengths, gaps and conditions are rule-based. Only the order of equally rated roles may use an approved AI provider. It does not decide employment eligibility.":
+    "優勢、落差與條件皆以規則判斷，只有評分相同職缺的順序可能使用經核准的 AI 服務供應商；不會決定是否符合任用資格。",
+  "AI-assisted ordering needs your semantic ranking permission in Account & privacy. This report uses rules only.":
+    "AI 輔助排序需要你在「帳號與隱私」中同意語意排序；這份報告僅使用規則。",
+  "Your weekly AI allowance is used up. This report uses rules only.":
+    "本週 AI 額度已用完；這份報告僅使用規則。",
+  "AI-assisted ordering is unavailable right now. This report uses rules only.":
+    "目前無法使用 AI 輔助排序；這份報告僅使用規則。",
+  "AI ordering was not needed: the rules already ordered every role. Your allowance was returned.":
+    "不需要 AI 排序：規則已能排序所有職缺，額度已退還。",
+  "AI ordering is not enabled on this deployment. Rules order shown; your allowance was returned.":
+    "此部署未啟用 AI 排序。顯示規則順序，額度已退還。",
+  "Permission was withdrawn before AI ordering ran. Rules order shown.":
+    "AI 排序執行前同意已撤回，顯示規則順序。",
+  "AI ordering could not complete, so the rules order is shown.":
+    "AI 排序未能完成，因此顯示規則順序。",
+  "Equal rule results were ordered with AI assistance (semantic-rank-v1).":
+    "評分相同的結果已使用 AI 輔助排序（semantic-rank-v1）。",
 } satisfies Messages;

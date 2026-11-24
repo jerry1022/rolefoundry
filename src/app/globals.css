@@ -5002,3 +5002,28 @@ input[type="radio"] {
   gap: 12px;
   align-items: end;
 }
+
+.matching-ai-option {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  margin: 20px 0 4px;
+  padding: 14px 16px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: linear-gradient(90deg, #f3f0ff 0%, #f7fbf4 100%);
+}
+.matching-ai-option input {
+  margin-top: 3px;
+}
+.matching-ai-option span {
+  display: grid;
+  gap: 4px;
+}
+.matching-ai-option small {
+  color: var(--muted);
+  line-height: 1.6;
+}
+.matching-ranking {
+  margin-top: 8px;
+}

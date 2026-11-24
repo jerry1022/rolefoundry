@@ -233,13 +233,23 @@ export const matchResultSchema = z
   })
   .strict();
 export const refreshMatchSchema = z
-  .object({ jobId: z.uuid().nullable(), constraints: matchConstraintsSchema })
+  .object({
+    jobId: z.uuid().nullable(),
+    constraints: matchConstraintsSchema,
+    /** Opt-in semantic tie-breaking; needs `matching` consent and weekly allowance. */
+    semantic: z.boolean().optional(),
+  })
   .strict();
 export type RefreshMatchInput = z.infer<typeof refreshMatchSchema>;
+export const semanticRequestStateSchema = z.object({
+  state: z.enum(["not-requested", "reserved", "unavailable"]),
+  code: z.string().nullable(),
+});
 export const matchTaskSchema = z.object({
   runId: z.uuid(),
   taskId: z.uuid(),
   status: z.enum(["queued", "running", "failed", "succeeded"]),
+  semantic: semanticRequestStateSchema.optional(),
 });
 export type MatchTask = z.infer<typeof matchTaskSchema>;
 const runStatus = z.enum(["queued", "running", "succeeded", "failed", "invalidated"]);
@@ -252,6 +262,14 @@ export const matchRunSchema = z.object({
   catalogRevision: z.number().int().nonnegative(),
   dictionaryVersion: z.number().int().positive(),
   recipe: z.literal("rules-v1"),
+  /** Which ordering actually applied; structured results are always rules-v1. */
+  ranking: z
+    .object({
+      recipe: z.enum(["rules-v1", "rules-v1+semantic-rank-v1"]),
+      state: z.enum(["not-requested", "applied", "fallback"]),
+      code: z.string().nullable(),
+    })
+    .optional(),
   createdAt: z.string(),
   finishedAt: z.string().nullable(),
   stale: z.boolean(),

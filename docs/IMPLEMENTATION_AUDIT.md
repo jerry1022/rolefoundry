@@ -37,7 +37,7 @@ The integration suite runs against actual local GoTrue, PostgREST, PostgreSQL an
 ## 06 — Matching and gap analysis
 
 - Design: [06-matching-gaps.md](design/06-matching-gaps.md).
-- Status: Deterministic private path implemented: sealed snapshots, real task execution, source-cited reports/API/UI, version guards and immediate deletion purge. See [setup and verification scope](MATCHING_SETUP.md). Required semantic ranking remains pending integration with module 11; rule-only fallback is implemented. Human relevance review and semantic/model recipe evaluation remain release gates.
+- Status: Deterministic private path implemented: sealed snapshots, real task execution, source-cited reports/API/UI, version guards and immediate deletion purge. See [setup and verification scope](MATCHING_SETUP.md). [Opt-in semantic tie ordering](MATCHING_SETUP.md#optional-semantic-ordering) through module 11 is integrated with consent/allowance reservation, recorded attempts and rule-only fallback; live provider quality evaluation remains pending. Human relevance review and semantic/model recipe evaluation remain release gates.
 - Required acceptance scope: Test hard conflicts versus unknowns, mandatory versus preferred requirements, empty profiles, unrelated jobs, duplicate skills, stale versions and deterministic ordering. Human review must confirm that every reported strength or gap has supporting source data.
 
 ## 07 — Course catalog and learning plans
@@ -67,7 +67,7 @@ The integration suite runs against actual local GoTrue, PostgREST, PostgreSQL an
 ## 11 — AI Gateway
 
 - Design: [11-ai-gateway.md](design/11-ai-gateway.md).
-- Status: Partial: [provider-neutral gateway core](AI_GATEWAY_SETUP.md) with routing policy, OpenAI-compatible/fake adapters, bounded retry/single transient fallback/repair, reference and fact checks, consent-recipient admission backed by identity tasks/consent/quota with reviewed per-version recipients and content-free attempt/usage records, embedding-space isolation and a fixed bilingual evaluation set implemented and verified with fake adapters. Provider selection/live evaluation, recipient-specific consent wording and worker integration for semantic matching and resume wording remain pending.
+- Status: Partial: [provider-neutral gateway core](AI_GATEWAY_SETUP.md) with routing policy, OpenAI-compatible/fake adapters, bounded retry/single transient fallback/repair, reference and fact checks, consent-recipient admission backed by identity tasks/consent/quota with reviewed per-version recipients and content-free attempt/usage records, embedding-space isolation and a fixed bilingual evaluation set implemented and verified with fake adapters. Semantic matching tie ordering is integrated. Provider selection/live evaluation, recipient-specific wording for the original consents and resume wording integration remain pending.
 - Required acceptance scope: Use fake adapters for malformed JSON, absent fact IDs, invented course IDs, quota errors, prompt-injection content, timeouts and deleted owners. Run explicit live-provider evaluation separately after credentials and data use are authorized. No live provider is required to run scaffold tests.
 
 ## 12 — Background worker and tasks

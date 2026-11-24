@@ -8,11 +8,14 @@ export function MatchingConditionsForm({
   target,
   workplaces,
   busy,
+  aiOrdering = false,
   onSubmit,
 }: {
   target: PublishedJob | null;
   workplaces: string[];
   busy: boolean;
+  /** True when the owner asked for AI-assisted ordering of equal results. */
+  aiOrdering?: boolean;
   onSubmit: (constraints: MatchConstraints) => void;
 }) {
   const { t } = useI18n();
@@ -109,9 +112,13 @@ export function MatchingConditionsForm({
         </button>
       </fieldset>
       <p className="fine-print">
-        {t(
-          "This rule-based analysis uses no external AI provider or AI allowance. It helps you explore opportunities; it does not decide employment eligibility.",
-        )}
+        {aiOrdering
+          ? t(
+              "Strengths, gaps and conditions are rule-based. Only the order of equally rated roles may use an approved AI provider. It does not decide employment eligibility.",
+            )
+          : t(
+              "This rule-based analysis uses no external AI provider or AI allowance. It helps you explore opportunities; it does not decide employment eligibility.",
+            )}
       </p>
     </form>
   );
