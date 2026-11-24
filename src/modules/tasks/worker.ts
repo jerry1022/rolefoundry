@@ -1,7 +1,11 @@
 import { TaskFailure, type TaskKind, type TaskLease } from "./model";
 import type { TaskQueue, TaskHandler, TaskLog } from "./ports";
+import { taskResourcePool, taskResourceLimitsSchema, type TaskResourceLimits } from "./resources";
 /** Queue/framework-independent worker; lease ownership remains authoritative in storage. */
 export class TaskWorker {
+  private acquiring = false;
+  private readonly active: TaskResourceLimits = { documents: 0, fetch: 0, general: 0 };
+  private readonly resources: TaskResourceLimits;
   constructor(
     private readonly queue: TaskQueue,
     private readonly handlers: Partial<Record<TaskKind, TaskHandler>>,
@@ -9,6 +13,7 @@ export class TaskWorker {
       workerId: string;
       leaseSeconds: number;
       concurrency: number;
+      resourceLimits?: TaskResourceLimits;
       executionTimeoutMs?: number;
       log?: (event: TaskLog) => void;
     },
@@ -18,22 +23,73 @@ export class TaskWorker {
       options.leaseSeconds > 300 ||
       options.concurrency < 1 ||
       options.concurrency > 8 ||
+      !Number.isInteger(options.leaseSeconds) ||
+      !Number.isInteger(options.concurrency) ||
       !Number.isInteger(options.executionTimeoutMs ?? 60_000) ||
       (options.executionTimeoutMs ?? 60_000) < 100 ||
       (options.executionTimeoutMs ?? 60_000) > 300_000
     )
       throw new Error("Invalid worker limits");
+    this.resources = taskResourceLimitsSchema.parse(
+      options.resourceLimits ?? {
+        documents: options.concurrency,
+        fetch: options.concurrency,
+        general: options.concurrency,
+      },
+    );
   }
   async tick(signal: AbortSignal) {
-    if (signal.aborted) return 0;
-    const leases = await this.queue.read(
-      this.options.workerId,
-      Object.keys(this.handlers) as TaskKind[],
-      this.options.leaseSeconds,
-      this.options.concurrency,
-    );
-    await Promise.all(leases.map((lease) => this.process(lease, signal)));
-    return leases.length;
+    const available =
+      this.options.concurrency - Object.values(this.active).reduce((a, b) => a + b, 0);
+    const limits: TaskResourceLimits = {
+      documents: Math.max(0, this.resources.documents - this.active.documents),
+      fetch: Math.max(0, this.resources.fetch - this.active.fetch),
+      general: Math.max(0, this.resources.general - this.active.general),
+    };
+    if (signal.aborted || this.acquiring || available <= 0 || !Object.values(limits).some(Boolean))
+      return 0;
+    const accepted: TaskLease[] = [],
+      rejected: TaskLease[] = [];
+    this.acquiring = true;
+    try {
+      const args = [
+        this.options.workerId,
+        Object.keys(this.handlers) as TaskKind[],
+        this.options.leaseSeconds,
+        available,
+      ] as const;
+      const leases = this.options.resourceLimits
+        ? await this.queue.read(...args, limits)
+        : await this.queue.read(...args);
+      for (const lease of leases) {
+        const pool = taskResourcePool(lease.kind);
+        if (
+          signal.aborted ||
+          !this.handlers[lease.kind] ||
+          accepted.length >= available ||
+          this.active[pool] >= this.resources[pool]
+        ) {
+          rejected.push(lease);
+          continue;
+        }
+        this.active[pool]++;
+        accepted.push(lease);
+      }
+    } finally {
+      this.acquiring = false;
+    }
+    // Observe every operation immediately, including replacement adapters that reject early.
+    const outcomes = await Promise.allSettled([
+      ...rejected.map(async (lease) => this.queue.release(lease)),
+      ...accepted.map((lease) =>
+        this.process(lease, signal).finally(() => {
+          this.active[taskResourcePool(lease.kind)]--;
+        }),
+      ),
+    ]);
+    const failure = outcomes.find((result) => result.status === "rejected");
+    if (failure?.status === "rejected") throw failure.reason;
+    return accepted.length;
   }
   private async process(lease: TaskLease, signal: AbortSignal) {
     if (signal.aborted) {

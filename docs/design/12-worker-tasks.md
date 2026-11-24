@@ -26,7 +26,7 @@ Create the domain record, task and queue message in one PostgreSQL transaction. 
 
 ## Concurrency and shutdown
 
-Configure separate concurrency budgets for document parsing and provider calls. Stop acquiring messages on shutdown, finish bounded in-flight work or release leases, and record heartbeat timestamps. The worker is a container/long-lived process; it is not deployed as an indefinitely running Vercel request.
+[Per-instance resource budgets](../WORKER_RESOURCE_SETUP.md) now independently constrain document parsing/PDF/ZIP processing, approved remote retrieval and general handler execution, with shared total limits and resource-aware queue admission. Provider-call concurrency remains a Gateway integration gate. Stop acquiring messages on shutdown, finish bounded in-flight work or release leases, and record heartbeat timestamps. The worker is a container/long-lived process; it is not deployed as an indefinitely running Vercel request.
 
 ## Failure handling
 
@@ -36,4 +36,4 @@ If a result commits before message archival and the message returns, the next ha
 
 Simulate duplicate delivery, lease expiry, crash before/after commit, provider timeout, poison payload, stale input, owner deletion and graceful shutdown. Verify that queue age, lease age, retries and terminal failures are observable.
 
-[Administrator task recovery](../TASK_REPLAY_SETUP.md) now creates a new audited attempt through domain-owned binding functions, rechecking current owner/input/source authority and preserving old execution history. Explicit HTTP mutations are independent of diagnostics reads and do not resend old queue messages or alter retry counters. Provider dispatch/budgets and per-purpose concurrency remain pending. Invalidation delivery does not generate analysis or replace synchronous privacy/read/publication guards.
+[Administrator task recovery](../TASK_REPLAY_SETUP.md) now creates a new audited attempt through domain-owned binding functions, rechecking current owner/input/source authority and preserving old execution history. Explicit HTTP mutations are independent of diagnostics reads and do not resend old queue messages or alter retry counters. Provider dispatch/budgets and provider-wide purpose concurrency remain pending; per-instance handler resource budgets are implemented. Invalidation delivery does not generate analysis or replace synchronous privacy/read/publication guards.

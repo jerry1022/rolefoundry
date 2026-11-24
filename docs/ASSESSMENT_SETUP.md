@@ -74,7 +74,12 @@ Hosted worker variables:
 - `SUPABASE_URL`: HTTPS, except loopback development.
 - `SUPABASE_SERVICE_ROLE_KEY`: private server credential; never use a `NEXT_PUBLIC_` name.
 - `WORKER_LEASE_SECONDS`: optional 5–300, default 30.
-- `WORKER_CONCURRENCY`: optional 1–8, default 2.
+- `WORKER_CONCURRENCY`: optional integer 1–8, default 2.
+- `WORKER_DOCUMENT_CONCURRENCY`: optional integer 0–8, default 1.
+- `WORKER_FETCH_CONCURRENCY`: optional integer 0–8, default 1.
+- `WORKER_GENERAL_CONCURRENCY`: optional integer 0–8, defaults to total concurrency.
+
+Apply the [worker resource migration and configuration](WORKER_RESOURCE_SETUP.md) before enabling these limits. Pools constrain one worker instance; provider-wide concurrency remains a separate Gateway gate.
 
 ```bash
 npm run worker:start

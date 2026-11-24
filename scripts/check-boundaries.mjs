@@ -55,6 +55,7 @@ for (const file of [
   );
   const domain =
     /^src\/modules\/identity\/(admin|admin-service)\.ts$/.test(file) ||
+    /^src\/modules\/tasks\/resources\.ts$/.test(file) ||
     /^src\/modules\/invalidation\/(model|ports|dispatcher)\.ts$/.test(file) ||
     /src\/modules\/((?:profile|jobs|skills|assessment|tasks|matching|learning|resume|applications|ingestion|operations|account-data|account-deletion)\/(model|ports|service|specializations|catalog|worker|rules|handler|report-state|planner|plan-state|document-state|cleanup|record-state|input|csv|normalizer|review-service|feed-service|feed-handler|presence|replay))\.ts$/.test(
       file,

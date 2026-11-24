@@ -149,3 +149,7 @@ GET `/api/v1/identity/admin/invitations` and GET `/api/v1/identity/admin/quota-p
 ## Worker-only invalidation RPCs
 
 There is no browser invalidation endpoint. The worker service role alone can execute `invalidation_claim(p_ids uuid[] default null)` (up to four opaque `{id,token}` leases), `invalidation_apply(p_id uuid,p_token uuid)` (`{completed,canceled}`) and `invalidation_retry(p_id uuid,p_token uuid)` (persisted backoff). Optional claim scope is bounded to four IDs for controlled operator/integration runs. Raw receipts and private consumer/task helpers are not granted even to the service role. Every apply/retry requires a current fenced lease. See [transaction, scope and retry contracts](INVALIDATION_SETUP.md).
+
+## Worker resource-aware acquisition
+
+Service-only `task_read_resources(p_worker uuid,p_kinds text[],p_seconds integer,p_quantity integer,p_limits jsonb)` accepts exactly `documents`, `fetch` and `general` integer ceilings 0–8. It returns the existing task lease DTOs, up to the total quantity (1–8), without issuing attempts to capacity-blocked work. The private pool mapper is not granted to callers. The existing four-argument `task_read` remains compatible through the same implementation. There is no new browser endpoint or global provider semaphore. See [acquisition, membership and execution contracts](WORKER_RESOURCE_SETUP.md).

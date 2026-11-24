@@ -1,4 +1,5 @@
 import type { TaskKind, TaskLease, FailureCategory, WorkTask } from "./model";
+import type { TaskResourceLimits } from "./resources";
 export interface TaskRepository {
   find(id: string): Promise<WorkTask>;
 }
@@ -8,6 +9,7 @@ export interface TaskQueue {
     kinds: TaskKind[],
     leaseSeconds: number,
     quantity: number,
+    resourceLimits?: TaskResourceLimits,
   ): Promise<TaskLease[]>;
   heartbeat(lease: TaskLease): Promise<boolean>;
   acknowledge(lease: TaskLease): Promise<void>;
