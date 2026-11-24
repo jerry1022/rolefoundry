@@ -6,6 +6,7 @@ import { assessmentMatching } from "./assessment-matching";
 import { catalog } from "./catalog";
 import { dashboard } from "./dashboard";
 import { learning } from "./learning";
+import { learningWorkspace } from "./learning-workspace";
 import { profile } from "./profile";
 import { resume } from "./resume";
 import { shell } from "./shell";
@@ -23,6 +24,7 @@ export const zhTWSections = {
   dashboard,
   profile,
   learning,
+  learningWorkspace,
   resume,
   applications,
   admin,

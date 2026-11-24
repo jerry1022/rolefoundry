@@ -10,6 +10,8 @@ import {
   courseBankSchema,
 } from "@/modules/learning/model";
 import { ApplicationError } from "@/modules/platform/errors";
+import { msg, useI18n } from "@/lib/i18n";
+const difficulties = [msg("Unknown"), msg("Beginner"), msg("Intermediate"), msg("Advanced")];
 type Bank = z.infer<typeof courseBankSchema>;
 type BankCourse = Bank["courses"][number];
 type Mutation = (work: () => Promise<unknown>) => Promise<void>;
@@ -24,6 +26,7 @@ function SourceForm({
   onMutation: Mutation;
   client: LearningAdminClient;
 }) {
+  const { t } = useI18n();
   const [hosts, setHosts] = useState<string[]>(bank.providers[0]?.allowedHosts.slice(0, 1) || []);
   const [provider, setProvider] = useState(bank.providers[0]?.id || ""),
     [name, setName] = useState(""),
@@ -31,6 +34,7 @@ function SourceForm({
     [basis, setBasis] = useState(""),
     [rights, setRights] = useState(""),
     [demo, setDemo] = useState(true);
+  const selectedProvider = bank.providers.find((item) => item.id === provider);
   return (
     <form
       className="panel"
@@ -50,17 +54,18 @@ function SourceForm({
         );
       }}
     >
-      <h3>Review a metadata source policy</h3>
+      <h3>{t("Review a metadata source policy")}</h3>
       <p className="muted">
-        Store approved metadata and links, not lessons. Provider host rules are configured
-        independently of course authors.
+        {t(
+          "Store approved metadata and links, not lessons. Provider host rules are configured independently of course authors.",
+        )}
       </p>
       <fieldset disabled={busy} className="profile-form-fields">
         <label>
-          Provider
+          {t("Provider")}
           <select
             className="text-input"
-            aria-label="Course source provider"
+            aria-label={t("Course source provider")}
             value={provider}
             onChange={(event) => {
               setProvider(event.target.value);
@@ -79,16 +84,16 @@ function SourceForm({
           </select>
         </label>
         {[
-          ["Source name", name, setName],
-          ["Publisher", publisher, setPublisher],
-          ["Authorization basis (private)", basis, setBasis],
-          ["Public rights summary", rights, setRights],
+          [msg("Source name"), name, setName],
+          [msg("Publisher"), publisher, setPublisher],
+          [msg("Authorization basis (private)"), basis, setBasis],
+          [msg("Public rights summary"), rights, setRights],
         ].map(([label, value, setter]) => (
           <label key={label as string}>
-            {label as string}
+            {t(label as string)}
             <textarea
               className="text-input"
-              aria-label={label as string}
+              aria-label={t(label as string)}
               required
               value={value as string}
               maxLength={
@@ -103,9 +108,9 @@ function SourceForm({
           </label>
         ))}
         <label>
-          Hosts covered by this policy
+          {t("Hosts covered by this policy")}
           <select
-            aria-label="Course source allowed hosts"
+            aria-label={t("Course source allowed hosts")}
             className="text-input learning-multiselect"
             multiple
             size={3}
@@ -115,20 +120,21 @@ function SourceForm({
               setHosts(Array.from(event.target.selectedOptions).map((option) => option.value))
             }
           >
-            {bank.providers
-              .find((item) => item.id === provider)
-              ?.allowedHosts.map((host) => (
-                <option key={host} value={host}>
-                  {host}
-                </option>
-              ))}
+            {selectedProvider?.allowedHosts.map((host) => (
+              <option key={host} value={host}>
+                {host}
+              </option>
+            ))}
           </select>
         </label>
         <p className="muted">
-          Allowed official hosts:{" "}
-          {bank.providers.find((item) => item.id === provider)?.allowedHosts.join(", ")}. Permission
-          covers the twelve catalog metadata fields. Allowed course paths:{" "}
-          {bank.providers.find((item) => item.id === provider)?.pathPrefixes.join(", ")}.
+          {t(
+            "Allowed official hosts: {hosts}. Permission covers the twelve catalog metadata fields. Allowed course paths: {paths}.",
+            {
+              hosts: selectedProvider?.allowedHosts.join(", ") ?? "",
+              paths: selectedProvider?.pathPrefixes.join(", ") ?? "",
+            },
+          )}
         </p>
         <label>
           <input
@@ -136,12 +142,13 @@ function SourceForm({
             checked={demo}
             onChange={(event) => setDemo(event.target.checked)}
           />{" "}
-          This is demonstration metadata
+          {t("This is demonstration metadata")}
         </label>
         <label>
-          <input type="checkbox" required /> I reviewed the stated permission and metadata scope
+          <input type="checkbox" required />{" "}
+          {t("I reviewed the stated permission and metadata scope")}
         </label>
-        <button className="button primary">Create course source policy</button>
+        <button className="button primary">{t("Create course source policy")}</button>
       </fieldset>
     </form>
   );
@@ -196,6 +203,7 @@ function DraftForm({
   busy: boolean;
   onMutation: Mutation;
 }) {
+  const { t } = useI18n();
   const [draft, setDraft] = useState<CourseDraft>(
       record ? draftFrom(record, redirects) : blank(bank),
     ),
@@ -233,7 +241,7 @@ function DraftForm({
         event.preventDefault();
         const parsed = courseDraftSchema.safeParse(draft);
         if (!parsed.success) {
-          setError("Check the source, resource fields, skills and estimates.");
+          setError(t("Check the source, resource fields, skills and estimates."));
           return;
         }
         setError("");
@@ -244,17 +252,18 @@ function DraftForm({
         );
       }}
     >
-      <h3>{record ? "Create the next immutable course version" : "Author a course draft"}</h3>
+      <h3>{record ? t("Create the next immutable course version") : t("Author a course draft")}</h3>
       <p className="muted">
-        An existing approved version stays visible while the next draft is reviewed. Estimates and
-        practice prompts must be clearly editorial.
+        {t(
+          "An existing approved version stays visible while the next draft is reviewed. Estimates and practice prompts must be clearly editorial.",
+        )}
       </p>
       {error && <p role="alert">{error}</p>}
       <fieldset className="profile-form-fields" disabled={busy || !bank.sources.length}>
         <label>
-          Provider
+          {t("Provider")}
           <select
-            aria-label="Draft course provider"
+            aria-label={t("Draft course provider")}
             className="text-input"
             disabled={!!record}
             value={draft.providerId}
@@ -270,15 +279,15 @@ function DraftForm({
           </select>
         </label>
         <label>
-          Approved source policy
+          {t("Approved source policy")}
           <select
-            aria-label="Draft course source"
+            aria-label={t("Draft course source")}
             className="text-input"
             value={draft.sourceId}
             required
             onChange={(event) => setDraft({ ...draft, sourceId: event.target.value })}
           >
-            <option value="">Choose a source</option>
+            <option value="">{t("Choose a source")}</option>
             {bank.sources
               .filter(
                 (source) => source.providerId === draft.providerId && source.status === "active",
@@ -290,42 +299,44 @@ function DraftForm({
               ))}
           </select>
         </label>
-        {field("key", "Course catalog key", 200)}
-        {field("title", "Course title", 200)}
-        {field("url", "Official course URL", 2048)}
-        {field("summary", "Independent course summary", 2000)}
+        {field("key", t("Course catalog key"), 200)}
+        {field("title", t("Course title"), 200)}
+        {field("url", t("Official course URL"), 2048)}
+        {field("summary", t("Independent course summary"), 2000)}
         <label>
-          Difficulty
+          {t("Difficulty")}
           <select
             className="text-input"
-            aria-label="Draft course difficulty"
+            aria-label={t("Draft course difficulty")}
             value={draft.difficulty}
             onChange={(event) =>
               setDraft({ ...draft, difficulty: event.target.value as CourseDraft["difficulty"] })
             }
           >
-            {["Unknown", "Beginner", "Intermediate", "Advanced"].map((value) => (
-              <option key={value}>{value}</option>
+            {difficulties.map((value) => (
+              <option key={value} value={value}>
+                {t(value)}
+              </option>
             ))}
           </select>
         </label>
         <label>
-          Language (leave unknown when not confirmed)
+          {t("Language (leave unknown when not confirmed)")}
           <input
             className="text-input"
-            aria-label="Course language"
+            aria-label={t("Course language")}
             maxLength={60}
             value={draft.language || ""}
             onChange={(event) => setDraft({ ...draft, language: event.target.value || null })}
           />
         </label>
-        {field("format", "Course format", 60)}
+        {field("format", t("Course format"), 60)}
         {(["skills", "prerequisiteSkills"] as const).map((key) => (
           <label key={key}>
-            {key === "skills" ? "Skills addressed" : "Prerequisite skills"}
+            {key === "skills" ? t("Skills addressed") : t("Prerequisite skills")}
             <select
               aria-label={
-                key === "skills" ? "Course addressed skills" : "Course prerequisite skills"
+                key === "skills" ? t("Course addressed skills") : t("Course prerequisite skills")
               }
               className="text-input learning-multiselect"
               multiple
@@ -347,9 +358,9 @@ function DraftForm({
           </label>
         ))}
         <label>
-          Prerequisite courses
+          {t("Prerequisite courses")}
           <select
-            aria-label="Course prerequisite resources"
+            aria-label={t("Course prerequisite resources")}
             className="text-input learning-multiselect"
             multiple
             size={4}
@@ -375,12 +386,14 @@ function DraftForm({
         {(["officialMinutes", "editorialMinutes"] as const).map((key) => (
           <label key={key}>
             {key === "officialMinutes"
-              ? "Confirmed official minutes (optional)"
-              : "Editorial estimated minutes (optional)"}
+              ? t("Confirmed official minutes (optional)")
+              : t("Editorial estimated minutes (optional)")}
             <input
               className="text-input"
               aria-label={
-                key === "officialMinutes" ? "Official course minutes" : "Editorial course minutes"
+                key === "officialMinutes"
+                  ? t("Official course minutes")
+                  : t("Editorial course minutes")
               }
               type="number"
               min={1}
@@ -395,12 +408,12 @@ function DraftForm({
             />
           </label>
         ))}
-        {field("durationNote", "Duration source or estimate note", 1000)}
+        {field("durationNote", t("Duration source or estimate note"), 1000)}
         <label>
-          Original practice prompt
+          {t("Original practice prompt")}
           <textarea
             className="text-input"
-            aria-label="Course practice prompt"
+            aria-label={t("Course practice prompt")}
             required
             maxLength={1000}
             value={draft.practice.prompt}
@@ -410,10 +423,10 @@ function DraftForm({
           />
         </label>
         <label>
-          Practice completion criteria
+          {t("Practice completion criteria")}
           <textarea
             className="text-input"
-            aria-label="Course practice completion criteria"
+            aria-label={t("Course practice completion criteria")}
             required
             maxLength={1000}
             value={draft.practice.completionCriteria}
@@ -426,10 +439,10 @@ function DraftForm({
           />
         </label>
         <label>
-          Practice minutes
+          {t("Practice minutes")}
           <input
             className="text-input"
-            aria-label="Course practice minutes"
+            aria-label={t("Course practice minutes")}
             type="number"
             min={5}
             max={240}
@@ -444,7 +457,7 @@ function DraftForm({
           />
         </label>
         <button className="button primary">
-          {record ? "Save new course version" : "Create course draft"}
+          {record ? t("Save new course version") : t("Create course draft")}
         </button>
       </fieldset>
     </form>
@@ -459,6 +472,7 @@ export function CourseAdministration({
   skills: SkillClient;
   onChanged: () => void;
 }) {
+  const { t } = useI18n();
   const [redirects, setRedirects] = useState<{ [id: string]: string }>({});
   const [bank, setBank] = useState<Bank | null>(null),
     [labels, setLabels] = useState<{ id: string; name: string }[]>([]),
@@ -469,7 +483,9 @@ export function CourseAdministration({
     [message, setMessage] = useState("");
   function failed(error: unknown) {
     setError(
-      error instanceof ApplicationError ? error.message : "Course administration is unavailable.",
+      error instanceof ApplicationError
+        ? error.message
+        : t("Course administration is unavailable."),
     );
   }
   useEffect(() => {
@@ -513,7 +529,7 @@ export function CourseAdministration({
       await work();
       setBank(await client.bank());
       onChanged();
-      setMessage("Course catalog change saved. Historical plan versions remain separate.");
+      setMessage(t("Course catalog change saved. Historical plan versions remain separate."));
     } catch (error) {
       failed(error);
     } finally {
@@ -523,10 +539,11 @@ export function CourseAdministration({
   const record = bank?.courses.find((item) => item.id === selected);
   return (
     <section className="section-block">
-      <h2>Course catalog administration</h2>
+      <h2>{t("Course catalog administration")}</h2>
       <p className="muted">
-        Review metadata, permissions, mappings and practice outcomes before publication. A
-        successful link fetch alone is not a content review.
+        {t(
+          "Review metadata, permissions, mappings and practice outcomes before publication. A successful link fetch alone is not a content review.",
+        )}
       </p>
       {error && (
         <p className="notice" role="alert">
@@ -541,14 +558,14 @@ export function CourseAdministration({
       {bank && (
         <>
           <label>
-            Edit a course or author a new resource
+            {t("Edit a course or author a new resource")}
             <select
-              aria-label="Course draft editor selection"
+              aria-label={t("Course draft editor selection")}
               className="text-input"
               value={selected}
               onChange={(event) => setSelected(event.target.value)}
             >
-              <option value="">New course</option>
+              <option value="">{t("New course")}</option>
               {bank.courses.map((course) => (
                 <option key={course.id} value={course.id}>
                   {course.title}
@@ -570,11 +587,11 @@ export function CourseAdministration({
             />
           </div>
           <section className="panel section-block">
-            <h3>Review and source status</h3>
+            <h3>{t("Review and source status")}</h3>
             <label>
-              Review reason
+              {t("Review reason")}
               <input
-                aria-label="Course review reason"
+                aria-label={t("Course review reason")}
                 className="text-input"
                 maxLength={1000}
                 value={reason}
@@ -586,10 +603,12 @@ export function CourseAdministration({
                 <article key={course.id} className="learning-reference">
                   <h4>{course.title}</h4>
                   <p>
-                    Draft version {course.version} · {course.stage} ·{" "}
+                    {t("Draft version {version}", { version: course.version })} · {course.stage} ·{" "}
                     {course.retired
-                      ? "Retired"
-                      : `Approved version ${course.publishedVersion ?? "none"}`}
+                      ? t("Retired")
+                      : course.publishedVersion === null
+                        ? t("Approved version none")
+                        : t("Approved version {version}", { version: course.publishedVersion })}
                   </p>
                   <div className="learning-actions">
                     {(
@@ -621,11 +640,11 @@ export function CourseAdministration({
                       >
                         {
                           {
-                            review: "Review course draft",
-                            publish: "Publish reviewed course",
-                            retire: "Retire course",
-                            confirmed_active: "Confirm resource active",
-                            network_failure: "Record uncertain availability",
+                            review: t("Review course draft"),
+                            publish: t("Publish reviewed course"),
+                            retire: t("Retire course"),
+                            confirmed_active: t("Confirm resource active"),
+                            network_failure: t("Record uncertain availability"),
                           }[action]
                         }
                       </button>
@@ -641,7 +660,7 @@ export function CourseAdministration({
                   {source.status} · {source.rightsSummary}
                 </p>
                 <details>
-                  <summary>Private permission record</summary>
+                  <summary>{t("Private permission record")}</summary>
                   <p>{source.authorizationBasis}</p>
                 </details>
                 <button
@@ -658,8 +677,8 @@ export function CourseAdministration({
                   }
                 >
                   {source.status === "active"
-                    ? "Revoke course source policy"
-                    : "Reactivate reviewed course source"}
+                    ? t("Revoke course source policy")
+                    : t("Reactivate reviewed course source")}
                 </button>
               </article>
             ))}

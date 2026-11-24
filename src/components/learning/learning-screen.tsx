@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { PageHeading } from "../ui/page-heading";
 import { ApplicationError } from "@/modules/platform/errors";
+import { useI18n } from "@/lib/i18n";
 import type { CourseClient, LearningClient, LearningAdminClient } from "@/modules/learning/ports";
 import type {
   CourseProgress,
@@ -39,6 +40,7 @@ export function LearningWorkspaceScreen({
   isAdmin: () => Promise<boolean>;
   privateEnabled: boolean;
 }) {
+  const { t } = useI18n();
   const [catalogVersion, setCatalogVersion] = useState(0);
   const [progress, setProgress] = useState<CourseProgress | null>(null),
     [history, setHistory] = useState<z.infer<typeof planHistorySchema> | null>(null),
@@ -60,7 +62,7 @@ export function LearningWorkspaceScreen({
     setError(
       error instanceof ApplicationError
         ? error.message
-        : "The learning workspace is temporarily unavailable.",
+        : t("The learning workspace is temporarily unavailable."),
     );
     if (error instanceof ApplicationError && [401, 403].includes(error.status)) {
       setLogin(true);
@@ -258,14 +260,17 @@ export function LearningWorkspaceScreen({
   return (
     <>
       <PageHeading
-        eyebrow="REVIEWED RESOURCES · PRIVATE PROGRESS"
-        title="Turn a useful gap into a learning step."
-        description="Explore curated course metadata, plan two manageable weeks and keep your own practice references. Learning progress stays separate from capability evidence."
+        eyebrow={t("REVIEWED RESOURCES · PRIVATE PROGRESS")}
+        title={t("Turn a useful gap into a learning step.")}
+        description={t(
+          "Explore curated course metadata, plan two manageable weeks and keep your own practice references. Learning progress stays separate from capability evidence.",
+        )}
       />
       {!privateEnabled && (
         <p className="panel">
-          Private plans and progress are not enabled on this deployment. You can still browse the
-          reviewed resources.
+          {t(
+            "Private plans and progress are not enabled on this deployment. You can still browse the reviewed resources.",
+          )}
         </p>
       )}
       {error && (
@@ -273,11 +278,11 @@ export function LearningWorkspaceScreen({
           <p>{error}</p>
           {login ? (
             <Link className="button secondary" href="/account/">
-              Open account and privacy
+              {t("Open account and privacy")}
             </Link>
           ) : (
             <button className="button secondary" onClick={() => window.location.reload()}>
-              Reload learning workspace
+              {t("Reload learning workspace")}
             </button>
           )}
         </div>
@@ -293,10 +298,11 @@ export function LearningWorkspaceScreen({
       />
       {!login && progress && history && jobs && (
         <section className="panel section-block">
-          <h2>Plan the next two weeks</h2>
+          <h2>{t("Plan the next two weeks")}</h2>
           <p className="muted">
-            Choose a target role. Planning reads fresh job and evidence versions; it does not
-            require a previous assessment or matching report.
+            {t(
+              "Choose a target role. Planning reads fresh job and evidence versions; it does not require a previous assessment or matching report.",
+            )}
           </p>
           <form
             onSubmit={(event) => {
@@ -306,9 +312,9 @@ export function LearningWorkspaceScreen({
           >
             <fieldset className="profile-form-fields" disabled={busy}>
               <label>
-                Target role
+                {t("Target role")}
                 <select
-                  aria-label="Learning target role"
+                  aria-label={t("Learning target role")}
                   className="text-input"
                   value={target?.id || ""}
                   required
@@ -331,7 +337,7 @@ export function LearningWorkspaceScreen({
                       });
                   }}
                 >
-                  <option value="">Choose a published role</option>
+                  <option value="">{t("Choose a published role")}</option>
                   {target && !jobs.data.some((job) => job.id === target.id) && (
                     <option value={target.id}>
                       {target.title} · {target.company}
@@ -357,13 +363,13 @@ export function LearningWorkspaceScreen({
                       .finally(() => setBusy(false));
                   }}
                 >
-                  Load more learning target roles
+                  {t("Load more learning target roles")}
                 </button>
               )}
               <label>
-                Weekly learning hours
+                {t("Weekly learning hours")}
                 <input
-                  aria-label="Weekly learning hours"
+                  aria-label={t("Weekly learning hours")}
                   className="text-input"
                   type="number"
                   min={0}
@@ -375,16 +381,17 @@ export function LearningWorkspaceScreen({
                 />
               </label>
               <details>
-                <summary>Adjust planning estimates to your pace</summary>
+                <summary>{t("Adjust planning estimates to your pace")}</summary>
                 <p className="muted">
-                  Official and editorial durations remain visible in the catalog. These optional
-                  estimates affect only your new plan and do not confirm completion.
+                  {t(
+                    "Official and editorial durations remain visible in the catalog. These optional estimates affect only your new plan and do not confirm completion.",
+                  )}
                 </p>
                 {resources?.data.map((course) => (
                   <label key={course.id}>
-                    {course.title} · your estimated study minutes
+                    {t("{title} · your estimated study minutes", { title: course.title })}
                     <input
-                      aria-label={`Planning minutes for ${course.title}`}
+                      aria-label={t("Planning minutes for {title}", { title: course.title })}
                       className="text-input"
                       type="number"
                       min={1}
@@ -411,18 +418,19 @@ export function LearningWorkspaceScreen({
                         .finally(() => setBusy(false));
                     }}
                   >
-                    Load more resource estimates
+                    {t("Load more resource estimates")}
                   </button>
                 )}
               </details>
               <button className="button primary" disabled={!target || busy}>
-                {busy ? "Creating plan…" : "Create a two-week learning plan"}
+                {busy ? t("Creating plan…") : t("Create a two-week learning plan")}
               </button>
             </fieldset>
           </form>
           <p className="fine-print">
-            This rule-based planner uses no external model or AI allowance. Missing coverage,
-            unknown durations and unfinished foundations stay explicit.
+            {t(
+              "This rule-based planner uses no external model or AI allowance. Missing coverage, unknown durations and unfinished foundations stay explicit.",
+            )}
           </p>
         </section>
       )}
@@ -453,12 +461,12 @@ export function LearningWorkspaceScreen({
       )}
       {history && (
         <section className="section-block">
-          <h2>Your learning plan history</h2>
-          {!history.data.length && <p className="muted">No private plans yet.</p>}
+          <h2>{t("Your learning plan history")}</h2>
+          {!history.data.length && <p className="muted">{t("No private plans yet.")}</p>}
           <div className="assessment-history">
             {history.data.map((plan) => (
               <article className="panel" key={plan.id}>
-                <h3>Two-week plan</h3>
+                <h3>{t("Two-week plan")}</h3>
                 <p>
                   {plan.status} · {plan.createdAt.slice(0, 10)}
                 </p>
@@ -467,7 +475,7 @@ export function LearningWorkspaceScreen({
                   disabled={busy}
                   onClick={() => void open(plan.id)}
                 >
-                  Open learning plan
+                  {t("Open learning plan")}
                 </button>
               </article>
             ))}
@@ -485,7 +493,7 @@ export function LearningWorkspaceScreen({
                   .finally(() => setBusy(false));
               }}
             >
-              Load more learning plan history
+              {t("Load more learning plan history")}
             </button>
           )}
         </section>
