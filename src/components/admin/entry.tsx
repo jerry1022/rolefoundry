@@ -22,7 +22,8 @@ import { ImportAdministration } from "../ingestion/administration";
 import { OperationsAdministration } from "../operations/administration";
 import { CourseLinkChecks } from "../learning/link-checks";
 import { AiRecipientAdministration } from "./ai-recipients";
-import { createRecipientClient } from "@/modules/gateway/adapters/http-client";
+import { AiUsageReport } from "./ai-usage";
+import { createRecipientClient, createUsageClient } from "@/modules/gateway/adapters/http-client";
 import { createCourseLinkClient } from "@/modules/course-links/adapters/http-client";
 /** Deployment composition only; each screen consumes an independently replaceable client port. */
 export function AdminWorkspace() {
@@ -44,6 +45,7 @@ function PrivateAdminWorkspace() {
     identity,
     courseLinks,
     aiRecipients,
+    aiUsage,
   } = useMemo(
     () => ({
       client: createImportAdminClient(fetcher),
@@ -57,6 +59,7 @@ function PrivateAdminWorkspace() {
       identity: createIdentityAdminClient(fetcher),
       courseLinks: createCourseLinkClient(fetcher),
       aiRecipients: createRecipientClient(fetcher),
+      aiUsage: createUsageClient(fetcher),
     }),
     [fetcher],
   );
@@ -101,6 +104,9 @@ function PrivateAdminWorkspace() {
           </AdminSection>
           <AdminSection title={t("AI recipients")}>
             <AiRecipientAdministration client={aiRecipients} />
+          </AdminSection>
+          <AdminSection title={t("AI usage and estimated spend")}>
+            <AiUsageReport client={aiUsage} />
           </AdminSection>
           <AdminSection title={t("Course link observations")}>
             <CourseLinkChecks client={courseLinks} />

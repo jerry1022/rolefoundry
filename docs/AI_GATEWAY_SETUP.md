@@ -99,6 +99,16 @@ Migration `20261114190000_gateway_authority.sql` connects the gateway to module 
 - `SupabaseGatewayRecorder` stores one content-free `gateway_results` row and ordered `gateway_attempts` per identity task (state, code, versions, provider/model, latency, tokens, fallback reason). Replays of the same result are idempotent and a different replay conflicts. Rows cascade with the identity task and its owner. No prompt, input or output text is stored.
 - The telemetry snapshot adds a `gateway` section, built by wrapping the previous snapshot function rather than copying it. The exporter emits `rolefoundry_ai_{calls,failures,fallbacks,input_tokens,output_tokens}_24h{provider}`, with providers limited to approved recipients.
 
+### Administrator usage report
+
+The **AI usage and estimated spend** section of `/admin/` (`GET /api/v1/identity/admin/ai-usage?days=1|7|30`, default 7) reads `gateway_usage_report` (migration `20261114310000`). It returns content-free aggregates only:
+
+- per provider and model: calls, failures, fallbacks, repairs, input and output tokens, p50 and p95 latency, estimated spend, and `unpricedCalls` (successful calls with no estimate because the route has no pricing or the provider reported no usage);
+- per purpose: task results by outcome (succeeded, rejected, invalid output, provider failed, stale or cancelled) and estimated spend, so retries do not inflate the counts;
+- per UTC day: calls, tokens and estimated spend.
+
+Spend comes from route pricing, not invoices. The panel marks the total as incomplete whenever any successful call lacks an estimate, so an unpriced route cannot make spend look lower than it is. The RPC requires a current administrator, rejects other windows and extra query parameters, and never returns input versions, task IDs or text. Unlike the telemetry exporter, the report also includes providers that are no longer approved, so spend from a revoked recipient stays visible.
+
 All gateway tables have RLS enabled and no client grants. Member and administrator sessions cannot call the service RPCs.
 
 Five integration cases run against the real local stack: administrator-only, audited approval with raw-table denial; admission for the exact started task, owner, version and approved recipients (including unapproved upstreams and queued tasks); a consent revocation during the call that blocks publication; idempotent content-free recording with attempt order, telemetry usage and cascade; and recipient revocation blocking later admission.
