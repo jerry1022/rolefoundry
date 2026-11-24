@@ -242,7 +242,7 @@ export const learningWorkspace = {
   "Shared host limits": "共用主機限制",
   "At most one probe per approved host set per minute across checker instances. A known provider wait cannot be shortened by clearing a manual pause.":
     "所有檢查程序合計，每組核准主機每分鐘最多探測一次。解除手動暫停無法縮短提供者已知的等待時間。",
-  "Recovery reason": "恢復原因",
+  "Recovery reason": "復原原因",
   "No host state has been created.": "尚未建立主機狀態。",
   "Paused for operator review; not before {time}": "已暫停，等待管理員審核；{time} 之前不會檢查",
   "Scheduled; not before {time}": "已排程；{time} 之前不會檢查",

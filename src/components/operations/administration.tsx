@@ -16,6 +16,23 @@ import type { TaskReplayClient } from "@/modules/operations/replay";
 import { taskKinds } from "@/modules/tasks/model";
 import { ApplicationError } from "@/modules/platform/errors";
 import { msg, useI18n } from "@/lib/i18n";
+/**
+ * UI labels for the domain's stable notice codes; the domain keeps its English message for
+ * logs and APIs, and unknown codes fall back to it.
+ */
+const noticeMessages: Record<string, string> = {
+  "queue-age": msg("Ready work has waited at least five minutes."),
+  "no-worker": msg("No recent active worker reports handling this ready work."),
+  "expired-lease": msg("Running work has an expired or missing lease."),
+  "erasure-retries": msg(
+    "Account removal has retried repeatedly. Inspect worker configuration and service availability.",
+  ),
+  failures: msg(
+    "At least ten percent of terminal work failed in the last 24 hours (minimum ten tasks).",
+  ),
+  poison: msg("Workers observed invalid queue deliveries in the last 24 hours."),
+};
+
 export function OperationsAdministration({
   client,
   isAdmin,
@@ -232,7 +249,7 @@ export function OperationsAdministration({
                   {operationsAlerts(summary).map((notice) => (
                     <li key={`${notice.kind}:${notice.code}`}>
                       {notice.kind ? `${notice.kind}: ` : ""}
-                      {notice.message}
+                      {t(noticeMessages[notice.code] ?? notice.message)}
                     </li>
                   ))}
                 </ul>

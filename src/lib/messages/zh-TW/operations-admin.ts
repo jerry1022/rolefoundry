@@ -145,4 +145,15 @@ export const operationsAdmin = {
   "Request {id} · {status}": "請求 {id} · {status}",
   "Account deletion recovery requires an administrator session.":
     "帳號刪除復原需要管理員登入工作階段。",
+  // Diagnostic notices (mapped by stable domain code).
+  "Ready work has waited at least five minutes.": "待處理工作已等待至少五分鐘。",
+  "No recent active worker reports handling this ready work.":
+    "最近沒有運作中的工作程序回報處理這些待處理工作。",
+  "Running work has an expired or missing lease.": "執行中的工作租約已過期或遺失。",
+  "Account removal has retried repeatedly. Inspect worker configuration and service availability.":
+    "帳號移除已重試多次，請檢查工作程序設定與服務可用性。",
+  "At least ten percent of terminal work failed in the last 24 hours (minimum ten tasks).":
+    "過去 24 小時內至少一成已結束的工作失敗（至少十項任務）。",
+  "Workers observed invalid queue deliveries in the last 24 hours.":
+    "過去 24 小時內工作程序觀察到無效的佇列傳遞。",
 } satisfies Messages;
