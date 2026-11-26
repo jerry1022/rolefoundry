@@ -5455,7 +5455,6 @@ body::before {
   min-width: 0;
 }
 
-
 /* Line breaks that only balance wide layouts; narrow screens wrap naturally. */
 @media (max-width: 760px) {
   .desktop-br {
