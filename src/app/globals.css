@@ -2512,9 +2512,22 @@ tr:last-child td {
   .assessment-aside h3 {
     display: none;
   }
+  /* Icon beside the heading and intro; progress spans the full card. */
+  .assessment-aside {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    column-gap: 16px;
+  }
+  .assessment-aside > * {
+    grid-column: 1 / -1;
+  }
   .assessment-aside .large-icon {
-    float: left;
-    margin-right: 18px;
+    grid-column: 1;
+    grid-row: 1 / span 2;
+  }
+  .assessment-aside > h2,
+  .assessment-aside > p {
+    grid-column: 2;
   }
   .assessment-aside h2 {
     font-size: 18px;
@@ -2869,8 +2882,12 @@ tr:last-child td {
   .kanban {
     grid-template-columns: 1fr;
   }
+  /* Stacked stages size to their content so empty ones stay compact. */
   .kanban-column {
-    min-height: 140px;
+    min-height: 0;
+  }
+  .kanban-empty {
+    padding: 14px 5px;
   }
   .application-card h3 {
     font-size: 14px;
