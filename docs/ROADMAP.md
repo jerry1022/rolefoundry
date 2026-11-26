@@ -23,7 +23,8 @@
 - [x] Profile change/deletion outbox and revision contract for later derived data.
 - [x] Repository/client ports, request-scoped adapters and dependency checks.
 - [x] Private persistence for the implemented career modules 01–09, including manual tracking.
-- [x] Private storage, delete/export account workflows and local recovery tests. Hosted Storage-object recovery and off-host ledger delivery remain deployment gates.
+- [x] Private storage, delete/export account workflows and local recovery tests.
+- [ ] Hosted Storage-object recovery and off-host ledger delivery.
 - [x] Identity task ledger and transactional outbox.
 - [x] Durable pgmq adapter, independent grading/matching/learning/resume worker, leases/retries and safe task metrics.
 - [x] Module 12 handlers, provider reservations, invalidation dispatch, provider concurrency and token budgets.
