@@ -37,7 +37,7 @@ At most twenty queued/running tasks may exist for the original owner. Ordinary r
 | `account.export` | Same unexpired, uninvalidated sealed snapshot/task, no committed ZIP, retained source-file references/objects; never resnapshot or extend expiry |
 | `account.delete` | Existing incomplete accepted request bound to the old erasure grant; delegate to the existing audited deletion recovery operation |
 
-Current assessment, matching, learning and resume transformations are deterministic and make no AI calls. These recovery checks do not implement the pending provider reservation/consent/budget integration; adding model-backed handlers must preserve and extend the same authority checks before activation. Retrying a feed does not waive provider waits or source rights, and preparing an import never publishes catalog records automatically.
+Assessment, matching, learning and resume transformations are deterministic. Opt-in semantic ordering and wording suggestions run inside the matching and resume handlers through [module 11](AI_GATEWAY_SETUP.md), using the consent/allowance reservation made when the owner requested them; recovery itself never creates a reservation. A new model-backed handler must keep these authority checks before activation. Retrying a feed does not waive provider waits or source rights, and preparing an import never publishes catalog records automatically.
 
 ## API and failure behavior
 
@@ -58,4 +58,4 @@ Enqueue, source binding, recovery linkage and audit commit atomically. A failure
 
 `npm run identity:test -- tests/identity/task-replay.integration.test.ts` runs actual Next/GoTrue/PostgREST/PostgreSQL/Storage with scoped synthetic fixtures. It covers all ten kinds, real domain handlers and PDF/ZIP processing, source/owner/revision/cap denial, repeated/lost responses, competing operators/owner retry, atomic failure rollback, actual mobile recovery and a lost browser response. The feed transport returns controlled synthetic content; it does not establish live publisher permission or availability. The fixture executor claims only explicitly owned task IDs and never drains unrelated developer work. Five unit cases verify injected authorization/policy, minimization and mutation identity.
 
-The [mobile recovery control](assets/task-replay-mobile.png) is captured from the actual configured app with synthetic data. Consolidated domain management, external telemetry/alerts, provider integration and hosted/off-host recovery remain separate [delivery gates](IMPLEMENTATION_AUDIT.md).
+The [mobile recovery control](assets/task-replay-mobile.png) is captured from the actual configured app with synthetic data. Consolidated domain management, hosted telemetry/alerts, live provider evaluation and hosted/off-host recovery remain separate [delivery gates](IMPLEMENTATION_AUDIT.md).
