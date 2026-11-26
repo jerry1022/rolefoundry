@@ -9,6 +9,7 @@ import {
 import type { UsageClient } from "@/modules/gateway/adapters/http-client";
 import { msg, useI18n } from "@/lib/i18n";
 import { ApplicationError } from "@/modules/platform/errors";
+import { TableScroll } from "../ui/table-scroll";
 
 const windowLabels: Record<UsageWindow, string> = {
   1: msg("24 hours"),
@@ -158,7 +159,7 @@ export function AiUsageReport({ client }: { client: UsageClient }) {
           {report.providers.length === 0 ? (
             <p className="muted">{t("No provider calls were recorded in this window.")}</p>
           ) : (
-            <div className="table-scroll">
+            <TableScroll label={t("Usage by provider and model")}>
               <table>
                 <caption className="sr-only">{t("Usage by provider and model")}</caption>
                 <thead>
@@ -199,10 +200,10 @@ export function AiUsageReport({ client }: { client: UsageClient }) {
                   ))}
                 </tbody>
               </table>
-            </div>
+            </TableScroll>
           )}
           {report.purposes.length > 0 && (
-            <div className="table-scroll">
+            <TableScroll label={t("Outcomes by purpose")}>
               <table>
                 <caption className="sr-only">{t("Outcomes by purpose")}</caption>
                 <thead>
@@ -232,7 +233,7 @@ export function AiUsageReport({ client }: { client: UsageClient }) {
                   ))}
                 </tbody>
               </table>
-            </div>
+            </TableScroll>
           )}
         </>
       )}

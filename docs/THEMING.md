@@ -39,3 +39,8 @@ axe cannot compute contrast over gradient backgrounds, and it reports those node
 - **Scroll reveal.** Cards rise into view using CSS scroll-driven animations (`animation-timeline: view()`), with backwards fill only, so hover transforms still apply afterwards. Browsers without scroll timelines show the cards immediately. The reveal is disabled under reduced motion.
 - **Drifting aurora.** `body::before` holds three blurred colour fields that move slowly behind every page.
 - **Colours.** All of these colours are tokens (`--glow-*`, `--aurora-*`). The dark values are defined in the generator's token block, so the theme generator never darkens them.
+
+## Route transitions
+
+Page content is wrapped in React's `<ViewTransition>` keyed by the route (`src/components/shell.tsx`). Navigating fades the old page out and the new page in with a slight rise. The shell (sidebar and top bar) is excluded from the animation, and the transition is disabled under reduced motion. Browsers without the View Transitions API simply swap the page. Staggered section entrance targets `.route-content > *`.
+

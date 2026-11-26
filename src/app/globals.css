@@ -4782,22 +4782,22 @@ input[type="radio"] {
 }
 
 /* ---------- Motion ---------- */
-.workspace-controls > * {
+.route-content > * {
   animation: rf-rise 0.6s var(--ease-out) both;
 }
-.workspace-controls > *:nth-child(2) {
+.route-content > *:nth-child(2) {
   animation-delay: 0.05s;
 }
-.workspace-controls > *:nth-child(3) {
+.route-content > *:nth-child(3) {
   animation-delay: 0.1s;
 }
-.workspace-controls > *:nth-child(4) {
+.route-content > *:nth-child(4) {
   animation-delay: 0.15s;
 }
-.workspace-controls > *:nth-child(5) {
+.route-content > *:nth-child(5) {
   animation-delay: 0.2s;
 }
-.workspace-controls > *:nth-child(n + 6) {
+.route-content > *:nth-child(n + 6) {
   animation-delay: 0.25s;
 }
 .stats-grid > .stat-card,
@@ -4899,7 +4899,7 @@ input[type="radio"] {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .workspace-controls > *,
+  .route-content > *,
   .modal,
   .learning-hero::before,
   .learning-hero > svg,
@@ -5386,5 +5386,36 @@ body::before {
   to {
     transform: translate3d(-4%, 3%, 0) rotate(8deg);
   }
+}
+
+/* ---------- Route transitions (React <ViewTransition> in shell.tsx) ---------- */
+/* Only the page content animates; the shell (sidebar, top bar) is not cross-faded. */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+}
+@media (prefers-reduced-motion: no-preference) {
+  ::view-transition-old(.page-out) {
+    animation: rf-page-out 160ms var(--ease-out) both;
+  }
+  ::view-transition-new(.page-in) {
+    animation: rf-page-in 360ms var(--ease-out) both;
+  }
+}
+@keyframes rf-page-out {
+  to {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+@keyframes rf-page-in {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+    filter: blur(4px);
+  }
+}
+.route-content {
+  min-width: 0;
 }
 
