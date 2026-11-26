@@ -37,7 +37,7 @@ At most twenty queued/running tasks may exist for the original owner. Ordinary r
 | `account.export` | Same unexpired, uninvalidated sealed snapshot/task, no committed ZIP, retained source-file references/objects; never resnapshot or extend expiry |
 | `account.delete` | Existing incomplete accepted request bound to the old erasure grant; delegate to the existing audited deletion recovery operation |
 
-Assessment, matching, learning and resume transformations are deterministic. Opt-in semantic ordering and wording suggestions run inside the matching and resume handlers through [module 11](AI_GATEWAY_SETUP.md), using the consent/allowance reservation made when the owner requested them; recovery itself never creates a reservation. A new model-backed handler must keep these authority checks before activation. Retrying a feed does not waive provider waits or source rights, and preparing an import never publishes catalog records automatically.
+Assessment, matching, learning and resume transformations are deterministic. Opt-in semantic ordering and wording suggestions run inside the matching and resume handlers through [module 11](AI_GATEWAY_SETUP.md), with the consent/allowance reservation made when the owner requested them. Recovery itself never creates a reservation; if identity no longer lets that reservation start, the recovered run keeps rule-only output. A new model-backed handler must keep these authority checks before activation. Retrying a feed does not waive provider waits or source rights, and preparing an import never publishes catalog records automatically.
 
 ## API and failure behavior
 
