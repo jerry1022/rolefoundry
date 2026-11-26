@@ -94,26 +94,28 @@ export function AdminScreen() {
         </TableScroll>
       </section>
       <section className="panel section-block">
-        <SectionHeading title={t("Integration roadmap")} />
+        <SectionHeading title={t("Integration status")} />
         <div className="roadmap-grid">
           {[
             {
               icon: Database,
               title: msg("Durable workspace"),
               text: msg(
-                "Account identity is available when configured. Private career storage and deletion workflows follow.",
+                "With a configured backend, career records and private files live in PostgreSQL and private Storage, with self-service export and deletion.",
               ),
             },
             {
               icon: Network,
               title: msg("Background processing"),
-              text: msg("pgmq queues, a Node worker, idempotent tasks and provider adapters."),
+              text: msg(
+                "pgmq queues, an independent Node worker, idempotent tasks and shared provider limits.",
+              ),
             },
             {
               icon: Sparkles,
               title: msg("Evidence-based analysis"),
               text: msg(
-                "Schema-validated extraction and review, with versions, quotas and human confirmation.",
+                "Schema-validated, source-grounded output with versions, quotas and owner confirmation. Live providers await approval.",
               ),
             },
           ].map((item) => (

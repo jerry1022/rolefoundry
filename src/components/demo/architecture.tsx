@@ -85,34 +85,18 @@ export function ArchitectureScreen() {
           <span>{t("Structured output · versions · quotas · no live provider in demo")}</span>
         </div>
       </div>
-      <div className="profile-grid section-block">
-        <section className="panel">
-          <h2>{t("What runs today")}</h2>
-          <ul className="detail-list">
-            <li>{t("Next.js routes and a responsive application shell.")}</li>
-            <li>{t("Fixture-backed search, overlap matching and course ranking.")}</li>
-            <li>{t("Scenario scoring and local evidence records.")}</li>
-            <li>{t("Local resume editing, text export and an application board.")}</li>
-            <li>
-              {t("Optional invitation-only Auth, consent, RLS and atomic quota reservations.")}
-            </li>
-            <li>
-              {t("Private preferences and evidence history through replaceable service ports.")}
-            </li>
-            <li>{t("Published catalog, source permissions/freshness and private bookmarks.")}</li>
-            <li>{t("Typed repository, provider and worker contracts.")}</li>
-          </ul>
-        </section>
-        <section className="panel">
-          <h2>{t("What comes next")}</h2>
-          <ul className="detail-list">
-            <li>{t("Private document storage and account-backed career workflows.")}</li>
-            <li>{t("Authorized live source adapters and import review workflows.")}</li>
-            <li>{t("Persistent queues and isolated document processing.")}</li>
-            <li>{t("Model adapters and output validation using versioned consent.")}</li>
-            <li>{t("Production telemetry, backups and deployment controls.")}</li>
-          </ul>
-        </section>
+      <div className="arch-status section-block">
+        {STATUS.map((column) => (
+          <section className={`panel arch-status-${column.tone}`} key={column.title}>
+            <p className="mini-label">{t(column.label)}</p>
+            <h2>{t(column.title)}</h2>
+            <ul className="detail-list">
+              {column.items.map((item) => (
+                <li key={item}>{t(item)}</li>
+              ))}
+            </ul>
+          </section>
+        ))}
       </div>
     </>
   );
@@ -121,3 +105,41 @@ export function ArchitectureScreen() {
 function PanelsIcon() {
   return <Layers3 size={24} />;
 }
+
+/** Delivery status shown under the diagram; keep in step with docs/IMPLEMENTATION_AUDIT.md. */
+const STATUS = [
+  {
+    tone: "demo",
+    label: msg("NO ACCOUNT NEEDED"),
+    title: msg("In this demo"),
+    items: [
+      msg("Fixture-backed search, overlap matching and course ranking."),
+      msg("Scenario scoring and local evidence records."),
+      msg("Local resume editing, text export and an application board."),
+      msg("English and Traditional Chinese, light and dark themes."),
+    ],
+  },
+  {
+    tone: "backend",
+    label: msg("IMPLEMENTED AND TESTED LOCALLY"),
+    title: msg("With a configured backend"),
+    items: [
+      msg("Invitation-only Auth, consent, RLS and atomic quota reservations."),
+      msg("Private evidence, assessments, matching, learning plans, resumes and applications."),
+      msg("Durable queue and independent worker with leases, retries and recovery."),
+      msg("Reviewed catalog ingestion, translations and administrator tools."),
+      msg("Account export and deletion, telemetry and an AI gateway with fallbacks."),
+    ],
+  },
+  {
+    tone: "gated",
+    label: msg("NEEDS PEOPLE OR HOSTING"),
+    title: msg("Release gates"),
+    items: [
+      msg("Approved AI provider and live evaluation."),
+      msg("Expert review of questions, rubrics and course mappings."),
+      msg("Authorized live job sources."),
+      msg("Hosted deployment, alerts and off-host recovery."),
+    ],
+  },
+] as const;

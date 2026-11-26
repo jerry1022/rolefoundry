@@ -1442,11 +1442,47 @@ h1 {
   font-size: 13px;
 }
 .detail-list {
+  display: grid;
+  gap: 9px;
   padding-left: 18px;
   margin: 15px 0 24px;
   color: #63715a;
   font-size: 13px;
-  line-height: 2.2;
+  line-height: 1.6;
+}
+.detail-list li::marker {
+  color: var(--green);
+}
+/* Architecture delivery status: three columns, each keyed by an accent rule. */
+.arch-status {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 20px;
+}
+.arch-status .panel {
+  position: relative;
+  overflow: hidden;
+}
+.arch-status .panel::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto;
+  height: 3px;
+  background: var(--status-accent);
+}
+.arch-status-demo {
+  --status-accent: var(--lime);
+}
+.arch-status-backend {
+  --status-accent: var(--green);
+}
+.arch-status-gated {
+  --status-accent: var(--coral);
+}
+@media (max-width: 980px) {
+  .arch-status {
+    grid-template-columns: 1fr;
+  }
 }
 .fine-print {
   font-size: 11.5px;

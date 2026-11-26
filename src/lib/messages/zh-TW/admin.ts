@@ -35,16 +35,16 @@ export const admin = {
   "Local demo browser state": "本機示範瀏覽器狀態",
   "No backend": "無後端",
   "Account-backed career data and deletion": "以帳號保存的職涯資料與刪除流程",
-  "Integration roadmap": "整合藍圖",
+  "Integration status": "整合現況",
   "Durable workspace": "持久化工作區",
-  "Account identity is available when configured. Private career storage and deletion workflows follow.":
-    "設定後即可使用帳號身分，私人職涯資料儲存與刪除流程隨後提供。",
+  "With a configured backend, career records and private files live in PostgreSQL and private Storage, with self-service export and deletion.":
+    "設定後端之後，職涯紀錄與私人檔案存放於 PostgreSQL 與私人儲存空間，並可自行匯出與刪除。",
   "Background processing": "背景處理",
-  "pgmq queues, a Node worker, idempotent tasks and provider adapters.":
-    "pgmq 佇列、Node 工作程序、冪等任務與服務供應商轉接器。",
+  "pgmq queues, an independent Node worker, idempotent tasks and shared provider limits.":
+    "pgmq 佇列、獨立的 Node 工作程序、冪等任務與共用的供應商上限。",
   "Evidence-based analysis": "以證據為本的分析",
-  "Schema-validated extraction and review, with versions, quotas and human confirmation.":
-    "經結構描述驗證的擷取與審查，搭配版本、額度與人工確認。",
+  "Schema-validated, source-grounded output with versions, quotas and owner confirmation. Live providers await approval.":
+    "經結構描述驗證且有來源依據的輸出，搭配版本、額度與本人確認。實際供應商仍待核准。",
   "Start with a clean workspace": "從乾淨的工作區開始",
   "Remove local edits, saved roles, scenario results and tracker entries.":
     "移除本機編輯、收藏職缺、情境結果與追蹤項目。",
