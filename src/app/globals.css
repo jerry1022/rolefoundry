@@ -1169,7 +1169,11 @@ h1 {
   font-weight: 400;
 }
 .growth-ring small {
+  /* Stay inside the ring's inner circle; the label wraps on small rings. */
+  max-width: 58%;
   font-size: 10.5px;
+  line-height: 1.2;
+  text-align: center;
   color: #666e5d;
   margin-top: 3px;
 }
@@ -2382,8 +2386,8 @@ tr:last-child td {
     gap: 14px;
   }
   .growth-ring {
-    width: 90px;
-    height: 90px;
+    width: 104px;
+    height: 104px;
   }
   .growth-copy h3 {
     font-size: 13px;
@@ -2757,8 +2761,8 @@ tr:last-child td {
     gap: 17px;
   }
   .growth-ring {
-    width: 90px;
-    height: 90px;
+    width: 104px;
+    height: 104px;
   }
   .growth-copy h3 {
     font-size: 14px;
