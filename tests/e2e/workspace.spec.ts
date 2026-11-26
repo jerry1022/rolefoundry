@@ -196,7 +196,9 @@ test("mobile routes fit the viewport and navigation works", async ({ page }) => 
   }
   await page.getByRole("button", { name: "Open navigation" }).click();
   await page.getByRole("link", { name: "Discover roles", exact: true }).click();
-  await expect(page.locator("h1")).toHaveText("Find your kind of next.");
+  // Client navigation on a cold CI dev server can exceed the default 5s (WebKit, #65).
+  await expect(page).toHaveURL(/\/jobs\/$/, { timeout: 15000 });
+  await expect(page.locator("h1")).toHaveText("Find your kind of next.", { timeout: 15000 });
 });
 
 test("public demo labels identity as unavailable and fails closed", async ({ page, request }) => {
