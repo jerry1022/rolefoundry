@@ -31,14 +31,15 @@ export function DictionaryWorkspace() {
       />
       <section className="panel">
         <h2>{t("Demo skill vocabulary")}</h2>
-        <div className="tags">
+        <ul className="vocab-grid">
           {Object.entries(skillLabels).map(([id, label]) => (
-            <span className="skill-tag" key={id}>
-              {t(label)} · {id}
-            </span>
+            <li key={id}>
+              <span>{t(label)}</span>
+              <code>{id}</code>
+            </li>
           ))}
-        </div>
-        <p className="muted">
+        </ul>
+        <p className="muted vocab-note">
           {t("Live lookup and administration are unavailable in the static demo.")}
         </p>
       </section>

@@ -405,6 +405,9 @@
 :root[data-theme="dark"] .assessment-question label {
   background: rgb(24 29 25);
 }
+:root[data-theme="dark"] .overlap-bar span {
+  background: linear-gradient(90deg, var(--green), rgb(40 86 43));
+}
 :root[data-theme="dark"] .application-add select {
   background: rgb(22 28 23);
 }
