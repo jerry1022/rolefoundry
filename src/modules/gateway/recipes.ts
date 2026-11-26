@@ -190,9 +190,29 @@ export type ShortAnswerOutput = z.infer<typeof shortAnswerOutput>;
 const normalized = (text: string) =>
   text.normalize("NFKC").replace(/\s+/g, " ").trim().toLowerCase();
 
+const cjk = /[\u3400-\u9fff\uf900-\ufaff]/u;
+const escape = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 /**
- * Every criterion is judged exactly once; a "met" verdict must quote a non-trivial span that
- * actually appears in the answer, so the model cannot credit reasoning the learner did not write.
+ * Whether `quote` appears in `source` as a whole-word span (after NFKC, whitespace and case
+ * normalization) with enough content to be evidence: at least `minWords` words, or at least
+ * `minCjk` characters when the quote is written in CJK script, which has no word spaces.
+ */
+export function quotedIn(source: string, quote: string, minimum: { words: number; cjk: number }) {
+  const text = normalized(source);
+  const span = normalized(quote);
+  if (!span) return false;
+  if (cjk.test(span))
+    return [...span].filter((c) => cjk.test(c)).length >= minimum.cjk && text.includes(span);
+  if (span.split(" ").filter((word) => /[\p{L}\p{N}]/u.test(word)).length < minimum.words)
+    return false;
+  // Word boundaries that also respect non-ASCII letters (\b does not).
+  return new RegExp(`(?<![\\p{L}\\p{N}])${escape(span)}(?![\\p{L}\\p{N}])`, "u").test(text);
+}
+
+/**
+ * Every criterion is judged exactly once; a "met" verdict must quote a whole-word span of the
+ * answer (at least two words, or four CJK characters), so the model cannot credit reasoning the
+ * learner did not write. Negation and context remain the model's judgement, measured by calibration.
  */
 export const shortAnswerSpec: OutputSpec<ShortAnswerOutput> = {
   schema: shortAnswerOutput,
@@ -226,14 +246,13 @@ export const shortAnswerSpec: OutputSpec<ShortAnswerOutput> = {
     const criteria = request.segments.filter((segment) => segment.label === "criterion");
     if (!answer || output.criteria.length !== criteria.length) return false;
     const seen = new Set<string>();
-    const text = normalized(answer.text);
     return output.criteria.every((item) => {
       if (seen.has(item.criterionRef) || !criteria.some((c) => c.ref === item.criterionRef))
         return false;
       seen.add(item.criterionRef);
       if (!item.met) return item.quote === null;
-      const quote = item.quote ? normalized(item.quote) : "";
-      return quote.length >= 3 && text.includes(quote);
+      // Evidence is a whole-word span of at least two words (four CJK characters).
+      return item.quote !== null && quotedIn(answer.text, item.quote, { words: 2, cjk: 4 });
     });
   },
 };
@@ -303,14 +322,13 @@ export const skillExtractionSpec: OutputSpec<SkillExtractionOutput> = {
       const fact = kinds.get(item.factRef);
       if (seen.has(item.factRef) || fact?.label !== "fact") return false;
       seen.add(item.factRef);
-      const text = normalized(fact.text);
       const skills = new Set<string>();
       return item.skills.every((skill) => {
         if (skills.has(skill.skillRef) || kinds.get(skill.skillRef)?.label !== "skill")
           return false;
         skills.add(skill.skillRef);
-        const quote = normalized(skill.quote);
-        return quote.length >= 2 && text.includes(quote);
+        // A skill name alone ("SQL", "檢索") can be its evidence, but only as a whole word.
+        return quotedIn(fact.text, skill.quote, { words: 1, cjk: 2 });
       });
     });
   },

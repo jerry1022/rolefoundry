@@ -29,6 +29,10 @@ export function LearningPlanView({
 }) {
   const { t, locale } = useI18n();
   const text = (value: string) => plannerText(value, t);
+  /** Provider course titles are official names and stay as published; only planner-written
+   * practice titles are translated. */
+  const title = (step: LearningPlan["steps"][number]) =>
+    step.kind === "practice" ? text(step.title) : step.title;
   /** Reviewed translation of the planned course version; criteria only for full-resource steps. */
   const stepText = (step: LearningPlan["steps"][number]) => {
     const translation = locale === "zh-TW" ? step.translations?.["zh-TW"] : undefined;
@@ -112,7 +116,7 @@ export function LearningPlanView({
                     ? t("STAGE {n} · RESOURCE + PRACTICE", { n: index + 1 })
                     : t("STAGE {n} · EDITORIAL PRACTICE", { n: index + 1 })}
                 </p>
-                <h3>{text(step.title)}</h3>
+                <h3>{title(step)}</h3>
                 <p className="pill">
                   {step.scope === "partial-resource"
                     ? t("Partial resource only")
@@ -139,11 +143,10 @@ export function LearningPlanView({
                   {step.dependsOn.length
                     ? t("Start after: {steps}.", {
                         steps: step.dependsOn
-                          .map(
-                            (key) =>
-                              plan.steps.find((item) => item.key === key)?.title ||
-                              t("the earlier foundation"),
-                          )
+                          .map((key) => {
+                            const found = plan.steps.find((item) => item.key === key);
+                            return found ? title(found) : t("the earlier foundation");
+                          })
                           .join(", "),
                       })
                     : ""}
@@ -236,7 +239,7 @@ export function LearningPlanView({
               >
                 {plan.steps.map((step) => (
                   <option key={step.id} value={step.id}>
-                    {text(step.title)}
+                    {title(step)}
                   </option>
                 ))}
               </select>

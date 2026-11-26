@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { querySchema, type PublishedJob } from "@/modules/jobs/model";
 import type { CatalogClient, CatalogTranslationClient } from "@/modules/jobs/ports";
 import { msg, useI18n } from "@/lib/i18n";
@@ -7,7 +7,7 @@ import { ApplicationError } from "@/modules/platform/errors";
 import { TranslationField } from "../ui/translation-field";
 
 type Draft = { title: string; summary: string; responsibilities: string[]; reviewNote: string };
-const emptyDraft = (job: PublishedJob): Draft => {
+const draftFor = (job: PublishedJob): Draft => {
   const current = job.translations?.["zh-TW"];
   return {
     title: current?.title ?? "",
@@ -46,7 +46,10 @@ export function JobTranslationAdministration({
     const timer = setTimeout(() => {
       catalog
         .list(querySchema.parse({ q: query, limit: 10 }), controller.signal)
-        .then((page) => setResults(page.data))
+        .then((page) => {
+          setResults(page.data);
+          setError("");
+        })
         .catch((reason) => {
           if (!controller.signal.aborted)
             setError(failure(reason, msg("Published jobs are temporarily unavailable.")));
@@ -58,15 +61,21 @@ export function JobTranslationAdministration({
     };
   }, [catalog, query]);
 
+  // Only the most recent selection may populate the form (a slow earlier load is ignored).
+  const latest = useRef("");
   async function open(id: string) {
+    latest.current = id;
     setError("");
     setStatus("");
     try {
       const value = await catalog.find(id);
+      if (latest.current !== id) return null;
       setJob(value);
-      setDraft(emptyDraft(value));
+      setDraft(draftFor(value));
+      return value;
     } catch (reason) {
-      setError(failure(reason, msg("The job could not be loaded.")));
+      if (latest.current === id) setError(failure(reason, msg("The job could not be loaded.")));
+      return null;
     }
   }
 
@@ -88,7 +97,7 @@ export function JobTranslationAdministration({
           locale: "zh-TW",
           reason: draft.reviewNote,
         });
-      await open(job.id);
+      if (!(await open(job.id))) return;
       setStatus(action === "save" ? msg("Translation saved.") : msg("Translation removed."));
     } catch (reason) {
       setError(failure(reason, msg("The change could not be confirmed. Refresh before retrying.")));
@@ -127,6 +136,7 @@ export function JobTranslationAdministration({
               type="button"
               className={item.id === job?.id ? "selected" : ""}
               aria-pressed={item.id === job?.id}
+              disabled={busy}
               onClick={() => void open(item.id)}
             >
               <strong>{item.title}</strong>
