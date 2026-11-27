@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
-import type { AssessmentAttempt } from "@/modules/assessment/model";
+import { localizedQuestion, type AssessmentAttempt } from "@/modules/assessment/model";
 import type { AssessmentClient } from "@/modules/assessment/ports";
 import { ApplicationError } from "@/modules/platform/errors";
 import { useI18n } from "@/lib/i18n";
@@ -107,29 +107,34 @@ export function AttemptForm({
         </div>
       )}
       <fieldset disabled={sealed || submitting} className="assessment-question-list">
-        {initial.items.map((item, index) => (
-          <fieldset key={item.id} className="assessment-question">
-            <legend>
-              {index + 1}. {item.prompt}
-            </legend>
-            <p className="muted">{skillName(item)}</p>
-            {item.options.map((option, optionIndex) => (
-              <label key={optionIndex}>
-                <input
-                  type="radio"
-                  name={`item-${item.id}`}
-                  checked={answers[item.id] === optionIndex}
-                  onChange={() => {
-                    const next = { ...latest.current, [item.id]: optionIndex };
-                    latest.current = next;
-                    setAnswers(next);
-                  }}
-                />
-                {option}
-              </label>
-            ))}
-          </fieldset>
-        ))}
+        {initial.items.map((item, index) => {
+          const text = localizedQuestion(item, locale);
+          return (
+            <fieldset key={item.id} className="assessment-question" lang={text.lang}>
+              <legend>
+                {index + 1}. {text.prompt}
+              </legend>
+              <p className="muted" lang={locale === "zh-TW" ? "zh-Hant" : "en"}>
+                {skillName(item)}
+              </p>
+              {text.options.map((option, optionIndex) => (
+                <label key={optionIndex}>
+                  <input
+                    type="radio"
+                    name={`item-${item.id}`}
+                    checked={answers[item.id] === optionIndex}
+                    onChange={() => {
+                      const next = { ...latest.current, [item.id]: optionIndex };
+                      latest.current = next;
+                      setAnswers(next);
+                    }}
+                  />
+                  {option}
+                </label>
+              ))}
+            </fieldset>
+          );
+        })}
       </fieldset>
       <div className="assessment-submit-row">
         <p role="status" className="muted">

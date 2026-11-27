@@ -32,6 +32,54 @@ export const questionInputSchema = z
   })
   .strict()
   .refine((v) => v.correctIndex < v.options.length);
+/** Reviewed translation of one immutable question version (options keep order and count). */
+const questionTranslationSchema = z.object({
+  prompt: z.string(),
+  options: z.array(z.string()),
+  reviewedAt: z.string(),
+  /** Present only once the attempt is graded, like the source explanation. */
+  explanation: z.string().optional(),
+});
+const questionTranslationsSchema = z
+  .object({ "zh-TW": questionTranslationSchema.optional() })
+  .optional();
+export const questionTranslationInputSchema = z
+  .object({
+    locale: z.literal("zh-TW"),
+    prompt: text(3000),
+    options: z.array(text(1000)).min(2).max(10),
+    explanation: text(3000),
+    reviewNote: text(1000),
+  })
+  .strict();
+export type QuestionTranslationInput = z.infer<typeof questionTranslationInputSchema>;
+export const questionTranslationRemovalSchema = z
+  .object({ locale: z.literal("zh-TW"), reason: text(1000) })
+  .strict();
+export type QuestionTranslationRemoval = z.infer<typeof questionTranslationRemovalSchema>;
+
+/**
+ * Question text for the viewer's locale. A translation applies only when its options align
+ * one-to-one with the source, so a selected index always means the same answer.
+ */
+export function localizedQuestion(
+  item: {
+    prompt: string;
+    options: string[];
+    translations?: z.infer<typeof questionTranslationsSchema>;
+  },
+  locale: string,
+) {
+  const translation = locale === "zh-TW" ? item.translations?.["zh-TW"] : undefined;
+  if (!translation || translation.options.length !== item.options.length)
+    return { prompt: item.prompt, options: item.options, explanation: null, lang: "en" as const };
+  return {
+    prompt: translation.prompt,
+    options: translation.options,
+    explanation: translation.explanation ?? null,
+    lang: "zh-Hant" as const,
+  };
+}
 export const publicItemSchema = z.object({
   id: z.uuid(),
   questionVersionId: z.uuid(),
@@ -42,6 +90,7 @@ export const publicItemSchema = z.object({
   skillLabel: z.string(),
   skillLabelZhTw: z.string().optional(),
   dictionaryVersion: z.number().int().positive(),
+  translations: questionTranslationsSchema,
 });
 export const assessmentResultSchema = z.object({
   id: z.uuid(),
@@ -88,6 +137,7 @@ export const questionAdminSchema = questionInputSchema.extend({
   id: z.uuid(),
   reviewed: z.boolean(),
   dictionaryVersion: z.number().int().positive(),
+  translations: questionTranslationsSchema,
 });
 export const rubricAdminSchema = rubricInputSchema.extend({ id: z.uuid() });
 export const questionBankSchema = z.object({

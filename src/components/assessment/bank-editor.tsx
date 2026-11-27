@@ -7,6 +7,7 @@ import { questionInputSchema, type QuestionBank } from "@/modules/assessment/mod
 import { tracks, type Track } from "@/modules/skills/catalog";
 import { ApplicationError } from "@/modules/platform/errors";
 import { useI18n } from "@/lib/i18n";
+import { QuestionTranslationForm } from "./question-translation";
 type Mutation = (work: () => Promise<unknown>) => Promise<void>;
 function RubricForm({
   client,
@@ -387,6 +388,13 @@ export function AssessmentBank({
                       ? t("Retire question version")
                       : t("Review question version")}
                   </button>
+                  <QuestionTranslationForm
+                    key={question.translations?.["zh-TW"]?.reviewedAt ?? "new"}
+                    question={question}
+                    client={client}
+                    busy={busy}
+                    onMutation={mutate}
+                  />
                 </article>
               ))}
             </div>

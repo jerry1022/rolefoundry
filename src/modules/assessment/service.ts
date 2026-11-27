@@ -2,7 +2,14 @@ import { z } from "zod";
 import type { Actor } from "../identity/core";
 import { tracks } from "../skills/catalog";
 import { ApplicationError } from "../platform/errors";
-import { saveAnswersSchema, submitSchema, rubricInputSchema, questionInputSchema } from "./model";
+import {
+  saveAnswersSchema,
+  submitSchema,
+  rubricInputSchema,
+  questionInputSchema,
+  questionTranslationInputSchema,
+  questionTranslationRemovalSchema,
+} from "./model";
 import type {
   AssessmentRepository,
   AssessmentAuthorization,
@@ -83,6 +90,21 @@ export class AssessmentAdministrationService {
     await this.repository.retire(
       parse(z.uuid(), id),
       parse(z.object({ reason: z.string().trim().min(1).max(1000) }).strict(), input).reason,
+    );
+  }
+  /** Reviewed zh-TW text for one immutable question version; the database checks alignment. */
+  async translate(actor: Actor, id: string, input: unknown) {
+    await this.allow(actor);
+    await this.repository.translate(
+      parse(z.uuid(), id),
+      parse(questionTranslationInputSchema, input),
+    );
+  }
+  async removeTranslation(actor: Actor, id: string, input: unknown) {
+    await this.allow(actor);
+    await this.repository.removeTranslation(
+      parse(z.uuid(), id),
+      parse(questionTranslationRemovalSchema, input),
     );
   }
 }

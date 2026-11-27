@@ -73,5 +73,17 @@ export function createAssessmentAdminClient(fetcher: typeof fetch = fetch): Asse
         body: { reason },
       });
     },
+    translate: async (id, input) => {
+      await request(`admin/assessments/questions/${encodeURIComponent(id)}/translations`, {
+        method: "POST",
+        body: input,
+      });
+    },
+    removeTranslation: async (id, input) => {
+      await request(`admin/assessments/questions/${encodeURIComponent(id)}/translations/remove`, {
+        method: "POST",
+        body: input,
+      });
+    },
   };
 }

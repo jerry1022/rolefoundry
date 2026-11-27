@@ -1,6 +1,6 @@
 "use client";
 import Link from "next/link";
-import type { AssessmentAttempt } from "@/modules/assessment/model";
+import { localizedQuestion, type AssessmentAttempt } from "@/modules/assessment/model";
 import { useI18n } from "@/lib/i18n";
 export function AttemptResult({ attempt }: { attempt: AssessmentAttempt }) {
   const { t, locale } = useI18n();
@@ -22,21 +22,24 @@ export function AttemptResult({ attempt }: { attempt: AssessmentAttempt }) {
       <div className="assessment-question-list">
         {attempt.items.map((item) => {
           const observation = result.observations.find((value) => value.itemId === item.id)!;
+          const text = localizedQuestion(item, locale);
           return (
             <article className="assessment-question" key={item.id}>
-              <h3>{item.prompt}</h3>
+              <h3 lang={text.lang}>{text.prompt}</h3>
               <span className="pill">
                 {observation.correct ? t("Correct in this scenario") : t("Worth revisiting")}
               </span>
               <p>
                 {t("Your response: {answer}", {
-                  answer: item.options[observation.selectedIndex],
+                  answer: text.options[observation.selectedIndex],
                 })}
               </p>
               <p>
-                {t("Reviewed answer: {answer}", { answer: item.options[observation.correctIndex] })}
+                {t("Reviewed answer: {answer}", { answer: text.options[observation.correctIndex] })}
               </p>
-              <p>{observation.explanation}</p>
+              <p lang={text.explanation ? text.lang : "en"}>
+                {text.explanation ?? observation.explanation}
+              </p>
               <small>{t("Skill: {skill}", { skill: skillName(item) })}</small>
               <p className="muted">
                 {t(

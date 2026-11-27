@@ -5062,6 +5062,19 @@ input[type="radio"] {
   color: var(--muted);
   font-size: 12px;
 }
+.question-translation {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px dashed var(--line);
+}
+.question-translation summary {
+  cursor: pointer;
+  color: var(--green);
+  font-weight: 600;
+}
+.question-translation form {
+  margin-top: 12px;
+}
 .job-translation-note {
   font-size: 12px;
 }
