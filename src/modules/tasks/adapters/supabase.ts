@@ -4,6 +4,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { safeDatabaseError } from "../../platform/database-errors";
 import { taskLeaseSchema, taskSchema } from "../model";
 import type { TaskQueue, TaskRepository } from "../ports";
+import type { TaskResourceLimits } from "../resources";
 async function rpc(client: SupabaseClient, name: string, input: Record<string, unknown>) {
   const { data, error } = await client.rpc(name, input);
   if (error) throw safeDatabaseError(error);
@@ -22,13 +23,15 @@ export class SupabaseTaskQueue implements TaskQueue {
     kinds: Parameters<TaskQueue["read"]>[1],
     seconds: number,
     quantity: number,
+    resourceLimits?: TaskResourceLimits,
   ) {
     return z.array(taskLeaseSchema).parse(
-      await rpc(this.client, "task_read", {
+      await rpc(this.client, resourceLimits ? "task_read_resources" : "task_read", {
         p_worker: workerId,
         p_kinds: kinds,
         p_seconds: seconds,
         p_quantity: quantity,
+        ...(resourceLimits ? { p_limits: resourceLimits } : {}),
       }),
     );
   }

@@ -108,3 +108,7 @@ Apply `20261114140000_identity_admin_directory.sql` and use the existing verifie
 ## Invalidation dispatch
 
 Apply `20261114150000_invalidation_dispatch.sql` and run compatible worker code using existing Supabase worker settings. No new secret, browser flag or model call is introduced. The normal worker performs bounded profile/dictionary maintenance before task acquisition; producer/privacy/version guards remain independently effective during rollout. Review historical event counts before hosted catch-up. See [setup, retry/lease behavior and operator checks](INVALIDATION_SETUP.md).
+
+## Worker resource limits
+
+Apply `20261114160000_worker_resource_budgets.sql`, then use compatible worker code. `WORKER_DOCUMENT_CONCURRENCY` and `WORKER_FETCH_CONCURRENCY` default to 1; `WORKER_GENERAL_CONCURRENCY` defaults to total `WORKER_CONCURRENCY`. Pool values are integers 0–8; total remains integer 1–8, default 2. No new credential or table is required. Local helpers inherit shell settings; independent workers do not automatically read Next env files. See [group membership, pause behavior and verification](WORKER_RESOURCE_SETUP.md). Provider-wide concurrency remains pending.

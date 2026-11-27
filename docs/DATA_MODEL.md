@@ -124,3 +124,7 @@ The existing invitation/quota tables remain authoritative. New administrator-onl
 ### Invalidation delivery receipts
 
 `invalidation_deliveries` references exactly one profile event or dictionary version and a fixed consumer. Unique event/consumer pairs, eligibility timestamps, retained attempts, fenced leases, completion and one safe error code support atomic bounded dispatch/retry. Profile references cascade on owner/event removal; no private content is copied. RLS and revoked raw grants protect every role. Only the three service-only claim/apply/retry RPCs expose opaque leases; consumer/task helpers remain private. Producer triggers and migration catch-up populate receipts. See [version comparisons, transaction/locking policy and retention](INVALIDATION_SETUP.md).
+
+### Resource-aware task acquisition
+
+The resource-reader migration adds a queue-message lookup index and private kind-to-resource mapping plus service-only `task_read_resources`; it creates no new table. The legacy task reader delegates to the same owner/erasure/retry/lease implementation. Queue/task metadata select eligible work before the normal pgmq conditional read, preserving paused-capacity messages and execution attempts. Per-instance resource counters live in the worker core; provider-wide durable admission is not introduced. See [scope and migration](WORKER_RESOURCE_SETUP.md).

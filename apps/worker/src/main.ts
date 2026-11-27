@@ -27,6 +27,7 @@ import { SupabaseWorkerPresenceStore } from "../../../src/modules/tasks/adapters
 import type { TaskHandler } from "../../../src/modules/tasks/ports";
 import type { TaskKind } from "../../../src/modules/tasks/model";
 import { TaskWorker } from "../../../src/modules/tasks/worker";
+import { declareTaskResources } from "../../../src/modules/tasks/resources";
 import { SupabaseTaskQueue } from "../../../src/modules/tasks/adapters/supabase";
 import { SupabaseAssessmentGrader } from "../../../src/modules/assessment/adapters/supabase";
 import { MatchingHandler } from "../../../src/modules/matching/handler";
@@ -68,12 +69,18 @@ const config = z
     key: z.string().min(1),
     seconds: z.coerce.number().int().min(5).max(300),
     concurrency: z.coerce.number().int().min(1).max(8),
+    documents: z.coerce.number().int().min(0).max(8),
+    fetches: z.coerce.number().int().min(0).max(8),
+    general: z.coerce.number().int().min(0).max(8),
   })
   .safeParse({
     url: process.env.SUPABASE_URL,
     key: process.env.SUPABASE_SERVICE_ROLE_KEY,
     seconds: process.env.WORKER_LEASE_SECONDS || 30,
     concurrency: process.env.WORKER_CONCURRENCY || 2,
+    documents: process.env.WORKER_DOCUMENT_CONCURRENCY || 1,
+    fetches: process.env.WORKER_FETCH_CONCURRENCY || 1,
+    general: process.env.WORKER_GENERAL_CONCURRENCY || process.env.WORKER_CONCURRENCY || 2,
   });
 if (!config.success)
   throw new Error("Worker configuration is missing or invalid; no credentials are printed.");
@@ -160,12 +167,18 @@ const handlers = {
     new RuleLearningGapAnalyzer(),
   ),
 } satisfies Partial<Record<TaskKind, TaskHandler>>;
+const resourceLimits = {
+  documents: config.data.documents,
+  fetch: config.data.fetches,
+  general: config.data.general,
+};
+const declaration = declareTaskResources(Object.keys(handlers) as TaskKind[], resourceLimits);
 const workerId = crypto.randomUUID(),
   presence = new WorkerPresence(
     new SupabaseWorkerPresenceStore(client),
     {
       id: workerId,
-      kinds: Object.keys(handlers) as TaskKind[],
+      kinds: declaration.kinds,
       leaseSeconds: config.data.seconds,
       concurrency: config.data.concurrency,
     },
@@ -178,16 +191,26 @@ const worker = new TaskWorker(new SupabaseTaskQueue(client), handlers, {
   workerId,
   leaseSeconds: config.data.seconds,
   concurrency: config.data.concurrency,
+  resourceLimits,
   log: (event) => console.log(JSON.stringify(event)),
 });
+console.log(
+  JSON.stringify({
+    event: "worker.resources",
+    total: config.data.concurrency,
+    documents: config.data.documents,
+    fetch: config.data.fetches,
+    general: config.data.general,
+  }),
+);
 const once = process.argv.includes("--once"),
   drain = process.argv.includes("--drain");
 let batches = 0;
 const draining = () => void presence.report("draining");
 controller.signal.addEventListener("abort", draining, { once: true });
 if (controller.signal.aborted) draining();
-await presence.report("active");
-const presenceTimer = setInterval(() => void presence.report("active"), 10000);
+await presence.report(declaration.state);
+const presenceTimer = setInterval(() => void presence.report(declaration.state), 10000);
 try {
   while (!controller.signal.aborted) {
     try {
