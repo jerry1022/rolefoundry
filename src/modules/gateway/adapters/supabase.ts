@@ -3,7 +3,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { safeDatabaseError } from "../../platform/database-errors";
 import { recipientPageSchema, type RecipientChange, type RecipientStore } from "../admin";
 import type { GatewayRequest, GatewayResult } from "../model";
-import type { GatewayAuthority, GatewayRecorder } from "../ports";
+import type { GatewayAuthority, GatewayRecorder, ProviderSlots } from "../ports";
 
 const bounded = (signal: AbortSignal) => AbortSignal.any([signal, AbortSignal.timeout(5000)]);
 
@@ -80,5 +80,28 @@ export class SupabaseRecipientStore implements RecipientStore {
       p_reason: change.reason,
     });
     if (error) throw safeDatabaseError(error);
+  }
+}
+
+/** Leased provider-wide slots in PostgreSQL, shared by every worker instance. */
+export class SupabaseProviderSlots implements ProviderSlots {
+  constructor(private readonly client: SupabaseClient) {}
+  async acquire(provider: string, limit: number, leaseSeconds: number, signal: AbortSignal) {
+    const { data, error } = await this.client
+      .rpc("gateway_slot_acquire", {
+        p_provider: provider,
+        p_limit: limit,
+        p_seconds: leaseSeconds,
+      })
+      .abortSignal(bounded(signal));
+    if (error) throw new Error("Provider slot store is unavailable.");
+    return typeof data === "string" ? data : null;
+  }
+  async release(provider: string, token: string) {
+    const { error } = await this.client.rpc("gateway_slot_release", {
+      p_provider: provider,
+      p_token: token,
+    });
+    if (error) throw new Error("Provider slot release failed.");
   }
 }

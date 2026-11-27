@@ -22,12 +22,12 @@ if (live) {
   const policy = parseGatewayPolicy(process.env.ROLEFOUNDRY_AI_POLICY);
   if (!policy.routes["resume.wording"])
     throw new Error("ROLEFOUNDRY_AI_POLICY has no resume.wording route.");
-  gateway = new AIGateway(
+  gateway = new AIGateway({
     policy,
-    adaptersFromEnvironment(process.env),
-    gatewayTemplates,
-    syntheticOnly,
-  );
+    adapters: adaptersFromEnvironment(process.env),
+    templates: gatewayTemplates,
+    authority: syntheticOnly,
+  });
 } else {
   const echo = new FakeAdapter("offline", (call) => {
     const payload = JSON.parse(call.messages[1].content) as {
@@ -45,8 +45,8 @@ if (live) {
       }),
     };
   });
-  gateway = new AIGateway(
-    parseGatewayPolicy(
+  gateway = new AIGateway({
+    policy: parseGatewayPolicy(
       JSON.stringify({
         routes: {
           "resume.wording": {
@@ -60,10 +60,10 @@ if (live) {
         },
       }),
     ),
-    [echo],
-    gatewayTemplates,
-    syntheticOnly,
-  );
+    adapters: [echo],
+    templates: gatewayTemplates,
+    authority: syntheticOnly,
+  });
 }
 const controller = new AbortController();
 for (const signal of ["SIGINT", "SIGTERM"] as const) process.on(signal, () => controller.abort());

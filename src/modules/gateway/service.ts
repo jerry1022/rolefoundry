@@ -12,6 +12,7 @@ import {
 } from "./model";
 import { purposeRoute, routeRecipients, type GatewayPolicy, type GatewayRoute } from "./policy";
 import type {
+  ProviderSlots,
   AdapterResponse,
   ChatMessage,
   GatewayAdapter,
@@ -159,17 +160,31 @@ function resultBuilder<T>(
  * The single controlled path for model calls. Domain modules own the decision and the
  * authority; this service owns policy, bounded execution, validation and traceability.
  */
+export interface AIGatewayOptions {
+  policy: GatewayPolicy;
+  adapters: readonly GatewayAdapter[];
+  templates: readonly PurposeTemplate[];
+  authority: GatewayAuthority;
+  clock?: GatewayClock;
+  /** Shared provider slots across worker instances; required when the policy sets limits. */
+  slots?: ProviderSlots;
+}
+
 export class AIGateway {
   private readonly gates = new Map<string, Gate>();
   private readonly adapters: Map<string, GatewayAdapter>;
   private readonly templates: Map<string, PurposeTemplate>;
-  constructor(
-    private readonly policy: GatewayPolicy,
-    adapters: readonly GatewayAdapter[],
-    templates: readonly PurposeTemplate[],
-    private readonly authority: GatewayAuthority,
-    private readonly clock: GatewayClock = systemClock,
-  ) {
+  private readonly policy: GatewayPolicy;
+  private readonly authority: GatewayAuthority;
+  private readonly clock: GatewayClock;
+  private readonly slots: ProviderSlots | null;
+  constructor({ policy, adapters, templates, authority, clock, slots }: AIGatewayOptions) {
+    this.policy = policy;
+    this.authority = authority;
+    this.clock = clock ?? systemClock;
+    this.slots = slots ?? null;
+    if (Object.keys(policy.providerLimits ?? {}).length && !this.slots)
+      throw new Error("AI gateway provider limits require a shared slot store.");
     this.adapters = new Map(adapters.map((adapter) => [adapter.id, adapter]));
     this.templates = new Map(templates.map((template) => [template.purpose, template]));
     for (const route of Object.values(policy.routes)) {
@@ -311,10 +326,12 @@ export class AIGateway {
       fallbackReason: plan.fallbackReason,
     };
     let acquired = false;
+    let slot: string | null = null;
     const begin = this.clock.now();
     try {
       await gate.acquire(route.concurrency, signal);
       acquired = true;
+      slot = await this.sharedSlot(adapter.id, route, signal);
       const response = await adapter.complete(
         {
           model: plan.target.model,
@@ -337,9 +354,25 @@ export class AIGateway {
         retryAfterMs: error instanceof ProviderFailure ? error.retryAfterMs : null,
       };
     } finally {
+      if (slot) await this.slots!.release(adapter.id, slot).catch(() => undefined);
       if (acquired) gate.release();
       record.latencyMs = Math.max(0, this.clock.now() - begin);
       execution.attempts.push(record);
+    }
+  }
+
+  /**
+   * Waits for a provider-wide slot when the policy limits this provider. The lease outlives a
+   * crashed worker by at most the route deadline; waiting counts against the shared deadline.
+   */
+  private async sharedSlot(provider: string, route: GatewayRoute, signal: AbortSignal) {
+    const limit = this.policy.providerLimits?.[provider];
+    if (!limit || !this.slots) return null;
+    const leaseSeconds = Math.ceil(route.deadlineMs / 1000) + 5;
+    for (let wait = 100; ; wait = Math.min(wait * 2, 1000)) {
+      const token = await this.slots.acquire(provider, limit.concurrency, leaseSeconds, signal);
+      if (token) return token;
+      await this.clock.sleep(wait, signal);
     }
   }
 

@@ -6,7 +6,11 @@ import type { GatewayRecorder } from "../../gateway/ports";
 import { gatewayTemplates, rankSpec } from "../../gateway/recipes";
 import { parseGatewayPolicy } from "../../gateway/policy";
 import { adaptersFromEnvironment } from "../../gateway/adapters/registry";
-import { SupabaseGatewayAuthority, SupabaseGatewayRecorder } from "../../gateway/adapters/supabase";
+import {
+  SupabaseGatewayAuthority,
+  SupabaseGatewayRecorder,
+  SupabaseProviderSlots,
+} from "../../gateway/adapters/supabase";
 import type { SemanticStage } from "../handler";
 import type { SemanticRankingStore } from "../ports";
 import { SemanticRanker, type SemanticGateway } from "../semantic";
@@ -40,12 +44,13 @@ export function semanticStageFromEnvironment(
   const enabled = Boolean(policy.routes["matching.semantic-rank"]);
   const gateway = enabled
     ? new GatewaySemanticRanking(
-        new AIGateway(
+        new AIGateway({
           policy,
-          adaptersFromEnvironment(env),
-          gatewayTemplates,
-          new SupabaseGatewayAuthority(client),
-        ),
+          adapters: adaptersFromEnvironment(env),
+          templates: gatewayTemplates,
+          authority: new SupabaseGatewayAuthority(client),
+          slots: new SupabaseProviderSlots(client),
+        }),
         new SupabaseGatewayRecorder(client),
       )
     : null;

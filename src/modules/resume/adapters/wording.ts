@@ -5,7 +5,11 @@ import { parseGatewayPolicy } from "../../gateway/policy";
 import { gatewayTemplates, wordingSpec } from "../../gateway/recipes";
 import { adaptersFromEnvironment } from "../../gateway/adapters/registry";
 import { IdentityAnalysisLifecycle } from "../../gateway/adapters/identity-lifecycle";
-import { SupabaseGatewayAuthority, SupabaseGatewayRecorder } from "../../gateway/adapters/supabase";
+import {
+  SupabaseGatewayAuthority,
+  SupabaseGatewayRecorder,
+  SupabaseProviderSlots,
+} from "../../gateway/adapters/supabase";
 import type { WordingStageDependencies } from "../handler";
 import type { ResumeWordingStore } from "../ports";
 import { WordingStage } from "../wording";
@@ -21,12 +25,13 @@ export function wordingStageFromEnvironment(
 ): WordingStageDependencies {
   const policy = parseGatewayPolicy(env.ROLEFOUNDRY_AI_POLICY);
   const gateway = policy.routes["resume.wording"]
-    ? new AIGateway(
+    ? new AIGateway({
         policy,
-        adaptersFromEnvironment(env),
-        gatewayTemplates,
-        new SupabaseGatewayAuthority(client),
-      )
+        adapters: adaptersFromEnvironment(env),
+        templates: gatewayTemplates,
+        authority: new SupabaseGatewayAuthority(client),
+        slots: new SupabaseProviderSlots(client),
+      })
     : null;
   const recorder = new SupabaseGatewayRecorder(client);
   return {

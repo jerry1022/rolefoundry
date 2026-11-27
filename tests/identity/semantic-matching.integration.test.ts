@@ -54,8 +54,8 @@ function handler(step: FakeStep[] | ((call: AdapterCall) => FakeStep) | null) {
     step === null
       ? null
       : new GatewaySemanticRanking(
-          new AIGateway(
-            parseGatewayPolicy(
+          new AIGateway({
+            policy: parseGatewayPolicy(
               JSON.stringify({
                 routes: {
                   "matching.semantic-rank": {
@@ -69,10 +69,10 @@ function handler(step: FakeStep[] | ((call: AdapterCall) => FakeStep) | null) {
                 },
               }),
             ),
-            [new FakeAdapter(recipient, step)],
-            gatewayTemplates,
-            new SupabaseGatewayAuthority(stack.privileged),
-          ),
+            adapters: [new FakeAdapter(recipient, step)],
+            templates: gatewayTemplates,
+            authority: new SupabaseGatewayAuthority(stack.privileged),
+          }),
           new SupabaseGatewayRecorder(stack.privileged),
         );
   return new MatchingHandler(store, {
