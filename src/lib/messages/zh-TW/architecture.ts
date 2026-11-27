@@ -29,27 +29,30 @@ export const architecture = {
   "AI Gateway": "AI 閘道",
   "Structured output · versions · quotas · no live provider in demo":
     "結構化輸出 · 版本 · 額度 · 示範版未連接真實供應商",
-  "What runs today": "目前已運作",
-  "Next.js routes and a responsive application shell.": "Next.js 路由與響應式應用程式外框。",
   "Fixture-backed search, overlap matching and course ranking.":
     "以範例資料提供的搜尋、重疊配對與課程排序。",
   "Scenario scoring and local evidence records.": "情境評分與本機證據紀錄。",
   "Local resume editing, text export and an application board.":
     "本機履歷編輯、文字匯出與應徵看板。",
-  "Optional invitation-only Auth, consent, RLS and atomic quota reservations.":
-    "可選用的邀請制驗證、同意管理、RLS 與原子化額度預留。",
-  "Private preferences and evidence history through replaceable service ports.":
-    "透過可替換的服務埠管理私人偏好與證據歷程。",
-  "Published catalog, source permissions/freshness and private bookmarks.":
-    "已發布目錄、來源授權／新鮮度與私人書籤。",
-  "Typed repository, provider and worker contracts.": "具型別的資料存取、供應商與工作程序合約。",
-  "What comes next": "接下來的規劃",
-  "Private document storage and account-backed career workflows.":
-    "私人文件儲存與以帳號為基礎的職涯流程。",
-  "Authorized live source adapters and import review workflows.":
-    "經授權的即時來源轉接器與匯入審核流程。",
-  "Persistent queues and isolated document processing.": "持久化佇列與隔離的文件處理。",
-  "Model adapters and output validation using versioned consent.":
-    "模型轉接器，以及搭配版本化同意的輸出驗證。",
-  "Production telemetry, backups and deployment controls.": "正式環境遙測、備份與部署控管。",
+  "NO ACCOUNT NEEDED": "不需要帳號",
+  "In this demo": "示範版內容",
+  "English and Traditional Chinese, light and dark themes.": "英文與繁體中文介面，淺色與深色主題。",
+  "IMPLEMENTED AND TESTED LOCALLY": "已實作並在本機驗證",
+  "With a configured backend": "設定後端之後",
+  "Invitation-only Auth, consent, RLS and atomic quota reservations.":
+    "邀請制驗證、同意管理、RLS 與原子化額度預留。",
+  "Private evidence, assessments, matching, learning plans, resumes and applications.":
+    "私人證據、能力檢測、職缺配對、學習計畫、履歷與應徵紀錄。",
+  "Durable queue and independent worker with leases, retries and recovery.":
+    "持久化佇列與獨立工作程序，具備租約、重試與復原機制。",
+  "Reviewed catalog ingestion, translations and administrator tools.":
+    "經審核的目錄匯入、翻譯與管理工具。",
+  "Account export and deletion, telemetry and an AI gateway with fallbacks.":
+    "帳號資料匯出與刪除、遙測，以及具備備援機制的 AI 閘道。",
+  "NEEDS PEOPLE OR HOSTING": "需要人工或正式環境",
+  "Release gates": "上線前關卡",
+  "Approved AI provider and live evaluation.": "核准的 AI 供應商與實際評估。",
+  "Expert review of questions, rubrics and course mappings.": "專家審閱題目、評分標準與課程對應。",
+  "Authorized live job sources.": "經授權的即時職缺來源。",
+  "Hosted deployment, alerts and off-host recovery.": "正式環境部署、警示與異地復原。",
 } satisfies Messages;
