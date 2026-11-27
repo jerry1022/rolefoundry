@@ -16,6 +16,7 @@ async function files(directory) {
 }
 const violations = [];
 for (const file of [
+  ...(await files("src/modules/identity")),
   ...(await files("src/modules/profile")),
   ...(await files("src/modules/skills")),
   ...(await files("src/modules/jobs")),
@@ -29,6 +30,7 @@ for (const file of [
   ...(await files("src/modules/operations")),
   ...(await files("src/modules/account-data")),
   ...(await files("src/modules/account-deletion")),
+  ...(await files("src/components/identity")),
   ...(await files("src/components/profile")),
   ...(await files("src/components/jobs")),
   ...(await files("src/components/skills")),
@@ -51,11 +53,12 @@ for (const file of [
     true,
   );
   const domain =
+    /^src\/modules\/identity\/(admin|admin-service)\.ts$/.test(file) ||
     /src\/modules\/((?:profile|jobs|skills|assessment|tasks|matching|learning|resume|applications|ingestion|operations|account-data|account-deletion)\/(model|ports|service|specializations|catalog|worker|rules|handler|report-state|planner|plan-state|document-state|cleanup|record-state|input|csv|normalizer|review-service|feed-service|feed-handler|presence|replay))\.ts$/.test(
       file,
     );
   const component =
-    /^src\/components\/(profile|jobs|skills|assessment|matching|learning|resume|applications|ingestion|operations|admin|account-data|account-deletion)\//.test(
+    /^src\/components\/(profile|jobs|skills|assessment|matching|learning|resume|applications|ingestion|operations|identity|admin|account-data|account-deletion)\//.test(
       file,
     );
   for (const statement of source.statements) {

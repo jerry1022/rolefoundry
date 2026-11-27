@@ -14,7 +14,7 @@ npm run identity:invite -- developer@example.test
 npm run identity:dev
 ```
 
-Sign in at `http://127.0.0.1:3200/account/`. An administrator must author a rubric and at least three reviewed questions for each supported track in **Question bank administration** at `/assessments/`. Use the administrator bootstrap in [identity setup](IDENTITY_SETUP.md). Migrations deliberately publish no assessment content. If a track has fewer than three eligible questions, starting an attempt returns `409 RF_NOT_READY` with a useful message.
+Sign in at `http://127.0.0.1:3200/account/`. An administrator must author a rubric and at least three reviewed questions for each supported track in **Question bank administration** at `/assessments/` or the reused **Assessment questions and rubrics** editor at `/admin/`. Use the administrator bootstrap in [identity setup](IDENTITY_SETUP.md). Migrations deliberately publish no assessment content. If a track has fewer than three eligible questions, starting an attempt returns `409 RF_NOT_READY` with a useful message.
 
 In a separate terminal run:
 

@@ -48,7 +48,7 @@ Responses contain task IDs/kinds/state, attempts/timestamps, safe allowlisted er
 
 See [the executable isolated database/queue recovery rehearsal](OPERATIONS_RECOVERY.md). Diagnostics reads create no work. The separate [task recovery mutation port](TASK_REPLAY_SETUP.md) now creates an audited **domain** attempt, revalidates current owner/input/source permissions and preserves the original attempt. Never reset a task row or resend a queue message as an operational shortcut.
 
-Module 13 remains partial: consolidated skills/question/invitation/quota administration, authoritative off-host ledger delivery/hosted cutover, external telemetry/alerts, and hosted/clean-cluster/Storage-object restore are outstanding. Source administration remains available through its [existing domain workflow](INGESTION_SETUP.md).
+[Consolidated skills/question/invitation/quota administration](ADMIN_WORKSPACE_SETUP.md) is implemented through reused domain components and current-role gates. Module 13 remains partial: authoritative off-host ledger delivery/hosted cutover, external telemetry/alerts, and hosted/clean-cluster/Storage-object restore are outstanding. Source administration remains available through its [existing domain workflow](INGESTION_SETUP.md).
 
 ## Browser evidence
 

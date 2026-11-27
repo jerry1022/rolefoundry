@@ -12,7 +12,7 @@ npx supabase migration up
 npm run identity:dev
 ```
 
-Open `/dictionary/` for anonymous browsing, exact lookup and historical snapshots. A verified administrator sees the editor, aliases/relationships/track mapping forms and reviewed merge/removal controls. Use Account & privacy for sign-in and the documented local admin bootstrap. No first-user-is-admin endpoint exists.
+Open `/dictionary/` for anonymous browsing, exact lookup and historical snapshots. A verified administrator sees the editor, aliases/relationships/track mapping forms and reviewed merge/removal controls. The same editor is available in **Skills and aliases** at the [consolidated administrator workspace](ADMIN_WORKSPACE_SETUP.md). Use Account & privacy for sign-in and the documented local admin bootstrap. No first-user-is-admin endpoint exists.
 
 The dictionary is available when either configured identity or the published catalog is enabled. Anonymous reads use only the URL/anon key and never need the service key. Private mutations reuse identity verification. Static export shows a clearly labeled, read-only seed vocabulary and does not call missing APIs.
 

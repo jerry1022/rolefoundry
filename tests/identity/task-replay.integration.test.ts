@@ -800,8 +800,11 @@ it("supports explicit mobile recovery, lost-response retry and inspection of the
         .getByRole("button", { name: "Check recovery eligibility", exact: true })
         .click();
       await webExpect(
-        panel.getByText("Task diagnostics require an administrator session.", { exact: false }),
+        page.getByText("Administration requires a current administrator session.", {
+          exact: false,
+        }),
       ).toBeVisible();
+      await webExpect(panel).toHaveCount(0);
       await webExpect(panel.getByLabel("Selected task diagnostics", { exact: true })).toHaveCount(
         0,
       );

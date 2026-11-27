@@ -1,4 +1,5 @@
 import "server-only";
+import { identityAdminDirectoryHttp } from "./admin-http";
 import {
   readJsonBody as body,
   requireSameOrigin,
@@ -30,6 +31,14 @@ const quota = z
 const refund = z.object({ taskId: z.uuid(), reason: z.string().trim().min(1).max(1000) }).strict();
 
 export async function identityHttp(request: Request, action: string[]) {
+  if (
+    action[0] === "admin" &&
+    ((request.method === "GET" &&
+      action.length === 2 &&
+      ["invitations", "quota-policies"].includes(action[1])) ||
+      (action.length === 4 && action[1] === "invitations" && action[3] === "revoke"))
+  )
+    return identityAdminDirectoryHttp(request, action);
   const requestId = crypto.randomUUID();
   const headers = privateHeaders(requestId);
   const success = (data: unknown, status = 200) => Response.json({ data }, { status, headers });
