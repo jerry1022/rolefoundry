@@ -95,7 +95,7 @@ export function IdentityAdministration({
       </p>
       {error && (
         <p className="notice" role="alert">
-          {error}
+          {t(error)}
         </p>
       )}
       {message && (

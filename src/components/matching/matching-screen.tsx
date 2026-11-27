@@ -251,7 +251,7 @@ export function MatchingScreen({
       />
       {error && (
         <div role="alert" className="notice">
-          <p>{error}</p>
+          <p>{t(error)}</p>
           {login ? (
             <Link className="button secondary" href="/account/">
               {t("Sign in to use private matching")}

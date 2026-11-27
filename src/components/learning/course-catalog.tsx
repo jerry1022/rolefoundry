@@ -125,7 +125,7 @@ export function CourseCatalog({
       </div>
       {error && (
         <div className="notice" role="alert">
-          <p>{error}</p>
+          <p>{t(error)}</p>
           <button className="button secondary" onClick={() => setReload((value) => value + 1)}>
             {t("Reload course catalog")}
           </button>
