@@ -625,7 +625,7 @@ describe.sequential("module 01 against real local Auth, PostgREST and PostgreSQL
       await page.getByRole("heading", { name: "Signed in as a member" }).waitFor();
       await page.getByRole("button", { name: "I agree to this policy" }).first().click();
       await page.getByRole("button", { name: "Revoke permission", exact: true }).waitFor();
-      expect(await page.locator(".account-usage .stat-card").count()).toBe(2);
+      expect(await page.locator(".account-usage .stat-card").count()).toBe(3);
       expect(await page.getByRole("heading", { name: "Administrator controls" }).count()).toBe(0);
       expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
         true,

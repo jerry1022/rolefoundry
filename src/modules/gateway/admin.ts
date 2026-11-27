@@ -1,8 +1,9 @@
 import { z } from "zod";
+import { featureSchema } from "../identity/core";
 import { ApplicationError } from "../platform/errors";
 
-/** Consent purposes that a model recipient can be approved under (identity consent features). */
-export const recipientPurposes = ["resume", "assessment"] as const;
+/** Recipients are approved under identity consent purposes; one shared list. */
+export const recipientPurposes = featureSchema.options;
 const recipient = z.string().regex(/^[a-z][a-z0-9-]{1,30}$/);
 const reason = z.string().trim().min(1).max(1000);
 

@@ -8,7 +8,7 @@ import {
   SupabaseGatewayRecorder,
 } from "../../src/modules/gateway/adapters/supabase";
 import { parseGatewayPolicy } from "../../src/modules/gateway/policy";
-import { gatewayTemplates, wordingSpec } from "../../src/modules/gateway/recipes";
+import { gatewayTemplates, rankSpec, wordingSpec } from "../../src/modules/gateway/recipes";
 import type { GatewayRequest } from "../../src/modules/gateway/model";
 import { telemetrySnapshotSchema } from "../../src/modules/telemetry/model";
 
@@ -308,4 +308,105 @@ it("revokes recipients with an audited reason so later requests are no longer ad
     ),
   ).toMatchObject({ code: "RF_RECIPIENT_NOT_APPROVED" });
   expect(adapter.calls).toHaveLength(0);
+});
+
+it("admits semantic ranking only under its own registered matching consent", async () => {
+  const member = await stack.member();
+  const version = (
+    (await member.client.rpc("identity_policies")).data as { purpose: string; version: string }[]
+  ).find((policy) => policy.purpose === "matching")!.version;
+  // Resume consent alone does not authorize a matching reservation.
+  await startedTask(member, "resume-version:only");
+  const denied = await stack.privileged.rpc("identity_reserve_analysis", {
+    p_user: member.id,
+    p_feature: "matching",
+    p_resource_ref: resource,
+    p_input_version: "profile:1",
+    p_idempotency_key: `gateway-test-${crypto.randomUUID()}`,
+  });
+  expect(denied.error?.message).toBe("RF_CONSENT_REQUIRED");
+  for (const feature of ["unknown", "Matching", null])
+    expect(
+      (
+        await stack.privileged.rpc("identity_reserve_analysis", {
+          p_user: member.id,
+          p_feature: feature,
+          p_resource_ref: resource,
+          p_input_version: "profile:1",
+          p_idempotency_key: `gateway-test-${crypto.randomUUID()}`,
+        })
+      ).error?.message,
+    ).toBe("RF_INVALID_INPUT");
+
+  expect(
+    (
+      await member.client.rpc("identity_grant_consent", {
+        p_purpose: "matching",
+        p_policy_version: version,
+      })
+    ).error,
+  ).toBeNull();
+  const reserved = await stack.privileged.rpc("identity_reserve_analysis", {
+    p_user: member.id,
+    p_feature: "matching",
+    p_resource_ref: resource,
+    p_input_version: "profile:1",
+    p_idempotency_key: `gateway-test-${crypto.randomUUID()}`,
+  });
+  const taskId = (reserved.data as { taskId: string }).taskId;
+  expect((await stack.privileged.rpc("identity_start_task", { p_task: taskId })).error).toBeNull();
+  const recipient = `fake-rank-${suffix}`;
+  const change = { purpose: "matching", recipient, reason: "Reviewed synthetic ranking route" };
+  expect((await stack.request("identity/admin/ai-recipients", admin, "POST", change)).status).toBe(
+    201,
+  );
+  try {
+    const ranking = JSON.stringify({
+      ranking: [{ jobRef: "job-1", score: 0.7, evidenceRefs: ["ev-1"] }],
+    });
+    const policy = parseGatewayPolicy(
+      JSON.stringify({
+        routes: {
+          "matching.semantic-rank": {
+            primary: { adapter: recipient, model: "fake-model", recipients: [recipient] },
+            deadlineMs: 5000,
+            primaryAttempts: 1,
+            maxInputChars: 4000,
+            maxOutputTokens: 200,
+            concurrency: 1,
+          },
+        },
+      }),
+    );
+    const rank = new AIGateway(
+      policy,
+      [new FakeAdapter(recipient, [{ text: ranking }])],
+      gatewayTemplates,
+      new SupabaseGatewayAuthority(stack.privileged),
+    );
+    const result = await rank.execute(
+      {
+        ...request(taskId, member.id, "profile:1"),
+        purpose: "matching.semantic-rank",
+        templateVersion: "semantic-rank-v1",
+        segments: [
+          { ref: "job-1", label: "job", text: "Requires retrieval." },
+          { ref: "ev-1", label: "evidence", text: "Built a retrieval prototype." },
+        ],
+        allowedRefs: ["job-1", "ev-1"],
+      },
+      rankSpec,
+      new AbortController().signal,
+    );
+    expect(result).toMatchObject({ state: "succeeded", provider: recipient });
+    await new SupabaseGatewayRecorder(stack.privileged).record(
+      result,
+      new AbortController().signal,
+    );
+  } finally {
+    await stack.request("identity/admin/ai-recipients", admin, "DELETE", {
+      ...change,
+      reason: "Test cleanup",
+    });
+  }
 });
