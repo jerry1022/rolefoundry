@@ -61,3 +61,36 @@ tests:
               severity: warning
             exp_annotations:
               summary: API server-error ratio is elevated with sufficient traffic
+  - name: A sustained course observation warning needs review
+    interval: 1m
+    input_series:
+      - series: rolefoundry_course_links_uncertain{job="rolefoundry",instance="owned"}
+        values: 1+0x15
+    alert_rule_test:
+      - eval_time: 5m
+        alertname: RoleFoundryCourseLinkReviewNeeded
+        exp_alerts: []
+      - eval_time: 12m
+        alertname: RoleFoundryCourseLinkReviewNeeded
+        exp_alerts:
+          - exp_labels:
+              job: rolefoundry
+              instance: owned
+              severity: warning
+            exp_annotations:
+              summary: Course HEAD observations need human review
+  - name: Paused course host policy alerts without a traffic requirement
+    interval: 1m
+    input_series:
+      - series: rolefoundry_course_links_paused_hosts{job="rolefoundry",instance="owned"}
+        values: 1+0x10
+    alert_rule_test:
+      - eval_time: 6m
+        alertname: RoleFoundryCourseLinkHostPaused
+        exp_alerts:
+          - exp_labels:
+              job: rolefoundry
+              instance: owned
+              severity: warning
+            exp_annotations:
+              summary: Course link host policy requires operator recovery

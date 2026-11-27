@@ -23,6 +23,7 @@ This guide distinguishes settings applied by the project from account-bound host
 | Administrator task/worker diagnostics | Private `/admin/`, existing administrator session and worker configuration | Apply the operations migration; [setup, read authorization and heartbeat/retention behavior](OPERATIONS_SETUP.md); no additional account/key required |
 | Local isolated database recovery | `npm run recovery:local` and `--verify-failure-cleanup` | Same-snapshot data/security/queue comparison, isolated send/archive and owned-resource cleanup; [scope and remaining gates](OPERATIONS_RECOVERY.md) |
 | Private operations telemetry | Optional web observation, service-only aggregate RPCs and independent Node exporter | [Setup, private token, local scrape/alert/recovery rehearsal and hosted gates](TELEMETRY_SETUP.md) |
+| Course link observations | Optional `Dockerfile.course-links` process, `ROLEFOUNDRY_COURSE_LINK_SOURCES` (default `[]`) | [Setup, request safety, shared cadence and alerts](COURSE_LINKS_SETUP.md); empty policy sends no request |
 | Automated repository checks | GitHub Actions | PR checks cover types, unit/process/browser/database tests and worker image |
 
 Local test keys are generated and stored only in the ignored, owner-readable local environment file. They are not hosted credentials. Tests start their own web/worker processes and stop them when finished; a passing suite does not mean a private web server or production worker was left running. The local database/Auth/Storage services remain available for development.
@@ -113,3 +114,7 @@ Apply `20261114150000_invalidation_dispatch.sql` and run compatible worker code 
 ## Worker resource limits
 
 Apply `20261114160000_worker_resource_budgets.sql`, then use compatible worker code. `WORKER_DOCUMENT_CONCURRENCY` and `WORKER_FETCH_CONCURRENCY` default to 1; `WORKER_GENERAL_CONCURRENCY` defaults to total `WORKER_CONCURRENCY`. Pool values are integers 0–8; total remains integer 1–8, default 2. No new credential or table is required. Local helpers inherit shell settings; independent workers do not automatically read Next env files. See [group membership, pause behavior and verification](WORKER_RESOURCE_SETUP.md). Provider-wide concurrency remains pending.
+
+## Course link observations
+
+Apply `20261114180000_course_link_checks.sql`. Set `ROLEFOUNDRY_COURSE_LINK_SOURCES` only on the independent checker host, using reviewed source IDs and hosts already allowed by both the source and its provider; the default `[]` makes no network request. Reuse the existing Supabase URL/service-role secret. See [request bounds, cadence and administrator recovery](COURSE_LINKS_SETUP.md).

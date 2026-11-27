@@ -20,7 +20,7 @@ The [consolidated domain workspace](../ADMIN_WORKSPACE_SETUP.md) now reuses the 
 
 Server-authorized `/admin` routes manage catalog review, skills/aliases, question/rubric versions, source policies, invitations, quotas and failed task inspection. `audit_events` records actor, action, resource ID, timestamp and a non-sensitive change summary. Large operations use the task system. Publication changes are versioned and reversible through a new reviewed version.
 
-[Private operations telemetry](../TELEMETRY_SETUP.md) implements optional API observation, fixed-label OpenMetrics export and local Prometheus/Alertmanager firing/resolved verification. Queue/lease/worker coverage, invalidation delivery and reviewed catalog metadata use existing contracts. Provider spend, live course-link probes, hosted durable monitoring and real notification ownership remain release gates.
+[Private operations telemetry](../TELEMETRY_SETUP.md) implements optional API observation, fixed-label OpenMetrics export and local Prometheus/Alertmanager firing/resolved verification. Queue/lease/worker coverage, invalidation delivery and reviewed catalog metadata use existing contracts. [Opt-in course link observations](../COURSE_LINKS_SETUP.md) add bounded HEAD checks that mark failing links uncertain for review. Provider spend, hosted durable monitoring and real notification ownership remain release gates.
 
 ## Operational design
 

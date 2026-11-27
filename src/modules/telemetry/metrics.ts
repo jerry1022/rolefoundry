@@ -14,6 +14,27 @@ export function renderMetrics(input: TelemetrySnapshot) {
       lines.push(`${name}${sample.labels ? `{${sample.labels}}` : ""} ${sample.value}`);
   };
   gauge("rolefoundry_exporter_up", "Validated database snapshot is available.", [{ value: 1 }]);
+  gauge(
+    "rolefoundry_course_link_metrics_available",
+    "Course link observation schema is available; does not imply an enabled source policy.",
+    [{ value: snapshot.courseLinks ? 1 : 0 }],
+  );
+  if (snapshot.courseLinks) {
+    for (const [key, suffix] of [
+      ["checked", "checked"],
+      ["uncertain", "uncertain"],
+      ["unprobed", "unprobed"],
+      ["pausedHosts", "paused_hosts"],
+      ["oldestCheckSeconds", "oldest_check_seconds"],
+    ] as const) {
+      const value = snapshot.courseLinks[key];
+      gauge(
+        `rolefoundry_course_links_${suffix}`,
+        "Current published course HEAD observation state; not editorial review.",
+        value === null ? [] : [{ value }],
+      );
+    }
+  }
   gauge("rolefoundry_snapshot_timestamp_seconds", "Database observation time.", [
     { value: Date.parse(snapshot.observedAt) / 1000 },
   ]);

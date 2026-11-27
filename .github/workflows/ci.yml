@@ -95,3 +95,15 @@ jobs:
 
       - name: Verify private account archive runtime in Linux
         run: node scripts/check-account-worker-image.mjs rolefoundry-worker:ci
+      - name: Build independent course link checker
+        run: docker build -f Dockerfile.course-links -t rolefoundry-course-links:ci .
+      - name: Verify checker configuration and disabled-source startup
+        run: |
+          node --input-type=module <<'JS'
+          import { spawnSync } from 'node:child_process';
+          const missing = spawnSync('docker', ['run', '--rm', 'rolefoundry-course-links:ci', 'node', '--conditions=react-server', '--import', 'tsx', 'apps/course-links/src/main.ts', '--once'], { encoding:'utf8', timeout:15000 });
+          if (missing.status !== 1 || !missing.stderr.includes('Course link storage configuration is missing.') || missing.stderr.includes('ERR_MODULE_NOT_FOUND')) throw Error('Checker missing-configuration guard failed.');
+          const disabled = spawnSync('docker', ['run', '--rm', '-e', 'SUPABASE_URL=https://fixture.invalid', '-e', 'SUPABASE_SERVICE_ROLE_KEY=synthetic-not-a-real-credential', 'rolefoundry-course-links:ci', 'node', '--conditions=react-server', '--import', 'tsx', 'apps/course-links/src/main.ts', '--once'], { encoding:'utf8', timeout:15000 });
+          if (disabled.status !== 0 || !disabled.stdout.includes('"enabledSources":0')) throw Error('Checker disabled-source startup failed.');
+          console.log('Checker imports/configuration resolve; empty policy performs no network check.');
+          JS
