@@ -246,16 +246,33 @@ export const resumeDocumentSchema = resumeSummarySchema.extend({
     .max(100),
 });
 export type ResumeDocument = z.infer<typeof resumeDocumentSchema>;
+/** Optional AI wording suggestions; the owner applies them to a draft and confirms. */
+export const proposalWordingSchema = z.object({
+  state: z.enum(["not-requested", "applied", "fallback"]),
+  code: z.string().nullable(),
+  suggestions: z
+    .array(z.object({ factId: uuid, text: z.string(), rationale: z.string() }).strict())
+    .max(250),
+});
+export type ProposalWording = z.infer<typeof proposalWordingSchema>;
 export const proposalSchema = proposalSummarySchema.omit({ createdAt: true }).extend({
   documentId: uuid,
   output: revisionOutputSchema.nullable(),
   acceptedIds: z.array(uuid).nullable(),
+  wording: proposalWordingSchema.optional(),
 });
 export type ResumeProposal = z.infer<typeof proposalSchema>;
 export const resumeTaskReplySchema = z.object({
   id: uuid,
   taskId: uuid,
   status: resumeTaskStatusSchema,
+  /** Present on revision requests: whether AI wording was reserved. */
+  wording: z
+    .object({
+      state: z.enum(["not-requested", "reserved", "unavailable"]),
+      code: z.string().nullable(),
+    })
+    .optional(),
 });
 export const resumeDocumentTaskSchema = z.object({
   documentId: uuid,

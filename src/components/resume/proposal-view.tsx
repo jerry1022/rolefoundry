@@ -1,4 +1,5 @@
 "use client";
+import { WordingSuggestions } from "./wording-suggestions";
 import { useState } from "react";
 import { useI18n } from "@/lib/i18n";
 import type { ResumeProposal } from "@/modules/resume/model";
@@ -7,11 +8,13 @@ export function ResumeProposalView({
   busy,
   onAccept,
   onVersion,
+  onUseWording,
 }: {
   proposal: ResumeProposal;
   busy: boolean;
   onAccept: (ids: string[]) => Promise<void>;
   onVersion: (id: string) => void;
+  onUseWording: (factId: string, text: string) => void;
 }) {
   const { t } = useI18n();
   const [selected, setSelected] = useState<string[]>(() => proposal.acceptedIds || []);
@@ -113,6 +116,9 @@ export function ResumeProposalView({
                 </p>
               ))}
             </section>
+          )}
+          {proposal.wording && (
+            <WordingSuggestions wording={proposal.wording} busy={locked} onUse={onUseWording} />
           )}
           <details>
             <summary>{t("Suggestion limits")}</summary>

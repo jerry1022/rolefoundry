@@ -5081,3 +5081,23 @@ input[type="radio"] {
     display: none;
   }
 }
+
+.wording-suggestions {
+  display: grid;
+  gap: 12px;
+}
+.wording-suggestion {
+  display: grid;
+  gap: 8px;
+  padding: 14px 16px;
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--violet);
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+}
+.wording-suggestion small {
+  color: var(--muted);
+}
+.wording-suggestion .button {
+  justify-self: start;
+}

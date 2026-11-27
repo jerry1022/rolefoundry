@@ -1,4 +1,5 @@
 import "server-only";
+import { IdentityWorkerGuard } from "../identity/service";
 import { createClient } from "@supabase/supabase-js";
 import { identityContext } from "../identity/server";
 import { ResumeService } from "./service";
@@ -29,6 +30,11 @@ export async function resumeContext(signal?: AbortSignal) {
       new SupabaseResumeStorage(privileged),
       new Sha256ResumeDigest(),
       identity.service,
+      {
+        reserveAnalysis: (owner, input) => identity.service.reserveAnalysis(owner, input),
+        // Releasing an unstarted reservation is a trusted server step (service role).
+        releaseAnalysis: (taskId) => new IdentityWorkerGuard(privileged).release(taskId),
+      },
     ),
   };
 }

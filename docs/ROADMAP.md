@@ -46,7 +46,7 @@ See [module-by-module delivery status](MODULE_DEVELOPMENT.md); module 10 is the 
 - [ ] Approved model adapter and fixed bilingual evaluation set. The [gateway core, OpenAI-compatible adapter and synthetic bilingual set](AI_GATEWAY_SETUP.md) are implemented; provider approval and live evaluation remain.
 - [x] Private PDF/DOCX sources, isolated parsing and confirmed resume facts/claim history.
 - [x] Grounded order proposals, individual acceptance, immutable versions and verified PDF export.
-- [ ] Evaluated model-assisted wording from confirmed facts through module 11.
+- [ ] Evaluated model-assisted wording from confirmed facts through module 11. Owner-applied, fact-preserving [wording suggestions](RESUME_SETUP.md#optional-ai-wording-suggestions) are integrated; live evaluation remains.
 - [x] Source-grounded private matching snapshots, explicit conditions and immediate deletion purge.
 - [ ] Structured short-answer grading and reviewed semantic/model match recipe.
 - [x] Reviewed course catalog, two-week budgeted plans/prerequisites and private progress/practice references.

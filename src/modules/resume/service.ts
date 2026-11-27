@@ -1,6 +1,11 @@
 import { z } from "zod";
 import type { Actor } from "../identity/core";
 import { ApplicationError } from "../platform/errors";
+import {
+  reserveOptionalAnalysis,
+  withOptionalAnalysis,
+  type AnalysisReservations,
+} from "../gateway/analysis";
 import type {
   ResumeRepository,
   PrivateResumeStorage,
@@ -28,6 +33,7 @@ export class ResumeService {
     private readonly storage: PrivateResumeStorage,
     private readonly digest: ResumeDigest,
     private readonly auth: ResumeAuthorization,
+    private readonly reservations?: AnalysisReservations,
   ) {}
   private allow(actor: Actor, write = false) {
     return this.auth.authorize(actor, write ? "resume:write" : "resume:read", actor.userId);
@@ -122,16 +128,39 @@ export class ResumeService {
   async revise(actor: Actor, id: unknown, input: unknown, key: unknown) {
     await this.allow(actor, true);
     const value = parse(
-      z.object({ versionId: uuid, jobId: uuid, expectedRevision: revision }).strict(),
+      z
+        .object({
+          versionId: uuid,
+          jobId: uuid,
+          expectedRevision: revision,
+          /** Opt-in AI wording suggestions; needs `resume` consent and weekly allowance. */
+          wording: z.boolean().optional(),
+        })
+        .strict(),
       input,
     );
-    return this.repository.revise(
-      parse(uuid, id),
-      value.versionId,
-      value.jobId,
-      value.expectedRevision,
-      parse(keySchema, key),
+    const requestKey = parse(keySchema, key);
+    // Reserve before the proposal exists so its worker can never start without it.
+    const analysis = value.wording
+      ? await reserveOptionalAnalysis(this.reservations, actor, {
+          feature: "resume",
+          prefix: "resume-wording",
+          requestKey,
+        })
+      : ({ state: "not-requested", code: null, taskId: null } as const);
+    const { analysis: wording, ...task } = await withOptionalAnalysis(
+      this.reservations,
+      analysis,
+      () =>
+        this.repository.revise(
+          parse(uuid, id),
+          value.versionId,
+          value.jobId,
+          value.expectedRevision,
+          requestKey,
+        ),
     );
+    return { ...task, wording };
   }
   async proposal(actor: Actor, id: unknown) {
     await this.allow(actor);

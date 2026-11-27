@@ -76,7 +76,11 @@ export function ResumeWorkspaceScreen({
     [login, setLogin] = useState(false),
     [busy, setBusy] = useState(false),
     [polling, setPolling] = useState(true),
-    [confirmDelete, setConfirmDelete] = useState(false);
+    [confirmDelete, setConfirmDelete] = useState(false),
+    [aiWording, setAiWording] = useState(false),
+    [incoming, setIncoming] = useState<{ factId: string; text: string; nonce: number } | null>(
+      null,
+    );
   const epoch = useRef(0),
     targetEpoch = useRef(0),
     deleted = useRef(new Set<string>()),
@@ -338,15 +342,27 @@ export function ResumeWorkspaceScreen({
           versionId: active.currentVersion.id,
           jobId: target.id,
           revision: active.revision,
+          wording: aiWording,
         },
         result = await client.revise(
           active.id,
-          active.currentVersion.id,
-          target.id,
-          active.revision,
+          {
+            versionId: active.currentVersion.id,
+            jobId: target.id,
+            expectedRevision: active.revision,
+            ...(aiWording ? { wording: true } : {}),
+          },
           key(payload),
         );
       pending.current = null;
+      if (result.wording?.state === "unavailable")
+        setNotice(
+          result.wording.code === "RF_QUOTA_EXCEEDED"
+            ? msg("Your weekly AI allowance is used up; the order proposal was still created.")
+            : msg(
+                "AI wording needs your resume analysis permission in Account & privacy; the order proposal was still created.",
+              ),
+        );
       setProposal(await client.proposal(result.id));
       accept(await client.find(active.id));
       setPolling(true);
@@ -571,6 +587,7 @@ export function ResumeWorkspaceScreen({
               busy={busy}
               dictionary={dictionary}
               onConfirm={confirm}
+              incoming={incoming}
             />
           )}
           {active.currentVersion && (
@@ -578,7 +595,7 @@ export function ResumeWorkspaceScreen({
               <h2>{t("Targeted review and fixed exports")}</h2>
               <p className="muted">
                 {t(
-                  "Confirmed version {version}. New wording from a model is not enabled; the current suggestion reorders existing statements only.",
+                  "Confirmed version {version}. Order suggestions reorder existing statements. Optional AI wording is only a suggestion until you edit and confirm it.",
                   { version: active.currentVersion.version },
                 )}
               </p>
@@ -637,6 +654,22 @@ export function ResumeWorkspaceScreen({
                       {t("Load more resume target roles")}
                     </button>
                   )}
+                  <label className="matching-ai-option">
+                    <input
+                      type="checkbox"
+                      checked={aiWording}
+                      disabled={busy}
+                      onChange={(event) => setAiWording(event.target.checked)}
+                    />
+                    <span>
+                      <strong>{t("Also suggest clearer wording with AI")}</strong>
+                      <small>
+                        {t(
+                          "Needs your resume analysis permission and uses one weekly allowance. Suggestions keep every fact and number, and change nothing until you confirm.",
+                        )}
+                      </small>
+                    </span>
+                  </label>
                   <button
                     className="button primary"
                     disabled={busy || !target}
@@ -702,6 +735,12 @@ export function ResumeWorkspaceScreen({
               busy={busy}
               onAccept={acceptProposal}
               onVersion={(id) => void openVersion(id)}
+              onUseWording={(factId, text) => {
+                setIncoming({ factId, text, nonce: Date.now() });
+                setNotice(
+                  msg("Suggestion added to your draft. Review it, then confirm a new version."),
+                );
+              }}
             />
           )}
           {version && version.documentId === active.id && (

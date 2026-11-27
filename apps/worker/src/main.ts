@@ -32,6 +32,7 @@ import { SupabaseTaskQueue } from "../../../src/modules/tasks/adapters/supabase"
 import { SupabaseAssessmentGrader } from "../../../src/modules/assessment/adapters/supabase";
 import { MatchingHandler } from "../../../src/modules/matching/handler";
 import { semanticStageFromEnvironment } from "../../../src/modules/matching/adapters/semantic";
+import { wordingStageFromEnvironment } from "../../../src/modules/resume/adapters/wording";
 import { SupabaseMatchingExecutionStore } from "../../../src/modules/matching/adapters/supabase";
 import { LearningHandler } from "../../../src/modules/learning/handler";
 import { SupabaseLearningExecutionStore } from "../../../src/modules/learning/adapters/supabase";
@@ -121,6 +122,7 @@ const deletionJanitor = new LateDeletionJanitor(
   new SupabaseDeletionFiles(client),
 );
 const matchingStore = new SupabaseMatchingExecutionStore(client);
+const revisionStore = new SupabaseResumeRevisionStore(client);
 const controller = new AbortController();
 const invalidationDispatcher = new InvalidationDispatcher(new SupabaseInvalidationStore(client));
 for (const signal of ["SIGINT", "SIGTERM"] as const) process.on(signal, () => controller.abort());
@@ -154,8 +156,9 @@ const handlers = {
     resumeProcessor,
   ),
   "resume.revise": new ResumeRevisionHandler(
-    new SupabaseResumeRevisionStore(client),
+    revisionStore,
     new ConfirmedFactOrderReviser(),
+    wordingStageFromEnvironment(client, revisionStore),
   ),
   "resume.export": new ResumeExportHandler(
     new SupabaseResumeExportStore(client, resumeStorage, resumeDigest),

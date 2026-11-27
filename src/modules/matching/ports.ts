@@ -14,20 +14,6 @@ export interface MatchingRepository {
   find(id: string, cursor?: string): Promise<MatchRun>;
   list(cursor?: string): Promise<MatchHistory>;
 }
-/** Identity-owned consent/quota reservation for an opt-in analysis. */
-export interface AnalysisReservations {
-  reserveAnalysis(
-    actor: Actor,
-    input: {
-      feature: "matching";
-      resourceId: string;
-      inputVersion: string;
-      idempotencyKey: string;
-    },
-  ): Promise<{ taskId: string }>;
-  /** Returns an unstarted reservation when the run could not be created. */
-  releaseAnalysis(taskId: string): Promise<unknown>;
-}
 export interface MatchingAuthorization {
   authorize(actor: Actor, action: string, ownerId?: string): Promise<void>;
 }

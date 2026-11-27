@@ -61,7 +61,7 @@ for (const file of [
     /^src\/modules\/tasks\/resources\.ts$/.test(file) ||
     /^src\/modules\/telemetry\/(model|ports|observer|metrics|service)\.ts$/.test(file) ||
     /^src\/modules\/course-links\/(model|ports|service|admin)\.ts$/.test(file) ||
-    /^src\/modules\/gateway\/(model|ports|policy|prompt|service|recipes|embeddings|evaluation|admin)\.ts$/.test(
+    /^src\/modules\/gateway\/(model|ports|policy|prompt|service|recipes|embeddings|evaluation|admin|analysis)\.ts$/.test(
       file,
     ) ||
     /^src\/modules\/invalidation\/(model|ports|dispatcher)\.ts$/.test(file) ||

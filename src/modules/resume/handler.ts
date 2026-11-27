@@ -16,7 +16,9 @@ import type {
   ResumeExportStore,
   ResumeReviser,
   ResumeRevisionStore,
+  ResumeWordingStore,
 } from "./ports";
+import type { WordingStage } from "./wording";
 import { validateResumeRevision, resumeText, resumeContentTokens, extractedText } from "./rules";
 function check(signal: AbortSignal) {
   if (signal.aborted) throw new TaskFailure("canceled");
@@ -75,10 +77,16 @@ export class ResumeParseHandler implements TaskHandler {
     });
   }
 }
+/** Present only when the worker composes optional AI wording. */
+export interface WordingStageDependencies {
+  store: ResumeWordingStore;
+  stage: WordingStage;
+}
 export class ResumeRevisionHandler implements TaskHandler {
   constructor(
     private readonly store: ResumeRevisionStore,
     private readonly reviser: ResumeReviser,
+    private readonly wording?: WordingStageDependencies,
   ) {}
   async execute(lease: Parameters<TaskHandler["execute"]>[0], signal: AbortSignal) {
     await execute(signal, async () => {
@@ -86,7 +94,18 @@ export class ResumeRevisionHandler implements TaskHandler {
       check(signal);
       const proposal = validateResumeRevision(input, await this.reviser.propose(input, signal));
       check(signal);
-      await this.store.publish(lease, proposal, signal);
+      if (!this.wording) return this.store.publish(lease, proposal, signal);
+      const context = await this.wording.store.wordingContext(lease, signal);
+      let result;
+      try {
+        result = await this.wording.stage.suggest(input, context, signal);
+      } catch {
+        throw new TaskFailure(signal.aborted ? "canceled" : "infrastructure");
+      }
+      check(signal);
+      await this.wording.store.publishWorded(lease, proposal, result.wording, signal);
+      // The proposal is committed; completing the identity task is bookkeeping.
+      await result.finalize(lease.taskId, signal).catch(() => undefined);
     });
   }
 }
