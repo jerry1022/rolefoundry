@@ -21,6 +21,13 @@ An open-source career workspace that connects **AI jobs → skill evidence → l
 
 ![RoleFoundry career workspace preview](docs/assets/dashboard.png)
 
+<details>
+<summary>Dark theme and Traditional Chinese</summary>
+
+![Role discovery in the dark theme and Traditional Chinese](docs/assets/jobs-zh-dark.png)
+
+</details>
+
 ## A job board gives you a list. A career workspace gives you a next step.
 
 Finding an interesting AI role is only the beginning. RoleFoundry helps you connect the requirements to your experience, notice where evidence is missing, and choose a useful course or practice task instead of collecting endless playlists.
