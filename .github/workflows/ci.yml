@@ -18,6 +18,7 @@ jobs:
       - run: npm ci
       - run: npm run typecheck
       - run: npm test
+      - run: npm run resume:test
       - run: npm run docs:check
       - run: npm run architecture:check
       - run: npm run worker:demo
@@ -64,3 +65,6 @@ jobs:
             throw Error('Worker image startup check failed.');
           console.log('Worker runtime imports resolve; missing configuration fails closed.');
           JS
+
+      - name: Verify isolated resume runtime in Linux
+        run: node scripts/check-resume-worker-image.mjs rolefoundry-worker:ci

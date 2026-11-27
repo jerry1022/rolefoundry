@@ -31,6 +31,9 @@ export function JobDetails({ job, onClose }: { job: PublishedJob; onClose: () =>
       <Link className="button secondary" href={`/learning/?job=${job.id}`}>
         Plan learning for this role
       </Link>
+      <Link className="button secondary" href={`/resume/?job=${job.id}`}>
+        Review resume for this role
+      </Link>
       <h3>Responsibilities</h3>
       <ul>
         {job.responsibilities.map((text, index) => (

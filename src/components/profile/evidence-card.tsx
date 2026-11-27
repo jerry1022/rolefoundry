@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import Link from "next/link";
 import { skillLabel } from "@/modules/skills/model";
 import type { CapabilityEvidence } from "@/modules/profile/model";
 const sourceLabels = {
@@ -46,6 +47,14 @@ export function EvidenceCard({
         {evidence.rubricVersion ? ` · Rubric ${evidence.rubricVersion}` : ""}
       </p>
       {evidence.outcome && <p className="profile-preserve-text">{evidence.outcome}</p>}
+      {evidence.source === "resume-claim" &&
+        /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+          evidence.sourceVersion,
+        ) && (
+          <Link className="text-link" href={`/resume/?version=${evidence.sourceVersion}`}>
+            View confirmed resume source
+          </Link>
+        )}
       {evidence.claimedLevel !== null && (
         <p>Self-reported experience: {evidence.claimedLevel}/3. This is a claim.</p>
       )}

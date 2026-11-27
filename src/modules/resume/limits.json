@@ -1,0 +1,12 @@
+{
+  "sourceBytes": 5242880,
+  "inflatedBytes": 20971520,
+  "zipEntries": 512,
+  "sourcePages": 20,
+  "textCharacters": 50000,
+  "blocks": 250,
+  "facts": 250,
+  "sections": 40,
+  "exportBytes": 5242880,
+  "processMilliseconds": 20000
+}

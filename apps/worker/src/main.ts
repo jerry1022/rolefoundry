@@ -8,6 +8,24 @@ import { SupabaseMatchingExecutionStore } from "../../../src/modules/matching/ad
 import { LearningHandler } from "../../../src/modules/learning/handler";
 import { SupabaseLearningExecutionStore } from "../../../src/modules/learning/adapters/supabase";
 import { RuleLearningGapAnalyzer } from "../../../src/modules/learning/adapters/matching";
+import { IsolatedResumeProcessor } from "../../../src/modules/resume/adapters/isolated-process";
+import { ConfirmedFactOrderReviser } from "../../../src/modules/resume/adapters/rules";
+import {
+  SupabaseResumeParseStore,
+  SupabaseResumeRevisionStore,
+  SupabaseResumeExportStore,
+  SupabaseResumeCleanupRepository,
+} from "../../../src/modules/resume/adapters/execution";
+import {
+  SupabaseResumeStorage,
+  Sha256ResumeDigest,
+} from "../../../src/modules/resume/adapters/storage";
+import {
+  ResumeParseHandler,
+  ResumeRevisionHandler,
+  ResumeExportHandler,
+} from "../../../src/modules/resume/handler";
+import { ResumeStorageJanitor } from "../../../src/modules/resume/cleanup";
 const config = z
   .object({
     url: z.url(),
@@ -42,11 +60,31 @@ const client = createClient(config.data.url, config.data.key, {
       }),
   },
 });
+const resumeProcessor = new IsolatedResumeProcessor(),
+  resumeStorage = new SupabaseResumeStorage(client),
+  resumeDigest = new Sha256ResumeDigest();
+const resumeJanitor = new ResumeStorageJanitor(
+  new SupabaseResumeCleanupRepository(client),
+  resumeStorage,
+);
 const controller = new AbortController();
 for (const signal of ["SIGINT", "SIGTERM"] as const) process.on(signal, () => controller.abort());
 const worker = new TaskWorker(
   new SupabaseTaskQueue(client),
   {
+    "resume.parse": new ResumeParseHandler(
+      new SupabaseResumeParseStore(client, resumeStorage, resumeDigest),
+      resumeProcessor,
+    ),
+    "resume.revise": new ResumeRevisionHandler(
+      new SupabaseResumeRevisionStore(client),
+      new ConfirmedFactOrderReviser(),
+    ),
+    "resume.export": new ResumeExportHandler(
+      new SupabaseResumeExportStore(client, resumeStorage, resumeDigest),
+      resumeProcessor,
+      resumeProcessor,
+    ),
     "assessment.grade": new SupabaseAssessmentGrader(client),
     "matches.refresh": new MatchingHandler(new SupabaseMatchingExecutionStore(client)),
     "learning.plan": new LearningHandler(
@@ -66,6 +104,15 @@ const once = process.argv.includes("--once"),
 let batches = 0;
 while (!controller.signal.aborted) {
   try {
+    try {
+      const removed = await resumeJanitor.tick(controller.signal);
+      if (removed) console.log(JSON.stringify({ event: "resume.cleanup", removed }));
+    } catch {
+      if (!controller.signal.aborted)
+        console.error(
+          JSON.stringify({ event: "resume.cleanup_unavailable", code: "RF_UNAVAILABLE" }),
+        );
+    }
     const count = await worker.tick(controller.signal);
     batches++;
     if (once || (drain && (count === 0 || batches >= 100))) break;
