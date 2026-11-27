@@ -33,7 +33,8 @@
     "metrics:probe": "node scripts/local-metrics.mjs probe",
     "metrics:rehearse": "node scripts/rehearse-metrics.mjs",
     "courses:check": "node --conditions=react-server --import tsx apps/course-links/src/main.ts",
-    "courses:check:local": "node scripts/local-course-links.mjs"
+    "courses:check:local": "node scripts/local-course-links.mjs",
+    "gateway:eval": "node --import tsx apps/gateway-eval/src/main.ts"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.7",

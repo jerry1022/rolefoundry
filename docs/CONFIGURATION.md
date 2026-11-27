@@ -118,3 +118,7 @@ Apply `20261114160000_worker_resource_budgets.sql`, then use compatible worker c
 ## Course link observations
 
 Apply `20261114180000_course_link_checks.sql`. Set `ROLEFOUNDRY_COURSE_LINK_SOURCES` only on the independent checker host, using reviewed source IDs and hosts already allowed by both the source and its provider; the default `[]` makes no network request. Reuse the existing Supabase URL/service-role secret. See [request bounds, cadence and administrator recovery](COURSE_LINKS_SETUP.md).
+
+## AI Gateway
+
+`ROLEFOUNDRY_AI_POLICY` is empty by default, which disables every model purpose. Provider keys (`OPENAI_API_KEY`, `LUNAROUTE_API_KEY` with an explicit `ROLEFOUNDRY_LUNAROUTE_BASE_URL`) are server/worker-only and never shared between providers. No domain worker calls the gateway yet. See [policy format, failure semantics and evaluation](AI_GATEWAY_SETUP.md).
