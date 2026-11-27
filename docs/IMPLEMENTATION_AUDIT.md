@@ -43,7 +43,7 @@ The integration suite runs against actual local GoTrue, PostgREST, PostgreSQL an
 ## 07 — Course catalog and learning plans
 
 - Design: [07-courses-learning.md](design/07-courses-learning.md).
-- Status: Pending implementation and verification.
+- Status: Implemented and locally verified; see [learning setup](LEARNING_SETUP.md). Source authorization, reviewed real metadata population, editorial usefulness and hosted operations remain release gates.
 - Required acceptance scope: Verify prerequisite order, no matching resource, completed-course deduplication, limited time budgets, unavailable resources, outdated metadata and source-ID validation. Ensure a course-complete event never promotes ability without separate evidence.
 
 ## 08 — Resume studio
@@ -73,7 +73,7 @@ The integration suite runs against actual local GoTrue, PostgREST, PostgreSQL an
 ## 12 — Background worker and tasks
 
 - Design: [12-worker-tasks.md](design/12-worker-tasks.md).
-- Status: Durable pgmq engine, queue adapter and actual assessment and matching handlers implemented/verified with modules 05–06. Remaining domain/provider handlers, invalidation dispatch and hosted telemetry integration are still pending; do not count the entire module complete.
+- Status: Durable pgmq engine, queue adapter and actual assessment, matching and learning handlers implemented/verified with modules 05–07. Remaining domain/provider handlers, invalidation dispatch and hosted telemetry integration are still pending; do not count the entire module complete.
 - Required acceptance scope: Simulate duplicate delivery, lease expiry, crash before/after commit, provider timeout, poison payload, stale input, owner deletion and graceful shutdown. Verify that queue age, lease age, retries and terminal failures are observable.
 
 ## 13 — Administration and operations

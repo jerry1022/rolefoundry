@@ -5,6 +5,9 @@ import { SupabaseTaskQueue } from "../../../src/modules/tasks/adapters/supabase"
 import { SupabaseAssessmentGrader } from "../../../src/modules/assessment/adapters/supabase";
 import { MatchingHandler } from "../../../src/modules/matching/handler";
 import { SupabaseMatchingExecutionStore } from "../../../src/modules/matching/adapters/supabase";
+import { LearningHandler } from "../../../src/modules/learning/handler";
+import { SupabaseLearningExecutionStore } from "../../../src/modules/learning/adapters/supabase";
+import { RuleLearningGapAnalyzer } from "../../../src/modules/learning/adapters/matching";
 const config = z
   .object({
     url: z.url(),
@@ -46,6 +49,10 @@ const worker = new TaskWorker(
   {
     "assessment.grade": new SupabaseAssessmentGrader(client),
     "matches.refresh": new MatchingHandler(new SupabaseMatchingExecutionStore(client)),
+    "learning.plan": new LearningHandler(
+      new SupabaseLearningExecutionStore(client),
+      new RuleLearningGapAnalyzer(),
+    ),
   },
   {
     workerId: crypto.randomUUID(),

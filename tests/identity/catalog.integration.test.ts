@@ -516,6 +516,7 @@ describe("module 03 published catalog and private bookmarks", () => {
         await new Promise((resolve) => setTimeout(resolve, 200));
       }
       expect(ready).toBe(true);
+      expect((await fetch(`http://127.0.0.1:${port}/api/v1/courses/`)).status).toBe(200);
       expect((await fetch(`http://127.0.0.1:${port}/api/v1/identity/session/`)).status).toBe(503);
       const rendered = await (await fetch(`http://127.0.0.1:${port}/jobs/`)).text();
       expect(rendered).toContain(prefix);

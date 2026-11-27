@@ -25,10 +25,10 @@
 - [ ] Migration/persistence for other demo career modules.
 - [ ] Private storage, delete/export account workflows and recovery tests.
 - [x] Identity task ledger and transactional outbox.
-- [x] Durable pgmq adapter, independent grading/matching worker, leases/retries and safe task metrics.
+- [x] Durable pgmq adapter, independent grading/matching/learning worker, leases/retries and safe task metrics.
 - [ ] Remaining module 12 handlers, provider reservation/invalidation dispatch and hosted alerts.
 
-See [module-by-module delivery status](MODULE_DEVELOPMENT.md); module 07 is the next implementation.
+See [module-by-module delivery status](MODULE_DEVELOPMENT.md); module 08 is the next implementation.
 
 ## v0.3 — Real catalogs and reviewed evidence
 
@@ -48,7 +48,8 @@ See [module-by-module delivery status](MODULE_DEVELOPMENT.md); module 07 is the 
 - [ ] Grounded revision proposals, immutable versions and PDF export.
 - [x] Source-grounded private matching snapshots, explicit conditions and immediate deletion purge.
 - [ ] Structured short-answer grading and reviewed semantic/model match recipe.
-- [ ] Two-week learning plans and practice evidence.
+- [x] Reviewed course catalog, two-week budgeted plans/prerequisites and private progress/practice references.
+- [ ] Human review of real course mappings, prerequisites and practice outcomes.
 
 ## v1.0 — Invitation pilot
 

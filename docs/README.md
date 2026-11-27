@@ -4,6 +4,8 @@ RoleFoundry is an open-source AI career workspace. This documentation separates 
 
 ## Start here
 
+- [Reviewed courses and private learning](LEARNING_SETUP.md): versioned resources, two-week budgets, prerequisites and independent progress.
+
 - [Skill dictionary](SKILL_DICTIONARY_SETUP.md): bilingual concepts, aliases, immutable versions and reviewed merges.
 
 - [Complete design audit](IMPLEMENTATION_AUDIT.md): full remaining goal and acceptance scope.
