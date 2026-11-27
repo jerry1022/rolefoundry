@@ -19,7 +19,7 @@ import {
   Target,
   X,
 } from "lucide-react";
-import { useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore, type ReactNode } from "react";
 import { WorkspaceProvider, useWorkspace } from "@/lib/workspace";
 import { courses } from "@/lib/fixtures";
 import { LocaleProvider, msg, useI18n } from "@/lib/i18n";
@@ -38,12 +38,44 @@ const navigation = [
   { href: "/dictionary/", label: msg("Skill dictionary"), icon: Network },
   { href: "/account/", label: msg("Account & privacy"), icon: ShieldCheck },
 ];
+/** Matches the CSS breakpoint where the sidebar becomes an off-canvas panel. */
+function useMediaQuery(query: string) {
+  return useSyncExternalStore(
+    (notify) => {
+      const media = window.matchMedia(query);
+      media.addEventListener("change", notify);
+      return () => media.removeEventListener("change", notify);
+    },
+    () => window.matchMedia(query).matches,
+    () => false,
+  );
+}
+
 function ShellContent({ children }: { children: ReactNode }) {
   const path = usePathname();
   const connected = process.env.NEXT_PUBLIC_IDENTITY_ENABLED === "true";
   const { state, ready, storageWarning } = useWorkspace();
   const [menu, setMenu] = useState(false);
   const { t } = useI18n();
+  const offCanvas = useMediaQuery("(max-width: 760px)");
+  const menuButton = useRef<HTMLButtonElement>(null);
+  const sidebar = useRef<HTMLElement>(null);
+  // Keyboard users get the same off-canvas behavior as pointer users: focus moves into the
+  // open panel, Escape closes it and focus returns to the menu button.
+  useEffect(() => {
+    if (!menu || !offCanvas) return;
+    sidebar.current?.querySelector<HTMLElement>("a, button")?.focus();
+    const close = (event: KeyboardEvent) => {
+      if (event.key !== "Escape") return;
+      setMenu(false);
+      menuButton.current?.focus();
+    };
+    document.addEventListener("keydown", close);
+    return () => document.removeEventListener("keydown", close);
+  }, [menu, offCanvas]);
+  useEffect(() => {
+    if (!offCanvas) setMenu(false);
+  }, [offCanvas]);
   const active = (href: string) =>
     href === "/" ? path === "/" : path.startsWith(href.replace(/\/$/, ""));
   const current = t(
@@ -59,7 +91,13 @@ function ShellContent({ children }: { children: ReactNode }) {
           aria-label={t("Close navigation")}
         />
       )}
-      <aside className={`sidebar ${menu ? "is-open" : ""}`}>
+      <aside
+        id="workspace-navigation"
+        ref={sidebar}
+        className={`sidebar ${menu ? "is-open" : ""}`}
+        // A closed off-canvas panel must not be reachable by Tab or screen readers.
+        inert={offCanvas && !menu}
+      >
         <Link href="/" className="brand" onClick={() => setMenu(false)}>
           <span className="brand-mark">
             <Sprout size={23} strokeWidth={2.1} />
@@ -145,9 +183,12 @@ function ShellContent({ children }: { children: ReactNode }) {
         <header className="topbar">
           <div className="breadcrumb">
             <button
+              ref={menuButton}
               className="icon-button mobile-menu"
-              aria-label={t("Open navigation")}
-              onClick={() => setMenu(true)}
+              aria-label={menu ? t("Close navigation") : t("Open navigation")}
+              aria-expanded={menu}
+              aria-controls="workspace-navigation"
+              onClick={() => setMenu(!menu)}
             >
               {menu ? <X size={20} /> : <Menu size={20} />}
             </button>
