@@ -14,6 +14,7 @@ import {
   Workflow,
 } from "lucide-react";
 import { careerPaths, type CareerPathId } from "@/lib/career-paths";
+import { msg, useI18n } from "@/lib/i18n";
 
 const icons = {
   "ai-llm-applications": Code2,
@@ -28,6 +29,13 @@ const icons = {
   "ai-design-content": Palette,
 };
 
+/** Explicit message keys keep plural forms translatable instead of concatenated. */
+function roleCountMessage(kind: "sample" | "published", count: number) {
+  if (kind === "published")
+    return count === 1 ? msg("{n} published role") : msg("{n} published roles");
+  return count === 1 ? msg("{n} sample role") : msg("{n} sample roles");
+}
+
 export function CareerPathBrowser({
   selected,
   counts,
@@ -39,15 +47,17 @@ export function CareerPathBrowser({
   onSelect: (path: CareerPathId | "all") => void;
   countLabel?: "sample" | "published";
 }) {
+  const { t } = useI18n();
   const current = careerPaths.find((path) => path.id === selected);
   return (
     <section className="career-path-section" aria-labelledby="career-path-heading">
       <div className="section-heading">
         <div>
-          <h2 id="career-path-heading">Explore AI career paths</h2>
+          <h2 id="career-path-heading">{t("Explore AI career paths")}</h2>
           <p>
-            The original nine career directions, plus design &amp; content. Choose one to see its
-            guide and roles.
+            {t(
+              "The original nine career directions, plus design & content. Choose one to see its guide and roles.",
+            )}
           </p>
         </div>
         <button
@@ -55,10 +65,10 @@ export function CareerPathBrowser({
           aria-pressed={selected === "all"}
           onClick={() => onSelect("all")}
         >
-          All specializations
+          {t("All specializations")}
         </button>
       </div>
-      <div className="career-path-grid" role="group" aria-label="AI career specializations">
+      <div className="career-path-grid" role="group" aria-label={t("AI career specializations")}>
         {careerPaths.map((path) => {
           const Icon = icons[path.id];
           return (
@@ -72,9 +82,9 @@ export function CareerPathBrowser({
                 <Icon size={19} />
                 <span>{counts[path.id]}</span>
               </span>
-              <strong>{path.title}</strong>
+              <strong>{t(path.title)}</strong>
               <small>
-                {counts[path.id]} {countLabel} {counts[path.id] === 1 ? "role" : "roles"}
+                {t(roleCountMessage(countLabel, counts[path.id]), { n: counts[path.id] })}
               </small>
             </button>
           );
@@ -84,18 +94,18 @@ export function CareerPathBrowser({
         <article className="career-guide panel" aria-labelledby="selected-career-heading">
           <div className="career-guide-heading">
             <div>
-              <p className="mini-label">CAREER PATH GUIDE</p>
-              <h2 id="selected-career-heading">{current.title}</h2>
+              <p className="mini-label">{t("CAREER PATH GUIDE")}</p>
+              <h2 id="selected-career-heading">{t(current.title)}</h2>
               <p>{current.work}</p>
             </div>
             <Link className="text-link" href="/learning/">
-              Browse the course catalog
+              {t("Browse the course catalog")}
               <ArrowUpRight size={15} />
             </Link>
           </div>
           <div className="career-guide-columns">
             <div>
-              <h3>Learning sequence</h3>
+              <h3>{t("Learning sequence")}</h3>
               <ol>
                 {current.learning.map((step) => (
                   <li key={step}>{step}</li>
@@ -103,19 +113,20 @@ export function CareerPathBrowser({
               </ol>
             </div>
             <div>
-              <h3>Evidence to build</h3>
+              <h3>{t("Evidence to build")}</h3>
               <ul>
                 {current.evidence.map((item) => (
                   <li key={item}>{item}</li>
                 ))}
               </ul>
-              <h3>A project to explore</h3>
+              <h3>{t("A project to explore")}</h3>
               <p>{current.project}</p>
             </div>
           </div>
           <p className="career-guide-note">
-            A starting framework from the career playbook. Actual job requirements and learning time
-            vary; course completion alone does not verify ability.
+            {t(
+              "A starting framework from the career playbook. Actual job requirements and learning time vary; course completion alone does not verify ability.",
+            )}
           </p>
         </article>
       )}
