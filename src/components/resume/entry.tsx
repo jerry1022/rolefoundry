@@ -1,5 +1,5 @@
 "use client";
-import { ResumeScreen } from "../screens";
+import { ResumeScreen } from "../demo/resume";
 import { ResumeWorkspaceScreen } from "./workspace-screen";
 import { createResumeClient } from "@/modules/resume/adapters/http-client";
 import { createCatalogClient } from "@/modules/jobs/adapters/http-client";

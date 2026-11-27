@@ -1,3 +1,3 @@
-import { ArchitectureScreen } from "@/components/screens";
+import { ArchitectureScreen } from "@/components/demo/architecture";
 export const metadata = { title: "System architecture" };
 export default ArchitectureScreen;

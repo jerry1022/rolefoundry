@@ -1,5 +1,5 @@
 "use client";
-import { LearningScreen } from "../screens";
+import { LearningScreen } from "../demo/learning";
 import { LearningWorkspaceScreen } from "./learning-screen";
 import {
   createCourseClient,

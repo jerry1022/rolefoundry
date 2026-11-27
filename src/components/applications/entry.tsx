@@ -1,5 +1,5 @@
 "use client";
-import { ApplicationsScreen } from "../screens";
+import { ApplicationsScreen } from "../demo/applications";
 import { ApplicationTrackerScreen } from "./tracker-screen";
 import { createApplicationClient } from "@/modules/applications/adapters/http-client";
 import { createCatalogClient } from "@/modules/jobs/adapters/http-client";

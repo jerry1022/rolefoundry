@@ -1,5 +1,5 @@
 "use client";
-import { AssessmentsScreen } from "../screens";
+import { AssessmentsScreen } from "../demo/assessments";
 import { AssessmentScreen } from "./assessment-screen";
 import {
   createAssessmentClient,
