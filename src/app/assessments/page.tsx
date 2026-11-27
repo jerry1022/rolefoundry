@@ -1,3 +1,3 @@
-import { AssessmentsScreen } from "@/components/screens";
+import { AssessmentWorkspace } from "@/components/assessment/entry";
 export const metadata = { title: "Skill check" };
-export default AssessmentsScreen;
+export default AssessmentWorkspace;

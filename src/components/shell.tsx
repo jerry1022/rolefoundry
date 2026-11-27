@@ -35,6 +35,7 @@ const navigation = [
 ];
 function ShellContent({ children }: { children: ReactNode }) {
   const path = usePathname();
+  const connected = process.env.NEXT_PUBLIC_IDENTITY_ENABLED === "true";
   const { state, ready, storageWarning } = useWorkspace();
   const [menu, setMenu] = useState(false);
   const active = (href: string) =>
@@ -121,10 +122,10 @@ function ShellContent({ children }: { children: ReactNode }) {
             Open source <ArrowUpRight size={14} />
           </a>
           <div className="sidebar-profile">
-            <span className="avatar">{state.name.slice(0, 1).toUpperCase()}</span>
+            <span className="avatar">{connected ? "R" : state.name.slice(0, 1).toUpperCase()}</span>
             <div>
-              <strong>{state.name}&apos;s workspace</strong>
-              <small>Local demo account</small>
+              <strong>{connected ? "Career workspace" : `${state.name}’s workspace`}</strong>
+              <small>{connected ? "Account & privacy" : "Local demo account"}</small>
             </div>
             <span className="profile-dots">···</span>
           </div>
@@ -148,7 +149,9 @@ function ShellContent({ children }: { children: ReactNode }) {
           <div className="topbar-right">
             <span className="demo-pill">
               <span className="status-dot" />
-              Interactive demo
+              {process.env.NEXT_PUBLIC_IDENTITY_ENABLED === "true"
+                ? "Connected workspace"
+                : "Interactive demo"}
             </span>
             <a
               href="https://github.com/jerry1022/rolefoundry"

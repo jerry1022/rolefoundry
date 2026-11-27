@@ -31,7 +31,7 @@ The integration suite runs against actual local GoTrue, PostgREST, PostgreSQL an
 ## 05 — Assessment
 
 - Design: [05-assessment.md](design/05-assessment.md).
-- Status: Pending implementation and verification.
+- Status: Fixed-choice production path implemented and locally verified; [setup and evidence](ASSESSMENT_SETUP.md). Expert bank review and future short-answer calibration remain explicit release gates.
 - Required acceptance scope: Cover each track, full/partial/invalid submissions, duplicate submission, question version changes, retries, evidence provenance, answer confidentiality and deleted owners. Calibrate short-answer agreement with reviewed examples before enabling it publicly.
 
 ## 06 — Matching and gap analysis
@@ -73,7 +73,7 @@ The integration suite runs against actual local GoTrue, PostgREST, PostgreSQL an
 ## 12 — Background worker and tasks
 
 - Design: [12-worker-tasks.md](design/12-worker-tasks.md).
-- Status: Pending implementation and verification.
+- Status: Durable pgmq engine, queue adapter and actual assessment handler implemented/verified with module 05. Remaining domain/provider handlers, invalidation dispatch and hosted telemetry integration are still pending; do not count the entire module complete.
 - Required acceptance scope: Simulate duplicate delivery, lease expiry, crash before/after commit, provider timeout, poison payload, stale input, owner deletion and graceful shutdown. Verify that queue age, lease age, retries and terminal failures are observable.
 
 ## 13 — Administration and operations

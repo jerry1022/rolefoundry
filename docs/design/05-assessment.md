@@ -4,9 +4,11 @@
 
 Offer lightweight, role-sensitive scenarios and record the reasoning behind feedback. The initial product assesses foundational judgment, not professional certification or candidate eligibility.
 
-## Current scaffold
+## Current implementation
 
 Twelve authored multiple-choice questions cover four tracks. Each three-question preview uses fixed answers and explanations. Submit is disabled until all answers are present. The browser contains answers because this is an open-book demo, not a secure examination. Results create scenario evidence without changing self-reported skills.
+
+Configured server deployments now add reviewed immutable question/rubric versions, repeat-aware selection, private autosaved attempts, revision-checked sealing, idempotent task creation and real pgmq/Node grading with atomic scenario evidence. Correct answers stay server-only until completion. Administrator author/review/retire screens are available. See [setup, exact API, concurrency and verification](../ASSESSMENT_SETUP.md). No live bank is seeded or automatically reviewed. Fixed-choice grading uses no external provider and consumes no AI analysis allowance. Short-answer grading and expert calibration remain gated; they are not implemented or claimed by this deterministic preview.
 
 ## Target records and interfaces
 
