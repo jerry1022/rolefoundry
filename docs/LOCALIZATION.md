@@ -22,11 +22,10 @@ Keep `t()` arguments literal. The checker extracts literals, so `t(cond ? "A" : 
 
 Localized: the shell, overview, role discovery and job details, career-path browser chrome and titles, skill profile, scenario check chrome, learning path, resume studio, tracker, demo inspector and architecture page, plus skill, track, stage, location, level and course-format labels.
 
-Connected (signed-in) screens are localized too: account, consent and allowances, data export and deletion, profile and evidence, skill dictionary, job catalog and bookmarks, assessments and the question bank, matching, learning plans and course administration, resume studio and application tracking, plus identity, AI-recipient and course-link administration labels.
+Connected (signed-in) screens are localized too: account, consent and allowances, data export and deletion, profile and evidence, skill dictionary, job catalog and bookmarks, assessments and the question bank, matching, learning plans and course administration, resume studio and application tracking, plus administration (identity, AI recipients, course links, ingestion review/feeds, operations diagnostics/recovery and deletion recovery). Operations notices are translated in the UI by their stable domain code, so domain models stay free of UI i18n.
 
 Still English, by design:
 - Authored or server content: job, course and question text, career-guide bodies, server error messages and consent policy descriptions. Localizing editorial content should add reviewed per-locale fields to the content records (the skill dictionary already stores `nameZhTw`), not more UI keys.
 - Enum codes shown verbatim (for example task, report and review states), ISO dates (`YYYY-MM-DD`), explicitly UTC timestamps, and typed confirmation phrases such as `DELETE`.
-- Ingestion and operations administration screens. They can adopt `useI18n()` incrementally; outside the provider it safely renders English.
 
 English output is byte-identical to the pre-localization UI, so English plural quirks such as "1 years" were kept. Fixing them is an English copy change, separate from localization.

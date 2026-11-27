@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import Link from "next/link";
+import { msg, useI18n } from "@/lib/i18n";
 import { publicationFields, sourcePolicySchema, type SourcePolicy } from "@/modules/jobs/model";
 /** Registration records an operator's supplied policy; it does not grant copying permission. */
 export function JobSourceRegistration({
@@ -10,6 +11,10 @@ export function JobSourceRegistration({
   busy: boolean;
   register: (policy: SourcePolicy) => Promise<void>;
 }) {
+  const { t } = useI18n();
+  const [beforeLink, afterLink] = t(
+    "For course sources, use {link} to select an approved provider.",
+  ).split("{link}");
   const [policy, setPolicy] = useState<SourcePolicy>({
       name: "",
       publisher: "",
@@ -23,7 +28,7 @@ export function JobSourceRegistration({
     [error, setError] = useState("");
   return (
     <details>
-      <summary>Register a job metadata source</summary>
+      <summary>{t("Register a job metadata source")}</summary>
       <form
         className="panel"
         onSubmit={(event) => {
@@ -34,7 +39,9 @@ export function JobSourceRegistration({
           });
           if (!parsed.success) {
             setError(
-              "Complete the source policy, use lowercase hostnames without paths, and select the fields you are authorized to publish.",
+              msg(
+                "Complete the source policy, use lowercase hostnames without paths, and select the fields you are authorized to publish.",
+              ),
             );
             return;
           }
@@ -43,25 +50,28 @@ export function JobSourceRegistration({
         }}
       >
         <p>
-          Record the publisher and your authorization basis before enabling uploads. Source
-          registration does not verify or grant rights. For course sources, use{" "}
-          <Link href="/learning/">course administration</Link> to select an approved provider.
+          {t(
+            "Record the publisher and your authorization basis before enabling uploads. Source registration does not verify or grant rights.",
+          )}{" "}
+          {beforeLink}
+          <Link href="/learning/">{t("course administration")}</Link>
+          {afterLink}
         </p>
-        {error && <p role="alert">{error}</p>}
+        {error && <p role="alert">{t(error)}</p>}
         <fieldset className="profile-form-fields" disabled={busy}>
           {(
             [
-              ["name", "Job source name", 160],
-              ["publisher", "Job source publisher", 200],
-              ["authorizationBasis", "Job source authorization basis (private)", 2000],
-              ["rightsSummary", "Job source public rights summary", 500],
+              ["name", msg("Job source name"), 160],
+              ["publisher", msg("Job source publisher"), 200],
+              ["authorizationBasis", msg("Job source authorization basis (private)"), 2000],
+              ["rightsSummary", msg("Job source public rights summary"), 500],
             ] as const
           ).map(([key, label, max]) => (
             <label key={key}>
-              {label}
+              {t(label)}
               <textarea
                 className="text-input"
-                aria-label={label}
+                aria-label={t(label)}
                 required
                 maxLength={max}
                 value={policy[key]}
@@ -70,10 +80,10 @@ export function JobSourceRegistration({
             </label>
           ))}
           <label>
-            Allowed source hostnames
+            {t("Allowed source hostnames")}
             <textarea
               className="text-input"
-              aria-label="Job source allowed hostnames"
+              aria-label={t("Job source allowed hostnames")}
               required
               maxLength={5100}
               value={hosts}
@@ -82,7 +92,7 @@ export function JobSourceRegistration({
             />
           </label>
           <fieldset>
-            <legend>Permitted job metadata fields</legend>
+            <legend>{t("Permitted job metadata fields")}</legend>
             {publicationFields.map((field) => (
               <label key={field}>
                 <input
@@ -107,10 +117,10 @@ export function JobSourceRegistration({
               checked={policy.isDemo}
               onChange={(event) => setPolicy({ ...policy, isDemo: event.target.checked })}
             />
-            This source contains fictional demonstration metadata
+            {t("This source contains fictional demonstration metadata")}
           </label>
           <button className="button secondary" type="submit">
-            Register job source with uploads disabled
+            {t("Register job source with uploads disabled")}
           </button>
         </fieldset>
       </form>

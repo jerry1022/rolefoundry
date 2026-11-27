@@ -7,6 +7,7 @@ import type {
   FeedRun,
   ApprovedFeedOption,
 } from "@/modules/ingestion/model";
+import { msg, useI18n } from "@/lib/i18n";
 import { ApplicationError } from "@/modules/platform/errors";
 function FeedSettingsForm({
   setting,
@@ -21,6 +22,7 @@ function FeedSettingsForm({
   save: (input: FeedConfiguration) => Promise<void>;
   fetchNow: () => Promise<void>;
 }) {
+  const { t } = useI18n();
   const options = definitions.filter((feed) => feed.kind === setting.kind),
     [feedId, setFeedId] = useState(setting.feedId || options[0]?.id || ""),
     [enabled, setEnabled] = useState(setting.enabled),
@@ -50,26 +52,35 @@ function FeedSettingsForm({
         {setting.name} · {setting.kind}
       </h4>
       <p>
-        Source {setting.sourceStatus}. Next scheduled check:{" "}
-        {setting.nextFetchAt || "not scheduled"}.
+        {t("Source {status}. Next scheduled check: {time}.", {
+          status: setting.sourceStatus,
+          time: setting.nextFetchAt || t("not scheduled"),
+        })}
       </p>
       {setting.manualPause && (
         <p className="notice">
-          Automatic retrieval is paused for operator review. Reported provider wait:{" "}
-          {setting.providerWait || "unknown"} seconds. Earliest retry:{" "}
-          {setting.pauseUntil || "requires review"}.
+          {t(
+            "Automatic retrieval is paused for operator review. Reported provider wait: {wait} seconds. Earliest retry: {retry}.",
+            {
+              wait: setting.providerWait || t("unknown"),
+              retry: setting.pauseUntil || t("requires review"),
+            },
+          )}
         </p>
       )}
       {setting.lastError && (
         <p>
-          Last retrieval issue: {setting.lastError}. Published metadata is retained; availability
-          may be uncertain.
+          {t(
+            "Last retrieval issue: {issue}. Published metadata is retained; availability may be uncertain.",
+            { issue: setting.lastError },
+          )}
         </p>
       )}
       {setting.feedId && !current && (
         <p className="notice">
-          The approved feed definition changed or is unavailable. Review and save the current
-          configuration before fetching.
+          {t(
+            "The approved feed definition changed or is unavailable. Review and save the current configuration before fetching.",
+          )}
         </p>
       )}
       <fieldset
@@ -77,15 +88,15 @@ function FeedSettingsForm({
         disabled={busy || setting.sourceStatus !== "active"}
       >
         <label>
-          Approved feed for {setting.name}
+          {t("Approved feed for {name}", { name: setting.name })}
           <select
             className="text-input"
-            aria-label={`Approved feed for ${setting.name}`}
+            aria-label={t("Approved feed for {name}", { name: setting.name })}
             required
             value={feedId}
             onChange={(event) => setFeedId(event.target.value)}
           >
-            <option value="">Select an approved feed</option>
+            <option value="">{t("Select an approved feed")}</option>
             {options.map((feed) => (
               <option key={feed.id} value={feed.id}>
                 {feed.id} · {feed.format}
@@ -99,13 +110,13 @@ function FeedSettingsForm({
             checked={enabled}
             onChange={(event) => setEnabled(event.target.checked)}
           />
-          Enable scheduled retrieval for {setting.name}
+          {t("Enable scheduled retrieval for {name}", { name: setting.name })}
         </label>
         <label>
-          Refresh interval for {setting.name} (minutes)
+          {t("Refresh interval for {name} (minutes)", { name: setting.name })}
           <input
             className="text-input"
-            aria-label={`Refresh interval for ${setting.name}`}
+            aria-label={t("Refresh interval for {name}", { name: setting.name })}
             type="number"
             min={15}
             max={10080}
@@ -122,15 +133,16 @@ function FeedSettingsForm({
               checked={resume}
               onChange={(event) => setResume(event.target.checked)}
             />
-            Resume after reviewing the provider wait for {setting.name}
+            {t("Resume after reviewing the provider wait for {name}", { name: setting.name })}
           </label>
         )}
         <p className="muted">
-          Saving assigns this schedule to your administrator account. Revoked sources and inactive
-          owners are skipped. A reported provider wait cannot be resumed early.
+          {t(
+            "Saving assigns this schedule to your administrator account. Revoked sources and inactive owners are skipped. A reported provider wait cannot be resumed early.",
+          )}
         </p>
         <button className="button secondary" type="submit" disabled={!feedId}>
-          Save feed settings for {setting.name}
+          {t("Save feed settings for {name}", { name: setting.name })}
         </button>
         <button
           className="button secondary"
@@ -138,7 +150,7 @@ function FeedSettingsForm({
           disabled={!setting.enabled || !current || waiting}
           onClick={() => void fetchNow()}
         >
-          Fetch approved feed for {setting.name}
+          {t("Fetch approved feed for {name}", { name: setting.name })}
         </button>
       </fieldset>
     </form>
@@ -155,6 +167,7 @@ export function FeedAdministration({
   onSettingsChanged: () => Promise<void>;
   onDenied: () => void;
 }) {
+  const { t } = useI18n();
   const [data, setData] = useState<{
       settings: FeedSetting[];
       definitions: ApprovedFeedOption[];
@@ -171,7 +184,9 @@ export function FeedAdministration({
     setError(
       error instanceof ApplicationError
         ? error.message
-        : "The feed request or refresh could not be completed. Refresh saved runs before retrying.",
+        : msg(
+            "The feed request or refresh could not be completed. Refresh saved runs before retrying.",
+          ),
     );
     if (error instanceof ApplicationError && [401, 403].includes(error.status)) onDenied();
   }
@@ -245,22 +260,24 @@ export function FeedAdministration({
     setPolling(true);
   }
   return (
-    <details className="panel section-block" aria-label="Approved feed administration">
-      <summary>Approved remote feeds and schedules</summary>
+    <details className="panel section-block" aria-label={t("Approved feed administration")}>
+      <summary>{t("Approved remote feeds and schedules")}</summary>
       <p>
-        Fetch only deployment-approved feeds. Retrieved data becomes a batch for review; it is never
-        published automatically. Missing rows do not close existing records.
+        {t(
+          "Fetch only deployment-approved feeds. Retrieved data becomes a batch for review; it is never published automatically. Missing rows do not close existing records.",
+        )}
       </p>
       {error && (
         <p className="notice" role="alert">
-          {error}
+          {t(error)}
         </p>
       )}
-      {!data && <p role="status">Loading feed settings…</p>}
+      {!data && <p role="status">{t("Loading feed settings…")}</p>}
       {data && !data.definitions.length && (
         <p>
-          No approved feeds are available on this deployment. An operator must register an
-          authorized feed before retrieval can be enabled.
+          {t(
+            "No approved feeds are available on this deployment. An operator must register an authorized feed before retrieval can be enabled.",
+          )}
         </p>
       )}
       <button
@@ -273,7 +290,7 @@ export function FeedAdministration({
           })
         }
       >
-        Refresh approved feeds and runs
+        {t("Refresh approved feeds and runs")}
       </button>
       {data?.settings.map((setting) => (
         <FeedSettingsForm
@@ -305,8 +322,8 @@ export function FeedAdministration({
           }
         />
       ))}
-      <h3>Recent feed runs</h3>
-      {!runs.length && <p>No retrieval runs yet.</p>}
+      <h3>{t("Recent feed runs")}</h3>
+      {!runs.length && <p>{t("No retrieval runs yet.")}</p>}
       {runs.map((run) => (
         <article className="section-block" key={run.id}>
           <strong>{run.feedId}</strong>
@@ -319,7 +336,7 @@ export function FeedAdministration({
             disabled={busy}
             onClick={() => void perform(() => open(run))}
           >
-            Inspect feed run {run.id}
+            {t("Inspect feed run {id}", { id: run.id })}
           </button>
           {run.batchId && (
             <button
@@ -327,20 +344,20 @@ export function FeedAdministration({
               disabled={busy}
               onClick={() => void perform(() => onOpenBatch(run.batchId!))}
             >
-              Open fetched batch {run.id}
+              {t("Open fetched batch {id}", { id: run.id })}
             </button>
           )}
         </article>
       ))}
       {active && (
-        <section className="panel section-block" aria-label="Selected feed run">
-          <h3>Selected feed run</h3>
+        <section className="panel section-block" aria-label={t("Selected feed run")}>
+          <h3>{t("Selected feed run")}</h3>
           <p role="status">
             {active.status} · {active.feedId}
           </p>
-          {active.errorCode && <p>Retrieval issue: {active.errorCode}</p>}
+          {active.errorCode && <p>{t("Retrieval issue: {code}", { code: active.errorCode })}</p>}
           {!polling && ["queued", "running"].includes(active.status) && (
-            <p>Automatic checking paused. Inspect the run to resume.</p>
+            <p>{t("Automatic checking paused. Inspect the run to resume.")}</p>
           )}
           {active.batchId && (
             <button
@@ -348,7 +365,7 @@ export function FeedAdministration({
               disabled={busy}
               onClick={() => void perform(() => onOpenBatch(active.batchId!))}
             >
-              Review fetched batch
+              {t("Review fetched batch")}
             </button>
           )}
         </section>

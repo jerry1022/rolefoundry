@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
+import { msg, useI18n } from "@/lib/i18n";
 import { ApplicationError } from "@/modules/platform/errors";
 import {
   replayReasonSchema,
@@ -8,14 +9,17 @@ import {
   type TaskReplayClient,
 } from "@/modules/operations/replay";
 const messages: Record<NonNullable<ReplayPreview["reason"]>, string> = {
-  "already-replayed": "A new attempt already exists. Inspect it before taking further action.",
-  "not-terminal": "Only a failed task without a committed result can be recovered here.",
-  permanent: "This failure needs a new owner request or domain correction; it cannot be replayed.",
-  "owner-unavailable": "The original account is unavailable. Its private work cannot restart.",
-  "source-stale":
+  "already-replayed": msg("A new attempt already exists. Inspect it before taking further action."),
+  "not-terminal": msg("Only a failed task without a committed result can be recovered here."),
+  permanent: msg(
+    "This failure needs a new owner request or domain correction; it cannot be replayed.",
+  ),
+  "owner-unavailable": msg("The original account is unavailable. Its private work cannot restart."),
+  "source-stale": msg(
     "The accepted input, source permission or version is no longer valid. Use the current domain workflow.",
-  limit: "The original request has reached its recovery or pending-work limit.",
-  "deployment-unavailable": "This deployment no longer approves the original feed definition.",
+  ),
+  limit: msg("The original request has reached its recovery or pending-work limit."),
+  "deployment-unavailable": msg("This deployment no longer approves the original feed definition."),
 };
 /** No read creates work. The pending mutation identity survives a lost response. */
 export function TaskReplayControl({
@@ -29,6 +33,7 @@ export function TaskReplayControl({
   onInspect: (id: string) => void;
   onUnavailable?: (error: ApplicationError) => void;
 }) {
+  const { t } = useI18n();
   const [preview, setPreview] = useState<ReplayPreview | null>(null),
     [busy, setBusy] = useState(false),
     [error, setError] = useState(""),
@@ -61,7 +66,7 @@ export function TaskReplayControl({
         setError(
           error instanceof ApplicationError
             ? error.message
-            : "Task recovery is temporarily unavailable. Retry the same operation.",
+            : msg("Task recovery is temporarily unavailable. Retry the same operation."),
         );
     } finally {
       lock.current = false;
@@ -87,26 +92,27 @@ export function TaskReplayControl({
     setAttempted(false);
   }
   return (
-    <section className="section-block" aria-label="Task recovery">
-      <h4>Recover a failed task</h4>
+    <section className="section-block" aria-label={t("Task recovery")}>
+      <h4>{t("Recover a failed task")}</h4>
       <p>
-        Recovery validates the original request and creates a new execution. Its previous history
-        stays available. Review the service issue before requesting recovery.
+        {t(
+          "Recovery validates the original request and creates a new execution. Its previous history stays available. Review the service issue before requesting recovery.",
+        )}
       </p>
-      {error && <p role="alert">{error}</p>}
+      {error && <p role="alert">{t(error)}</p>}
       <button className="button secondary" disabled={busy} onClick={() => void perform(inspect)}>
-        Check recovery eligibility
+        {t("Check recovery eligibility")}
       </button>
-      {preview?.reason && <p role="status">{messages[preview.reason]}</p>}
+      {preview?.reason && <p role="status">{t(messages[preview.reason])}</p>}
       {preview?.nextTaskId && (
         <>
-          <p>New attempt: {preview.nextTaskId}</p>
+          <p>{t("New attempt: {id}", { id: preview.nextTaskId })}</p>
           <button
             className="button secondary"
             disabled={busy}
             onClick={() => onInspect(preview.nextTaskId!)}
           >
-            Inspect recovered attempt
+            {t("Inspect recovered attempt")}
           </button>
         </>
       )}
@@ -118,26 +124,26 @@ export function TaskReplayControl({
           }}
         >
           <label className="field">
-            Recovery reason
+            {t("Recovery reason")}
             <select
               className="text-input"
-              aria-label="Task recovery reason"
+              aria-label={t("Task recovery reason")}
               value={reason}
               disabled={busy || attempted}
               onChange={(event) => setReason(replayReasonSchema.parse(event.target.value))}
             >
-              <option value="operator-reviewed">Operator reviewed</option>
-              <option value="configuration-restored">Configuration restored</option>
-              <option value="storage-restored">Storage restored</option>
-              <option value="directory-restored">Directory restored</option>
+              <option value="operator-reviewed">{t("Operator reviewed")}</option>
+              <option value="configuration-restored">{t("Configuration restored")}</option>
+              <option value="storage-restored">{t("Storage restored")}</option>
+              <option value="directory-restored">{t("Directory restored")}</option>
             </select>
           </label>
           <button className="button primary" disabled={busy}>
             {busy
-              ? "Requesting recovery…"
+              ? t("Requesting recovery…")
               : attempted
-                ? "Retry this recovery request"
-                : "Create new task attempt"}
+                ? t("Retry this recovery request")
+                : t("Create new task attempt")}
           </button>
         </form>
       )}

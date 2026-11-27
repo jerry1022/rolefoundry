@@ -1,6 +1,7 @@
 import { expect } from "vitest";
 import type { LocalFixtures, LocalMember } from "./local-fixtures";
 import { leaseTask } from "./task-fixtures";
+import type { CapabilityEvidence } from "../../src/modules/profile/model";
 import { publicationFields, type JobDraft, type PublishedJob } from "../../src/modules/jobs/model";
 
 /** Owned, fictional catalog/profile fixtures for matching tests; callers clean up by prefix. */
@@ -95,11 +96,15 @@ export class MatchingFixtures {
       },
     });
     expect(evidence.status).toBe(201);
-    return owner;
+    const created = (await evidence.json()).data as {
+      evidence: CapabilityEvidence;
+      revision: number;
+    };
+    return { owner, ...created };
   }
 
-  lease(taskId: string) {
-    return leaseTask(this.stack, taskId, "matches.refresh");
+  lease(taskId: string, seconds = 30) {
+    return leaseTask(this.stack, taskId, "matches.refresh", seconds);
   }
 
   /** Removes this fixture's queue messages, runs and catalog records (in dependency order). */

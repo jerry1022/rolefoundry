@@ -6,12 +6,13 @@ export async function leaseTask(
   stack: LocalFixtures,
   taskId: string,
   kind: TaskKind,
+  seconds = 30,
 ): Promise<TaskLease> {
   for (let attempt = 0; attempt < 10; attempt++) {
     const result = await stack.privileged.rpc("task_read", {
       p_worker: crypto.randomUUID(),
       p_kinds: [kind],
-      p_seconds: 30,
+      p_seconds: seconds,
       p_quantity: 8,
     });
     if (result.error) throw Error(result.error.message);
@@ -25,7 +26,7 @@ export async function leaseTask(
         token: selected.token,
         messageId: String(selected.messageId),
         kind,
-        leaseSeconds: 30,
+        leaseSeconds: seconds,
       };
   }
   throw Error(`Owned ${kind} task was not visible`);

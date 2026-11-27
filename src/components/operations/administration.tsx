@@ -15,6 +15,24 @@ import { TaskReplayControl } from "./replay-control";
 import type { TaskReplayClient } from "@/modules/operations/replay";
 import { taskKinds } from "@/modules/tasks/model";
 import { ApplicationError } from "@/modules/platform/errors";
+import { msg, useI18n } from "@/lib/i18n";
+/**
+ * UI labels for the domain's stable notice codes; the domain keeps its English message for
+ * logs and APIs, and unknown codes fall back to it.
+ */
+const noticeMessages: Record<string, string> = {
+  "queue-age": msg("Ready work has waited at least five minutes."),
+  "no-worker": msg("No recent active worker reports handling this ready work."),
+  "expired-lease": msg("Running work has an expired or missing lease."),
+  "erasure-retries": msg(
+    "Account removal has retried repeatedly. Inspect worker configuration and service availability.",
+  ),
+  failures: msg(
+    "At least ten percent of terminal work failed in the last 24 hours (minimum ten tasks).",
+  ),
+  poison: msg("Workers observed invalid queue deliveries in the last 24 hours."),
+};
+
 export function OperationsAdministration({
   client,
   isAdmin,
@@ -24,6 +42,7 @@ export function OperationsAdministration({
   isAdmin: () => Promise<boolean>;
   replayClient?: TaskReplayClient;
 }) {
+  const { t } = useI18n();
   const [access, setAccess] = useState<"checking" | "allowed" | "denied">("checking"),
     [open, setOpen] = useState(false),
     [summary, setSummary] = useState<OperationsSummary | null>(null),
@@ -44,7 +63,7 @@ export function OperationsAdministration({
     setError(
       error instanceof ApplicationError
         ? error.message
-        : "Task diagnostics are temporarily unavailable.",
+        : msg("Task diagnostics are temporarily unavailable."),
     );
     if (error instanceof ApplicationError && [401, 403].includes(error.status)) {
       generation.current++;
@@ -135,27 +154,30 @@ export function OperationsAdministration({
     setTask(record);
     setEvents(history);
   }
+  const attemptLimit = (item: OperationsTask) =>
+    item.retryPolicy === "until-complete" ? t("persistent") : item.maxAttempts;
   return (
     <details
       className="panel section-block operations-workspace"
-      aria-label="Task and worker diagnostics"
+      aria-label={t("Task and worker diagnostics")}
       onToggle={(event) => setOpen(event.currentTarget.open)}
     >
-      <summary>Task and worker diagnostics</summary>
+      <summary>{t("Task and worker diagnostics")}</summary>
       <p className="muted">
-        Operational metadata only. Refresh on demand; displayed observations do not change task
-        state.
+        {t(
+          "Operational metadata only. Refresh on demand; displayed observations do not change task state.",
+        )}
       </p>
-      {access === "checking" && <p role="status">Checking task diagnostics access…</p>}
+      {access === "checking" && <p role="status">{t("Checking task diagnostics access…")}</p>}
       {access === "denied" && (
         <p>
-          Task diagnostics require an administrator session.{" "}
-          <Link href="/account/">Open account and privacy</Link>
+          {t("Task diagnostics require an administrator session.")}{" "}
+          <Link href="/account/">{t("Open account and privacy")}</Link>
         </p>
       )}
       {error && (
         <p className="notice" role="alert">
-          {error}
+          {t(error)}
         </p>
       )}
       {access === "allowed" && (
@@ -165,26 +187,32 @@ export function OperationsAdministration({
             disabled={busy}
             onClick={() => void perform(refresh)}
           >
-            Refresh task diagnostics
+            {t("Refresh task diagnostics")}
           </button>
-          {busy && <p role="status">Loading task diagnostics…</p>}
+          {busy && <p role="status">{t("Loading task diagnostics…")}</p>}
           {summary && (
-            <section className="section-block" aria-label="Task metrics">
-              <h3>Queue and lease observations</h3>
+            <section className="section-block" aria-label={t("Task metrics")}>
+              <h3>{t("Queue and lease observations")}</h3>
               <p>
-                Observed {summary.observedAt}. Physical deliveries: {summary.deliveryCount}. Invalid
-                deliveries observed in 24 hours: {summary.poison24h}.
+                {t(
+                  "Observed {observedAt}. Physical deliveries: {deliveries}. Invalid deliveries observed in 24 hours: {invalid}.",
+                  {
+                    observedAt: summary.observedAt,
+                    deliveries: summary.deliveryCount,
+                    invalid: summary.poison24h,
+                  },
+                )}
               </p>
               <div className="table-scroll">
                 <table>
                   <thead>
                     <tr>
-                      <th>Task kind</th>
-                      <th>Queued / ready</th>
-                      <th>Running / expired lease</th>
-                      <th>Oldest ready / heartbeat age (seconds)</th>
-                      <th>Success / failure / retry events (24 hours)</th>
-                      <th>Recent active workers</th>
+                      <th>{t("Task kind")}</th>
+                      <th>{t("Queued / ready")}</th>
+                      <th>{t("Running / expired lease")}</th>
+                      <th>{t("Oldest ready / heartbeat age (seconds)")}</th>
+                      <th>{t("Success / failure / retry events (24 hours)")}</th>
+                      <th>{t("Recent active workers")}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -215,28 +243,29 @@ export function OperationsAdministration({
                   </tbody>
                 </table>
               </div>
-              <h4>Diagnostic notices</h4>
+              <h4>{t("Diagnostic notices")}</h4>
               {operationsAlerts(summary).length ? (
                 <ul>
                   {operationsAlerts(summary).map((notice) => (
                     <li key={`${notice.kind}:${notice.code}`}>
                       {notice.kind ? `${notice.kind}: ` : ""}
-                      {notice.message}
+                      {t(noticeMessages[notice.code] ?? notice.message)}
                     </li>
                   ))}
                 </ul>
               ) : (
-                <p>No configured diagnostic thresholds were exceeded at this observation.</p>
+                <p>{t("No configured diagnostic thresholds were exceeded at this observation.")}</p>
               )}
               <p className="muted">
-                Ready means the retry deadline has passed. Worker presence is self-reported and
-                becomes stale after {summary.workerFreshSeconds} seconds; task leases remain
-                authoritative. These notices do not send alerts to another service.
+                {t(
+                  "Ready means the retry deadline has passed. Worker presence is self-reported and becomes stale after {seconds} seconds; task leases remain authoritative. These notices do not send alerts to another service.",
+                  { seconds: summary.workerFreshSeconds },
+                )}
               </p>
             </section>
           )}
           <section className="section-block">
-            <h3>Inspect tasks</h3>
+            <h3>{t("Inspect tasks")}</h3>
             <form
               onSubmit={(event) => {
                 event.preventDefault();
@@ -254,14 +283,14 @@ export function OperationsAdministration({
             >
               <fieldset disabled={busy} className="profile-form-fields">
                 <label>
-                  Task kind
+                  {t("Task kind")}
                   <select
                     className="text-input"
-                    aria-label="Diagnostic task kind"
+                    aria-label={t("Diagnostic task kind")}
                     value={kind}
                     onChange={(event) => setKind(event.target.value)}
                   >
-                    <option value="">All kinds</option>
+                    <option value="">{t("All kinds")}</option>
                     {taskKinds.map((kind) => (
                       <option key={kind} value={kind}>
                         {kind}
@@ -270,14 +299,14 @@ export function OperationsAdministration({
                   </select>
                 </label>
                 <label>
-                  Task state
+                  {t("Task state")}
                   <select
                     className="text-input"
-                    aria-label="Diagnostic task state"
+                    aria-label={t("Diagnostic task state")}
                     value={status}
                     onChange={(event) => setStatus(event.target.value)}
                   >
-                    <option value="">All states</option>
+                    <option value="">{t("All states")}</option>
                     {["queued", "running", "succeeded", "failed"].map((state) => (
                       <option key={state} value={state}>
                         {state}
@@ -285,11 +314,14 @@ export function OperationsAdministration({
                     ))}
                   </select>
                 </label>
-                <button className="button secondary">Apply task filters</button>
+                <button className="button secondary">{t("Apply task filters")}</button>
               </fieldset>
             </form>
             <p>
-              Applied filters: {query.kind || "all kinds"} / {query.status || "all states"}.
+              {t("Applied filters: {kind} / {status}.", {
+                kind: query.kind || t("all kinds"),
+                status: query.status || t("all states"),
+              })}
             </p>
             <form
               onSubmit={(event) => {
@@ -299,36 +331,39 @@ export function OperationsAdministration({
             >
               <fieldset disabled={busy} className="profile-form-fields">
                 <label>
-                  Task identifier
+                  {t("Task identifier")}
                   <input
                     className="text-input"
-                    aria-label="Diagnostic task identifier"
+                    aria-label={t("Diagnostic task identifier")}
                     required
                     maxLength={36}
                     value={lookup}
                     onChange={(event) => setLookup(event.target.value)}
                   />
                 </label>
-                <button className="button secondary">Inspect task identifier</button>
+                <button className="button secondary">{t("Inspect task identifier")}</button>
               </fieldset>
             </form>
-            {tasks?.data.length === 0 && <p>No tasks match these filters.</p>}
+            {tasks?.data.length === 0 && <p>{t("No tasks match these filters.")}</p>}
             {tasks?.data.map((item) => (
               <article key={item.id} className="panel section-block">
                 <strong>
                   {item.kind} · {item.status}
                 </strong>
                 <p>
-                  {item.id} · attempts {item.attempts}/
-                  {item.retryPolicy === "until-complete" ? "persistent" : item.maxAttempts} ·{" "}
-                  {item.errorCode || "no classified issue"}
+                  {t("{id} · attempts {attempts}/{limit} · {issue}", {
+                    id: item.id,
+                    attempts: item.attempts,
+                    limit: attemptLimit(item),
+                    issue: item.errorCode || t("no classified issue"),
+                  })}
                 </p>
                 <button
                   className="button secondary"
                   disabled={busy}
                   onClick={() => void perform(() => select(item.id))}
                 >
-                  Inspect task {item.id}
+                  {t("Inspect task {id}", { id: item.id })}
                 </button>
               </article>
             ))}
@@ -343,36 +378,35 @@ export function OperationsAdministration({
                   })
                 }
               >
-                Load older diagnostic tasks
+                {t("Load older diagnostic tasks")}
               </button>
             )}
           </section>
           {task && (
-            <section className="panel section-block" aria-label="Selected task diagnostics">
-              <h3>Selected task diagnostics</h3>
+            <section className="panel section-block" aria-label={t("Selected task diagnostics")}>
+              <h3>{t("Selected task diagnostics")}</h3>
               <p>
                 {task.id} · {task.kind} · {task.status}
               </p>
               <dl>
-                <dt>Attempts</dt>
+                <dt>{t("Attempts")}</dt>
                 <dd>
-                  {task.attempts}/
-                  {task.retryPolicy === "until-complete" ? "persistent" : task.maxAttempts}
+                  {task.attempts}/{attemptLimit(task)}
                 </dd>
-                <dt>Created / started</dt>
+                <dt>{t("Created / started")}</dt>
                 <dd>
-                  {task.createdAt} / {task.startedAt || "not started"}
+                  {task.createdAt} / {task.startedAt || t("not started")}
                 </dd>
-                <dt>Retry due</dt>
+                <dt>{t("Retry due")}</dt>
                 <dd>{task.nextRunAt}</dd>
-                <dt>Lease expiry</dt>
-                <dd>{task.leaseExpiresAt || "no active lease"}</dd>
-                <dt>Latest task heartbeat</dt>
-                <dd>{task.heartbeatAt || "none"}</dd>
-                <dt>Result reference recorded</dt>
-                <dd>{task.resultAvailable ? "yes" : "no"}</dd>
-                <dt>Safe failure code</dt>
-                <dd>{task.errorCode || "none"}</dd>
+                <dt>{t("Lease expiry")}</dt>
+                <dd>{task.leaseExpiresAt || t("no active lease")}</dd>
+                <dt>{t("Latest task heartbeat")}</dt>
+                <dd>{task.heartbeatAt || t("none")}</dd>
+                <dt>{t("Result reference recorded")}</dt>
+                <dd>{task.resultAvailable ? t("yes") : t("no")}</dd>
+                <dt>{t("Safe failure code")}</dt>
+                <dd>{task.errorCode || t("none")}</dd>
               </dl>
               {replayClient && (
                 <TaskReplayControl
@@ -383,8 +417,8 @@ export function OperationsAdministration({
                   onInspect={(id) => void perform(() => select(id))}
                 />
               )}
-              <h4>Task event history</h4>
-              {events?.data.length === 0 && <p>No retained events.</p>}
+              <h4>{t("Task event history")}</h4>
+              {events?.data.length === 0 && <p>{t("No retained events.")}</p>}
               <ul>
                 {events?.data.map((event) => (
                   <li key={event.id}>
@@ -404,30 +438,45 @@ export function OperationsAdministration({
                     })
                   }
                 >
-                  Load older task events
+                  {t("Load older task events")}
                 </button>
               )}
               <p className="muted">
-                Task replay requires a separate audited domain operation that revalidates owner and
-                input versions.
+                {t(
+                  "Task replay requires a separate audited domain operation that revalidates owner and input versions.",
+                )}
               </p>
             </section>
           )}
           {workers && (
-            <section className="section-block" aria-label="Worker observations">
-              <h3>Worker observations</h3>
+            <section className="section-block" aria-label={t("Worker observations")}>
+              <h3>{t("Worker observations")}</h3>
               <p>
-                Observed {workers.observedAt}. Showing {workers.data.length} latest worker records
-                {workers.truncated ? " (additional records are not shown)" : ""}.
+                {workers.truncated
+                  ? t(
+                      "Observed {observedAt}. Showing {count} latest worker records (additional records are not shown).",
+                      { observedAt: workers.observedAt, count: workers.data.length },
+                    )
+                  : t("Observed {observedAt}. Showing {count} latest worker records.", {
+                      observedAt: workers.observedAt,
+                      count: workers.data.length,
+                    })}
               </p>
-              {!workers.data.length && <p>No worker presence has been reported.</p>}
+              {!workers.data.length && <p>{t("No worker presence has been reported.")}</p>}
               {workers.data.map((worker) => (
                 <article className="panel section-block" key={worker.id}>
                   <strong>{worker.observedState}</strong>
                   <p>{worker.id}</p>
                   <p>
-                    Reported {worker.reportedState} · last seen {worker.lastSeenAt} · concurrency{" "}
-                    {worker.concurrency} · lease {worker.leaseSeconds}s
+                    {t(
+                      "Reported {state} · last seen {lastSeenAt} · concurrency {concurrency} · lease {leaseSeconds}s",
+                      {
+                        state: worker.reportedState,
+                        lastSeenAt: worker.lastSeenAt,
+                        concurrency: worker.concurrency,
+                        leaseSeconds: worker.leaseSeconds,
+                      },
+                    )}
                   </p>
                   <p>{worker.kinds.join(", ")}</p>
                 </article>

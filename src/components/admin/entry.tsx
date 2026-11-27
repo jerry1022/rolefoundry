@@ -5,6 +5,7 @@ import { AdminScreen } from "../screens";
 import { PageHeading } from "../ui/page-heading";
 import Link from "next/link";
 import { useMemo } from "react";
+import { useI18n } from "@/lib/i18n";
 import { useAdminAccess } from "./access";
 import { AdminSection } from "./section";
 import { DictionaryScreen } from "../skills/dictionary-screen";
@@ -29,6 +30,7 @@ export function AdminWorkspace() {
   return <PrivateAdminWorkspace />;
 }
 function PrivateAdminWorkspace() {
+  const { t } = useI18n();
   const { access, verify: isAdmin, fetcher } = useAdminAccess();
   const {
     client,
@@ -61,42 +63,46 @@ function PrivateAdminWorkspace() {
   return (
     <>
       <PageHeading
-        eyebrow="ADMINISTRATION"
-        title="Review content and operate the workspace."
-        description="Manage reviewed skills, assessment versions, invitations and allowances alongside authorized sources and task recovery."
+        eyebrow={t("ADMINISTRATION")}
+        title={t("Review content and operate the workspace.")}
+        description={t(
+          "Manage reviewed skills, assessment versions, invitations and allowances alongside authorized sources and task recovery.",
+        )}
       />
-      {access === "checking" && <p role="status">Checking administrator access…</p>}
+      {access === "checking" && <p role="status">{t("Checking administrator access…")}</p>}
       {access === "denied" && (
         <p>
-          Administration requires a current administrator session.{" "}
-          <Link href="/account/">Open account and privacy</Link>
+          {t("Administration requires a current administrator session.")}{" "}
+          <Link href="/account/">{t("Open account and privacy")}</Link>
         </p>
       )}
       {access === "unavailable" && (
         <p role="alert">
-          Administrator access could not be verified. Retry when the identity service is available.
+          {t(
+            "Administrator access could not be verified. Retry when the identity service is available.",
+          )}
         </p>
       )}
       {access !== "allowed" && access !== "checking" && (
         <button className="button secondary" onClick={() => void isAdmin()}>
-          Check administrator access again
+          {t("Check administrator access again")}
         </button>
       )}
       {access === "allowed" && (
         <>
-          <AdminSection title="Skills and aliases">
+          <AdminSection title={t("Skills and aliases")}>
             <DictionaryScreen client={skills} adminClient={skillAdmin} isAdmin={isAdmin} embedded />
           </AdminSection>
-          <AdminSection title="Assessment questions and rubrics">
+          <AdminSection title={t("Assessment questions and rubrics")}>
             <AssessmentBank client={bank} skills={skills} />
           </AdminSection>
-          <AdminSection title="Invitations and allowances">
+          <AdminSection title={t("Invitations and allowances")}>
             <IdentityAdministration client={identity} />
           </AdminSection>
-          <AdminSection title="AI recipients">
+          <AdminSection title={t("AI recipients")}>
             <AiRecipientAdministration client={aiRecipients} />
           </AdminSection>
-          <AdminSection title="Course link observations">
+          <AdminSection title={t("Course link observations")}>
             <CourseLinkChecks client={courseLinks} />
           </AdminSection>
           <OperationsAdministration client={operations} replayClient={replay} isAdmin={isAdmin} />

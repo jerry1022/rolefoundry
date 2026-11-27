@@ -10,6 +10,7 @@ import {
   type ImportReview,
   type ImportSetting,
 } from "@/modules/ingestion/model";
+import { msg, useI18n } from "@/lib/i18n";
 import { ApplicationError } from "@/modules/platform/errors";
 import { FeedAdministration } from "./feed-administration";
 import { JobSourceRegistration } from "./source-registration";
@@ -23,6 +24,7 @@ function SourceSettings({
   busy: boolean;
   save: (enabled: boolean, closure: boolean) => Promise<void>;
 }) {
+  const { t } = useI18n();
   const [enabled, setEnabled] = useState(source.uploadsEnabled),
     [closure, setClosure] = useState(source.allowClosure);
   return (
@@ -37,9 +39,10 @@ function SourceSettings({
         {source.name} · {source.kind}
       </h3>
       <p>
-        {source.sourceStatus} · allowed hosts: {source.allowedHosts.join(", ")}
+        {source.sourceStatus} ·{" "}
+        {t("allowed hosts: {hosts}", { hosts: source.allowedHosts.join(", ") })}
       </p>
-      <p>Permitted fields: {source.permittedFields.join(", ")}</p>
+      <p>{t("Permitted fields: {fields}", { fields: source.permittedFields.join(", ") })}</p>
       <fieldset disabled={busy}>
         <label>
           <input
@@ -47,7 +50,7 @@ function SourceSettings({
             checked={enabled}
             onChange={(event) => setEnabled(event.target.checked)}
           />
-          Enable authorized uploads for {source.name}
+          {t("Enable authorized uploads for {name}", { name: source.name })}
         </label>
         <label>
           <input
@@ -55,10 +58,10 @@ function SourceSettings({
             checked={closure}
             onChange={(event) => setClosure(event.target.checked)}
           />
-          Allow explicit closure for {source.name}
+          {t("Allow explicit closure for {name}", { name: source.name })}
         </label>
         <button className="button secondary" type="submit">
-          Save settings for {source.name}
+          {t("Save settings for {name}", { name: source.name })}
         </button>
       </fieldset>
     </form>
@@ -73,6 +76,7 @@ export function ImportAdministration({
   feedClient: FeedAdminClient;
   isAdmin: () => Promise<boolean>;
 }) {
+  const { t } = useI18n();
   const [access, setAccess] = useState<"checking" | "allowed" | "denied">("checking"),
     [sources, setSources] = useState<ImportSetting[]>([]),
     [history, setHistory] = useState<{
@@ -104,7 +108,7 @@ export function ImportAdministration({
     setError(
       error instanceof ApplicationError
         ? error.message
-        : "The import workspace is temporarily unavailable. Your upload draft is still here.",
+        : msg("The import workspace is temporarily unavailable. Your upload draft is still here."),
     );
     if (error instanceof ApplicationError && [401, 403].includes(error.status)) denied();
   }
@@ -190,7 +194,7 @@ export function ImportAdministration({
   }
   async function submit() {
     if (new TextEncoder().encode(content).byteLength > ingestionLimits.bytes) {
-      setError("The import exceeds 2 MiB. Split it into smaller batches.");
+      setError(msg("The import exceeds 2 MiB. Split it into smaller batches."));
       return;
     }
     const input = { sourceId, batchId, format, content },
@@ -206,26 +210,28 @@ export function ImportAdministration({
   return (
     <section
       className="section-block ingestion-workspace"
-      aria-label="Source import administration"
+      aria-label={t("Source import administration")}
       style={{ overflowWrap: "anywhere", minWidth: 0 }}
     >
-      <h2>Source imports and publication review</h2>
+      <h2>{t("Source imports and publication review")}</h2>
       <p className="muted">
-        Upload authorized job or course metadata, inspect the proposed changes and record a
-        publication decision. Uploads never publish automatically.
+        {t(
+          "Upload authorized job or course metadata, inspect the proposed changes and record a publication decision. Uploads never publish automatically.",
+        )}
       </p>
       {error && (
         <div className="notice" role="alert">
-          {error}
+          {t(error)}
           <button className="button secondary" onClick={() => window.location.reload()}>
-            Reload import workspace
+            {t("Reload import workspace")}
           </button>
         </div>
       )}
-      {access === "checking" && <p role="status">Checking administrator access…</p>}
+      {access === "checking" && <p role="status">{t("Checking administrator access…")}</p>}
       {access === "denied" && (
         <p className="panel">
-          Administrator access is required. <Link href="/account/">Open account and privacy</Link>
+          {t("Administrator access is required.")}{" "}
+          <Link href="/account/">{t("Open account and privacy")}</Link>
         </p>
       )}
       {access === "allowed" && (
@@ -247,11 +253,14 @@ export function ImportAdministration({
             }
           />
           <details>
-            <summary>Authorized source settings ({sources.length})</summary>
+            <summary>
+              {t("Authorized source settings ({count})", { count: sources.length })}
+            </summary>
             {!sources.length && (
               <p>
-                No authorized sources are configured. Create and review a source policy before
-                enabling uploads.
+                {t(
+                  "No authorized sources are configured. Create and review a source policy before enabling uploads.",
+                )}
               </p>
             )}
             {sources.map((source) => (
@@ -279,22 +288,23 @@ export function ImportAdministration({
               void perform(submit);
             }}
           >
-            <h3>Upload a source batch</h3>
+            <h3>{t("Upload a source batch")}</h3>
             <p>
-              Up to 100 records and 2 MiB. Keep a stable batch identifier when retrying the same
-              file. Missing fields preserve curated values; explicit null clears a field.
+              {t(
+                "Up to 100 records and 2 MiB. Keep a stable batch identifier when retrying the same file. Missing fields preserve curated values; explicit null clears a field.",
+              )}
             </p>
             <fieldset className="profile-form-fields" disabled={busy}>
               <label>
-                Authorized source
+                {t("Authorized source")}
                 <select
                   className="text-input"
-                  aria-label="Import source"
+                  aria-label={t("Import source")}
                   required
                   value={sourceId}
                   onChange={(event) => setSourceId(event.target.value)}
                 >
-                  <option value="">Choose an enabled source</option>
+                  <option value="">{t("Choose an enabled source")}</option>
                   {sources
                     .filter((source) => source.status === "active")
                     .map((source) => (
@@ -306,15 +316,17 @@ export function ImportAdministration({
               </label>
               {selected && (
                 <p>
-                  Permitted fields: {selected.permittedFields.join(", ")}. Original links must use{" "}
-                  {selected.allowedHosts.join(", ")}.
+                  {t("Permitted fields: {fields}. Original links must use {hosts}.", {
+                    fields: selected.permittedFields.join(", "),
+                    hosts: selected.allowedHosts.join(", "),
+                  })}
                 </p>
               )}
               <label>
-                Batch identifier
+                {t("Batch identifier")}
                 <input
                   className="text-input"
-                  aria-label="Import batch identifier"
+                  aria-label={t("Import batch identifier")}
                   maxLength={120}
                   required
                   value={batchId}
@@ -322,10 +334,10 @@ export function ImportAdministration({
                 />
               </label>
               <label>
-                File format
+                {t("File format")}
                 <select
                   className="text-input"
-                  aria-label="Import format"
+                  aria-label={t("Import format")}
                   value={format}
                   onChange={(event) => setFormat(event.target.value as ImportFormat)}
                 >
@@ -334,10 +346,10 @@ export function ImportAdministration({
                 </select>
               </label>
               <label>
-                Choose a local import file
+                {t("Choose a local import file")}
                 <input
                   type="file"
-                  aria-label="Import file"
+                  aria-label={t("Import file")}
                   accept=".json,.csv,application/json,text/csv"
                   onChange={(event) => {
                     const file = event.target.files?.[0];
@@ -348,14 +360,14 @@ export function ImportAdministration({
                         throw new ApplicationError(
                           "RF_TOO_LARGE",
                           413,
-                          "Choose a file no larger than 2 MiB.",
+                          msg("Choose a file no larger than 2 MiB."),
                         );
                       const text = await file.text();
                       if (new TextEncoder().encode(text).byteLength > ingestionLimits.bytes)
                         throw new ApplicationError(
                           "RF_TOO_LARGE",
                           413,
-                          "The decoded file exceeds 2 MiB.",
+                          msg("The decoded file exceeds 2 MiB."),
                         );
                       setContent(text);
                       setFormat(file.name.toLowerCase().endsWith(".csv") ? "csv" : "json");
@@ -364,10 +376,10 @@ export function ImportAdministration({
                 />
               </label>
               <label>
-                Import content
+                {t("Import content")}
                 <textarea
                   className="text-input"
-                  aria-label="Import content"
+                  aria-label={t("Import content")}
                   rows={8}
                   required
                   value={content}
@@ -375,12 +387,11 @@ export function ImportAdministration({
                 />
               </label>
               <details>
-                <summary>File structure</summary>
+                <summary>{t("File structure")}</summary>
                 <p>
-                  JSON uses a records array. Each record has externalId, url, state (active or
-                  closed) and fields containing only permitted metadata. CSV uses
-                  externalId,url,state and permitted metadata columns; structured cells contain
-                  JSON. A blank CSV cell means missing, and null means an explicit clear.
+                  {t(
+                    "JSON uses a records array. Each record has externalId, url, state (active or closed) and fields containing only permitted metadata. CSV uses externalId,url,state and permitted metadata columns; structured cells contain JSON. A blank CSV cell means missing, and null means an explicit clear.",
+                  )}
                 </p>
                 <pre style={{ whiteSpace: "pre-wrap" }}>
                   {
@@ -393,12 +404,12 @@ export function ImportAdministration({
                 type="submit"
                 disabled={!selected || selected.status !== "active"}
               >
-                Queue import for review
+                {t("Queue import for review")}
               </button>
             </fieldset>
           </form>
           <details className="panel section-block" open={!batch}>
-            <summary>Import batch history</summary>
+            <summary>{t("Import batch history")}</summary>
             <button
               className="button secondary"
               disabled={busy}
@@ -409,22 +420,26 @@ export function ImportAdministration({
                 })
               }
             >
-              Refresh batches and settings
+              {t("Refresh batches and settings")}
             </button>
-            {history?.data.length === 0 && <p>No batches yet.</p>}
+            {history?.data.length === 0 && <p>{t("No batches yet.")}</p>}
             {history?.data.map((item) => (
               <article className="section-block" key={item.id}>
                 <strong>{item.batchId}</strong>
                 <p>
-                  {item.status} · {item.total} records · {item.rejectedCount} rejected ·{" "}
-                  {item.createdAt}
+                  {item.status} ·{" "}
+                  {t("{total} records · {rejected} rejected", {
+                    total: item.total,
+                    rejected: item.rejectedCount,
+                  })}{" "}
+                  · {item.createdAt}
                 </p>
                 <button
                   className="button secondary"
                   disabled={busy}
                   onClick={() => void perform(() => open(item.id))}
                 >
-                  Open batch {item.batchId}
+                  {t("Open batch {id}", { id: item.batchId })}
                 </button>
               </article>
             ))}
@@ -439,24 +454,32 @@ export function ImportAdministration({
                   })
                 }
               >
-                Load older import batches
+                {t("Load older import batches")}
               </button>
             )}
           </details>
           {batch && (
-            <section className="panel section-block" aria-label="Selected import batch">
-              <h3>Batch {batch.batchId}</h3>
+            <section className="panel section-block" aria-label={t("Selected import batch")}>
+              <h3>{t("Batch {id}", { id: batch.batchId })}</h3>
               <p role="status">
-                {batch.status} · {batch.total} records · {batch.items.length} review items ·{" "}
-                {batch.rejected.length} rejected
+                {batch.status} ·{" "}
+                {t("{total} records · {items} review items · {rejected} rejected", {
+                  total: batch.total,
+                  items: batch.items.length,
+                  rejected: batch.rejected.length,
+                })}
               </p>
               {!batch.sourceCurrent && (
-                <p className="notice">Source permissions or settings changed after submission.</p>
+                <p className="notice">
+                  {t("Source permissions or settings changed after submission.")}
+                </p>
               )}
               {batch.errorCode && (
                 <p className="notice">
-                  Processing stopped: {batch.errorCode}. Review source settings before creating a
-                  new batch.
+                  {t(
+                    "Processing stopped: {code}. Review source settings before creating a new batch.",
+                    { code: batch.errorCode },
+                  )}
                 </p>
               )}
               <button
@@ -470,18 +493,21 @@ export function ImportAdministration({
                   })
                 }
               >
-                Refresh selected batch
+                {t("Refresh selected batch")}
               </button>
               {!polling && ["queued", "running"].includes(batch.status) && (
-                <p>Automatic polling paused. Refresh to resume checking.</p>
+                <p>{t("Automatic polling paused. Refresh to resume checking.")}</p>
               )}
               {!!batch.rejected.length && (
                 <div>
-                  <h4>Rejected input rows</h4>
+                  <h4>{t("Rejected input rows")}</h4>
                   <ul>
                     {batch.rejected.map((row) => (
                       <li key={row.position}>
-                        Row {row.position} · {row.externalId || "unidentified"}:{" "}
+                        {t("Row {position} · {id}:", {
+                          position: row.position,
+                          id: row.externalId || t("unidentified"),
+                        })}{" "}
                         {row.issues.map((issue) => `${issue.code} (${issue.field})`).join(", ")}
                       </li>
                     ))}
@@ -491,11 +517,14 @@ export function ImportAdministration({
               {batch.items.map((item) => (
                 <article className="section-block" key={item.id}>
                   <strong>
-                    Row {item.normalized.position}: {item.normalized.externalId}
+                    {t("Row {position}: {id}", {
+                      position: item.normalized.position,
+                      id: item.normalized.externalId,
+                    })}
                   </strong>
                   <p>
-                    {item.state} · {item.normalized.disposition} · {item.normalized.changes.length}{" "}
-                    changes
+                    {item.state} · {item.normalized.disposition} ·{" "}
+                    {t("{count} changes", { count: item.normalized.changes.length })}
                   </p>
                   <button
                     className="button secondary"
@@ -506,7 +535,7 @@ export function ImportAdministration({
                       })
                     }
                   >
-                    Review row {item.normalized.position}
+                    {t("Review row {position}", { position: item.normalized.position })}
                   </button>
                 </article>
               ))}
