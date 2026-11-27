@@ -14,6 +14,7 @@ import {
   Workflow,
 } from "lucide-react";
 import { careerPaths, type CareerPathId } from "@/lib/career-paths";
+import { localizedCareerPath } from "@/lib/career-paths-zh-tw";
 import { msg, useI18n } from "@/lib/i18n";
 
 const icons = {
@@ -47,8 +48,9 @@ export function CareerPathBrowser({
   onSelect: (path: CareerPathId | "all") => void;
   countLabel?: "sample" | "published";
 }) {
-  const { t } = useI18n();
-  const current = careerPaths.find((path) => path.id === selected);
+  const { t, locale } = useI18n();
+  const found = careerPaths.find((path) => path.id === selected);
+  const current = found && localizedCareerPath(found, locale);
   return (
     <section className="career-path-section" aria-labelledby="career-path-heading">
       <div className="section-heading">
@@ -96,14 +98,14 @@ export function CareerPathBrowser({
             <div>
               <p className="mini-label">{t("CAREER PATH GUIDE")}</p>
               <h2 id="selected-career-heading">{t(current.title)}</h2>
-              <p>{current.work}</p>
+              <p lang={current.lang}>{current.work}</p>
             </div>
             <Link className="text-link" href="/learning/">
               {t("Browse the course catalog")}
               <ArrowUpRight size={15} />
             </Link>
           </div>
-          <div className="career-guide-columns">
+          <div className="career-guide-columns" lang={current.lang}>
             <div>
               <h3>{t("Learning sequence")}</h3>
               <ol>
