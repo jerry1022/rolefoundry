@@ -1,17 +1,10 @@
 import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { IdentityAnalysisLifecycle } from "../../gateway/adapters/identity-lifecycle";
-import { AIGateway } from "../../gateway/service";
+import type { AIGateway } from "../../gateway/service";
 import type { GatewayRecorder } from "../../gateway/ports";
-import { gatewayTemplates, rankSpec } from "../../gateway/recipes";
-import { parseGatewayPolicy } from "../../gateway/policy";
-import { adaptersFromEnvironment } from "../../gateway/adapters/registry";
-import {
-  SupabaseGatewayAuthority,
-  SupabaseGatewayRecorder,
-  SupabaseProviderBudgets,
-  SupabaseProviderSlots,
-} from "../../gateway/adapters/supabase";
+import { rankSpec } from "../../gateway/recipes";
+import { IdentityAnalysisLifecycle } from "../../gateway/adapters/identity-lifecycle";
+import type { GatewayRuntime } from "../../gateway/adapters/runtime";
 import type { SemanticStage } from "../handler";
 import type { SemanticRankingStore } from "../ports";
 import { SemanticRanker, type SemanticGateway } from "../semantic";
@@ -33,28 +26,17 @@ export class GatewaySemanticRanking implements SemanticGateway {
 }
 
 /**
- * Worker composition. An invalid policy fails startup; a policy without a ranking route leaves
- * the stage present but gateway-less, so reservations are released and reports say why.
+ * Worker composition. Without a `matching.semantic-rank` route the stage stays present but
+ * gateway-less, so reservations are released and reports say why.
  */
-export function semanticStageFromEnvironment(
+export function semanticStage(
   client: SupabaseClient,
   store: SemanticRankingStore,
-  env: Record<string, string | undefined> = process.env,
+  runtime: GatewayRuntime,
 ): SemanticStage {
-  const policy = parseGatewayPolicy(env.ROLEFOUNDRY_AI_POLICY);
-  const enabled = Boolean(policy.routes["matching.semantic-rank"]);
-  const gateway = enabled
-    ? new GatewaySemanticRanking(
-        new AIGateway({
-          policy,
-          adapters: adaptersFromEnvironment(env),
-          templates: gatewayTemplates,
-          authority: new SupabaseGatewayAuthority(client),
-          slots: new SupabaseProviderSlots(client),
-          budgets: new SupabaseProviderBudgets(client),
-        }),
-        new SupabaseGatewayRecorder(client),
-      )
-    : null;
+  const gateway =
+    runtime.gateway && runtime.enabled("matching.semantic-rank")
+      ? new GatewaySemanticRanking(runtime.gateway, runtime.recorder)
+      : null;
   return { store, ranker: new SemanticRanker(new IdentityAnalysisLifecycle(client), gateway) };
 }

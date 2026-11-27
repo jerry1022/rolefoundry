@@ -253,3 +253,46 @@ it("rejects forged ranking metadata at publication", async () => {
         .error,
     ).toBeTruthy();
 });
+
+it("still publishes the rules report when consent was revoked before the worker started", async () => {
+  const { owner } = await fixtures.ownerWithEvidence();
+  await consent(owner);
+  const task = await request(owner, true);
+  expect(task.semantic).toEqual({ state: "reserved", code: null });
+  // Revocation fails the queued identity task; starting it later would raise RF_CONFLICT.
+  expect(
+    (await owner.client.rpc("identity_revoke_consent", { p_purpose: "matching" })).error,
+  ).toBeNull();
+  await handler(reverseScores).execute(await fixtures.lease(task.taskId), signal());
+  const run = await report(owner, task.runId);
+  expect(run.status).toBe("succeeded");
+  expect(run.ranking).toMatchObject({ recipe: "rules-v1", state: "fallback" });
+});
+
+it("sweeps unstarted reservations and stuck analyses", async () => {
+  const { owner } = await fixtures.ownerWithEvidence();
+  await consent(owner);
+  const stale = await request(owner, true);
+  const identity = await stack.sql.query(
+    "select id from public.identity_tasks where user_id=$1 and feature='matching' and status='queued'",
+    [owner.id],
+  );
+  const id = identity.rows[0].id;
+  await stack.sql.query(
+    "update public.identity_tasks set created_at=now()-interval '2 hours' where id=$1",
+    [id],
+  );
+  expect(
+    (await stack.privileged.rpc("identity_sweep_analyses", { p_limit: 500 })).error,
+  ).toBeNull();
+  expect(await identityState(owner.id)).toMatchObject({
+    status: "failed",
+    failure_category: "canceled",
+    reservation: "released",
+  });
+  // The domain run is unaffected and still completes with rules order.
+  await handler(reverseScores).execute(await fixtures.lease(stale.taskId), signal());
+  expect((await report(owner, stale.runId)).status).toBe("succeeded");
+  for (const client of [owner.client, admin.client])
+    expect((await client.rpc("identity_sweep_analyses", { p_limit: 1 })).error).toBeTruthy();
+});

@@ -273,7 +273,10 @@ export class AIGateway {
       shared.throwIfAborted();
       return finish("succeeded", null, checked.value, outcome.plan.target);
     } catch {
-      return failed(signal.aborted ? "cancelled" : "timeout");
+      // Admission/publication-check or verification errors are service faults, not timeouts.
+      if (signal.aborted) return failed("cancelled");
+      if (deadline.signal.aborted) return failed("timeout");
+      return finish("provider-failed", "RF_GATEWAY_UNAVAILABLE");
     } finally {
       clearTimeout(timer);
     }
@@ -390,7 +393,12 @@ export class AIGateway {
     if (!limit?.concurrency || !this.slots) return null;
     const leaseSeconds = Math.ceil(route.deadlineMs / 1000) + 5;
     for (let wait = 100; ; wait = Math.min(wait * 2, 1000)) {
-      const token = await this.slots.acquire(provider, limit.concurrency, leaseSeconds, signal);
+      const token = await this.slots
+        .acquire(provider, limit.concurrency, leaseSeconds, signal)
+        .catch((error) => {
+          if (signal.aborted) throw error;
+          throw new ProviderFailure("unavailable");
+        });
       if (token) return token;
       await this.clock.sleep(wait, signal);
     }
@@ -410,7 +418,10 @@ export class AIGateway {
     if (!cap || !this.budgets) return null;
     const characters = messages.reduce((total, message) => total + message.content.length, 0);
     const estimate = Math.min(1_000_000, Math.ceil(characters / 4) + route.maxOutputTokens);
-    const id = await this.budgets.reserve(provider, estimate, cap, signal);
+    const id = await this.budgets.reserve(provider, estimate, cap, signal).catch((error) => {
+      if (signal.aborted) throw error;
+      throw new ProviderFailure("unavailable");
+    });
     if (!id) throw new ProviderFailure("quota");
     return { id };
   }

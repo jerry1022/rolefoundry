@@ -214,7 +214,8 @@ describe("semantic ranker", () => {
     for (const [state, code, expected] of [
       ["provider-failed", "RF_PROVIDER_TIMEOUT", ["start", "fail:infrastructure"]],
       ["invalid-reference", "RF_GATEWAY_INVALID_REFERENCE", ["start", "fail:validation"]],
-      ["rejected", "RF_RECIPIENT_NOT_APPROVED", ["start", "fail:validation"]],
+      // A rejection before any provider call is refundable.
+      ["rejected", "RF_RECIPIENT_NOT_APPROVED", ["start", "fail:infrastructure"]],
       // Consent revocation already failed the identity task; nothing more to record.
       ["stale", "RF_STALE", ["start"]],
     ] as const) {
@@ -289,8 +290,8 @@ describe("opt-in reservation", () => {
     expect(first.semantic).toEqual({ state: "reserved", code: null });
     expect(seen[0]).toEqual(seen[1]);
     expect(seen[0]).toMatchObject({
-      inputVersion: "matching-key:key-12345678",
-      idempotencyKey: "matching:key-12345678",
+      inputVersion: "matching-key:key-12345678:ai",
+      idempotencyKey: "matching:key-12345678:ai",
     });
     expect(seen[0].resourceId).toMatch(
       /^[0-9a-f]{8}-[0-9a-f]{4}-5[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/,

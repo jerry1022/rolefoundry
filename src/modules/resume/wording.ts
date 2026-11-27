@@ -35,13 +35,33 @@ export interface WordingResult {
 /** Contact details are never sent and never reworded; very short facts gain nothing. */
 const eligible = (fact: ResumeRevisionInput["version"]["content"]["facts"][number]) =>
   fact.kind !== "contact" && fact.text.trim().length >= 12;
-export const wordingBounds = { facts: 40, requirements: 12, requirementChars: 300 };
+export const wordingBounds = {
+  facts: 40,
+  /** Total fact text per request; keeps typical route limits from rejecting (and charging). */
+  factChars: 16000,
+  requirements: 12,
+  requirementChars: 300,
+};
+const cjk = /[\u3400-\u9fff]/;
+
+/** Whole facts in order until the text budget is reached; facts are never truncated. */
+function selectFacts(facts: ResumeRevisionInput["version"]["content"]["facts"]) {
+  const chosen: typeof facts = [];
+  let total = 0;
+  for (const fact of facts.filter(eligible)) {
+    if (chosen.length >= wordingBounds.facts || total + fact.text.length > wordingBounds.factChars)
+      continue;
+    chosen.push(fact);
+    total += fact.text.length;
+  }
+  return chosen;
+}
 
 export function wordingRequest(
   input: ResumeRevisionInput,
   context: WordingContext,
 ): GatewayRequest {
-  const facts = input.version.content.facts.filter(eligible).slice(0, wordingBounds.facts);
+  const facts = selectFacts(input.version.content.facts);
   const requirements = context.requirements
     .slice(0, wordingBounds.requirements)
     .map((text) => `- ${text.slice(0, wordingBounds.requirementChars)}`);
@@ -51,7 +71,8 @@ export function wordingRequest(
     ownerId: context.ownerId,
     inputVersion: context.inputVersion,
     templateVersion: "resume-wording-v1",
-    locale: "en",
+    // Suggestions keep the language the owner wrote in.
+    locale: facts.some((fact) => cjk.test(fact.text)) ? "zh-TW" : "en",
     instructions: [`Target role: ${context.jobTitle}`, "Relevant requirements:", ...requirements]
       .join("\n")
       .slice(0, 4000),

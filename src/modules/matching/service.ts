@@ -3,7 +3,7 @@ import type { Actor } from "../identity/core";
 import { ApplicationError } from "../platform/errors";
 import { refreshMatchSchema } from "./model";
 import {
-  reserveOptionalAnalysis,
+  planOptionalAnalysis,
   withOptionalAnalysis,
   type AnalysisReservations,
 } from "../gateway/analysis";
@@ -25,17 +25,16 @@ export class MatchingService {
     const request = parse(refreshMatchSchema, input);
     const idempotencyKey = parse(z.string().min(8).max(200), key);
     // Reserve before the run exists so its worker can never start without the reservation.
-    const analysis = request.semantic
-      ? await reserveOptionalAnalysis(this.reservations, actor, {
-          feature: "matching",
-          prefix: "matching",
-          requestKey: idempotencyKey,
-        })
-      : ({ state: "not-requested", code: null, taskId: null } as const);
+    const { analysis, domainKey } = await planOptionalAnalysis(this.reservations, actor, {
+      optedIn: request.semantic,
+      feature: "matching",
+      prefix: "matching",
+      requestKey: idempotencyKey,
+    });
     const { analysis: semantic, ...task } = await withOptionalAnalysis(
       this.reservations,
       analysis,
-      () => this.repository.refresh(request, idempotencyKey),
+      () => this.repository.refresh(request, domainKey),
     );
     return { ...task, semantic };
   }

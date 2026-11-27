@@ -2,7 +2,7 @@ import { z } from "zod";
 import type { Actor } from "../identity/core";
 import { ApplicationError } from "../platform/errors";
 import {
-  reserveOptionalAnalysis,
+  planOptionalAnalysis,
   withOptionalAnalysis,
   type AnalysisReservations,
 } from "../gateway/analysis";
@@ -141,13 +141,12 @@ export class ResumeService {
     );
     const requestKey = parse(keySchema, key);
     // Reserve before the proposal exists so its worker can never start without it.
-    const analysis = value.wording
-      ? await reserveOptionalAnalysis(this.reservations, actor, {
-          feature: "resume",
-          prefix: "resume-wording",
-          requestKey,
-        })
-      : ({ state: "not-requested", code: null, taskId: null } as const);
+    const { analysis, domainKey } = await planOptionalAnalysis(this.reservations, actor, {
+      optedIn: value.wording,
+      feature: "resume",
+      prefix: "resume-wording",
+      requestKey,
+    });
     const { analysis: wording, ...task } = await withOptionalAnalysis(
       this.reservations,
       analysis,
@@ -157,7 +156,7 @@ export class ResumeService {
           value.versionId,
           value.jobId,
           value.expectedRevision,
-          requestKey,
+          domainKey,
         ),
     );
     return { ...task, wording };
