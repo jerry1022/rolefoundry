@@ -305,6 +305,18 @@ export const planSchema = z.object({
       completed: z.boolean(),
       available: z.boolean(),
       url: resourceUrl.nullable(),
+      /** Reviewed translation of the exact course version this step was planned from. */
+      translations: z
+        .object({
+          "zh-TW": z
+            .object({
+              practicePrompt: z.string(),
+              completionCriteria: z.string(),
+              reviewedAt: z.string(),
+            })
+            .optional(),
+        })
+        .optional(),
     }),
   ),
   practiceSubmissions: z.array(

@@ -3,6 +3,7 @@ import { Fragment, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { useI18n } from "@/lib/i18n";
 import type { LearningPlan } from "@/modules/learning/model";
+import { plannerText } from "./planner-text";
 
 /** Places links into a translated sentence, e.g. "{assessment} or {evidence}.". */
 function renderLinks(template: string, links: Record<string, ReactNode>) {
@@ -26,7 +27,19 @@ export function LearningPlanView({
   onPractice: (stepId: string, url: string, summary: string) => void;
   onRemove: (id: string) => void;
 }) {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
+  const text = (value: string) => plannerText(value, t);
+  /** Reviewed translation of the planned course version; criteria only for full-resource steps. */
+  const stepText = (step: LearningPlan["steps"][number]) => {
+    const translation = locale === "zh-TW" ? step.translations?.["zh-TW"] : undefined;
+    return {
+      practicePrompt: translation?.practicePrompt ?? text(step.practicePrompt),
+      completionCriteria:
+        translation && step.scope === "full-resource"
+          ? translation.completionCriteria
+          : text(step.completionCriteria),
+    };
+  };
   const [stepId, setStep] = useState(""),
     [url, setUrl] = useState(""),
     [summary, setSummary] = useState("");
@@ -99,7 +112,7 @@ export function LearningPlanView({
                     ? t("STAGE {n} · RESOURCE + PRACTICE", { n: index + 1 })
                     : t("STAGE {n} · EDITORIAL PRACTICE", { n: index + 1 })}
                 </p>
-                <h3>{step.title}</h3>
+                <h3>{text(step.title)}</h3>
                 <p className="pill">
                   {step.scope === "partial-resource"
                     ? t("Partial resource only")
@@ -142,15 +155,15 @@ export function LearningPlanView({
                     )}
                   </p>
                 )}
-                <p>{step.practicePrompt}</p>
+                <p>{stepText(step).practicePrompt}</p>
                 <p>
-                  <strong>{t("Completion criteria:")}</strong> {step.completionCriteria}
+                  <strong>{t("Completion criteria:")}</strong> {stepText(step).completionCriteria}
                 </p>
                 <details>
                   <summary>{t("Limits and assumptions")}</summary>
                   <ul>
                     {step.notes.map((note, index) => (
-                      <li key={index}>{note}</li>
+                      <li key={index}>{text(note)}</li>
                     ))}
                   </ul>
                 </details>
@@ -183,7 +196,7 @@ export function LearningPlanView({
                 {plan.output.issues.map((issue, index) => (
                   <li key={index}>
                     {issue.skillId ? `${issue.skillId}: ` : ""}
-                    {issue.reason}
+                    {text(issue.reason)}
                   </li>
                 ))}
               </ul>
@@ -223,7 +236,7 @@ export function LearningPlanView({
               >
                 {plan.steps.map((step) => (
                   <option key={step.id} value={step.id}>
-                    {step.title}
+                    {text(step.title)}
                   </option>
                 ))}
               </select>
