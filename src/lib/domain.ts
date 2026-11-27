@@ -19,6 +19,8 @@ export interface Job {
   summary: string;
   responsibilities: string[];
   added: string;
+  /** Extra searchable text, such as translated demo titles; never displayed. */
+  searchAliases?: string[];
 }
 export interface Course {
   id: string;
@@ -103,6 +105,7 @@ export function searchJobs(
         getCareerPath(job.specialization).title,
         ...getCareerPath(job.specialization).aliases,
         ...job.skills.map((s) => `${s} ${skillLabels[s]}`),
+        ...(job.searchAliases ?? []),
       ]
         .join(" ")
         .toLowerCase();

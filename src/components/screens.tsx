@@ -36,6 +36,12 @@ import {
 } from "lucide-react";
 import { courses, jobs, questions } from "@/lib/fixtures";
 import {
+  localizedDemoCourse,
+  localizedDemoJob,
+  localizedDemoQuestion,
+  searchableDemoJobs,
+} from "@/lib/fixtures-locale";
+import {
   gradeAssessment,
   matchJob,
   recommendCourses,
@@ -129,9 +135,10 @@ function Modal({
     </dialog>
   );
 }
-function JobDetails({ job, onClose }: { job: Job; onClose: () => void }) {
+function JobDetails({ job: source, onClose }: { job: Job; onClose: () => void }) {
   const { state, update } = useWorkspace();
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
+  const job = localizedDemoJob(source, locale);
   const skillNames = useSkillNames();
   const match = matchJob(job, state.knownSkills);
   const tracked = state.applications.some((a) => a.jobId === job.id);
@@ -141,12 +148,16 @@ function JobDetails({ job, onClose }: { job: Job; onClose: () => void }) {
       <p className="eyebrow modal-eyebrow">
         {job.company} · {t("ILLUSTRATIVE OPENING")}
       </p>
-      <h2 className="modal-title">{job.title}</h2>
+      <h2 className="modal-title" lang={job.lang}>
+        {job.title}
+      </h2>
       <p className="muted">
         {t(job.location)} · {t(job.mode)} · {t(job.level)}
       </p>
       <p className="job-specialization">{t(getCareerPath(job.specialization).title)}</p>
-      <p className="detail-summary">{job.summary}</p>
+      <p className="detail-summary" lang={job.lang}>
+        {job.summary}
+      </p>
       <h3>{t("What you would work on")}</h3>
       <ul className="detail-list">
         {job.responsibilities.map((r) => (
@@ -208,7 +219,8 @@ function JobCard({
   onOpen: (job: Job) => void;
 }) {
   const { state, update } = useWorkspace();
-  const { t, fmt } = useI18n();
+  const { t, fmt, locale } = useI18n();
+  const text = localizedDemoJob(job, locale);
   const saved = state.savedJobs.includes(job.id);
   const match = matchJob(job, state.knownSkills);
   return (
@@ -223,8 +235,8 @@ function JobCard({
           className={`icon-button bookmark ${saved ? "saved" : ""}`}
           aria-label={
             saved
-              ? t("Unsave {title}", { title: job.title })
-              : t("Save {title}", { title: job.title })
+              ? t("Unsave {title}", { title: text.title })
+              : t("Save {title}", { title: text.title })
           }
           aria-pressed={saved}
           onClick={() =>
@@ -240,7 +252,7 @@ function JobCard({
         </button>
       </div>
       <button className="job-title-button" onClick={() => onOpen(job)}>
-        <h3>{job.title}</h3>
+        <h3 lang={text.lang}>{text.title}</h3>
       </button>
       {!compact && (
         <p className="job-specialization">{t(getCareerPath(job.specialization).title)}</p>
@@ -251,7 +263,11 @@ function JobCard({
         <span>·</span>
         {t(job.mode)}
       </p>
-      {!compact && <p className="job-summary">{job.summary}</p>}
+      {!compact && (
+        <p className="job-summary" lang={text.lang}>
+          {text.summary}
+        </p>
+      )}
       <div className="tags">
         {job.skills.slice(0, 3).map((skill) => (
           <SkillTag skill={skill} key={skill} known={state.knownSkills.includes(skill)} />
@@ -273,10 +289,13 @@ export function Dashboard() {
   const { state } = useWorkspace();
   const { t, fmt } = useI18n();
   const [selected, setSelected] = useState<Job | null>(null);
-  const recommended = searchJobs(jobs, "", state.track, "Any workplace", state.knownSkills).slice(
-    0,
-    3,
-  );
+  const recommended = searchJobs(
+    searchableDemoJobs,
+    "",
+    state.track,
+    "Any workplace",
+    state.knownSkills,
+  ).slice(0, 3);
   const target = recommended[0];
   const gaps = target ? matchJob(target, state.knownSkills).missing : [];
   const nextCourse =
@@ -486,12 +505,17 @@ export function JobsScreen() {
   const [specialization, setSpecialization] = useState<CareerPathId | "all">("all");
   const [savedOnly, setSavedOnly] = useState(false);
   const [selected, setSelected] = useState<Job | null>(null);
-  const candidates = searchJobs(jobs, query, track, mode, state.knownSkills).filter(
+  const candidates = searchJobs(searchableDemoJobs, query, track, mode, state.knownSkills).filter(
     (job) => !savedOnly || state.savedJobs.includes(job.id),
   );
-  const results = searchJobs(jobs, query, track, mode, state.knownSkills, specialization).filter(
-    (job) => !savedOnly || state.savedJobs.includes(job.id),
-  );
+  const results = searchJobs(
+    searchableDemoJobs,
+    query,
+    track,
+    mode,
+    state.knownSkills,
+    specialization,
+  ).filter((job) => !savedOnly || state.savedJobs.includes(job.id));
   const counts = Object.fromEntries(
     careerPaths.map((path) => [
       path.id,
@@ -745,7 +769,7 @@ export function SkillsScreen() {
 
 export function AssessmentsScreen() {
   const { state, update } = useWorkspace();
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const [track, setTrack] = useState<Track>(state.track);
   const [answers, setAnswers] = useState<Record<string, number>>({});
   const [submitted, setSubmitted] = useState(false);
@@ -806,43 +830,46 @@ export function AssessmentsScreen() {
               {t("About 3 minutes")}
             </span>
           </div>
-          {items.map((q, i) => (
-            <article className="panel question-card" key={q.id}>
-              <span className="mini-label">
-                {t("SCENARIO {n} OF {total}", { n: i + 1, total: items.length })} ·{" "}
-                {t(skillLabels[q.skill]).toUpperCase()}
-              </span>
-              <h2>{q.prompt}</h2>
-              <fieldset disabled={submitted}>
-                <legend className="sr-only">{q.prompt}</legend>
-                {q.options.map((option, j) => (
-                  <label
-                    className={`answer-option ${answers[q.id] === j ? "chosen" : ""} ${submitted && j === q.correct ? "correct" : ""}`}
-                    key={option}
-                  >
-                    <input
-                      type="radio"
-                      name={q.id}
-                      checked={answers[q.id] === j}
-                      onChange={() => setAnswers((a) => ({ ...a, [q.id]: j }))}
-                    />
-                    <span>{option}</span>
-                    {submitted && j === q.correct && <CheckCircle2 size={17} />}
-                  </label>
-                ))}
-              </fieldset>
-              {submitted && (
-                <div className="answer-explanation">
-                  <strong>
-                    {answers[q.id] === q.correct
-                      ? t("A solid starting point.")
-                      : t("An opportunity to learn.")}
-                  </strong>
-                  <p>{q.explanation}</p>
-                </div>
-              )}
-            </article>
-          ))}
+          {items.map((source, i) => {
+            const q = localizedDemoQuestion(source, locale);
+            return (
+              <article className="panel question-card" key={q.id} lang={q.lang}>
+                <span className="mini-label">
+                  {t("SCENARIO {n} OF {total}", { n: i + 1, total: items.length })} ·{" "}
+                  {t(skillLabels[q.skill]).toUpperCase()}
+                </span>
+                <h2>{q.prompt}</h2>
+                <fieldset disabled={submitted}>
+                  <legend className="sr-only">{q.prompt}</legend>
+                  {q.options.map((option, j) => (
+                    <label
+                      className={`answer-option ${answers[q.id] === j ? "chosen" : ""} ${submitted && j === q.correct ? "correct" : ""}`}
+                      key={option}
+                    >
+                      <input
+                        type="radio"
+                        name={q.id}
+                        checked={answers[q.id] === j}
+                        onChange={() => setAnswers((a) => ({ ...a, [q.id]: j }))}
+                      />
+                      <span>{option}</span>
+                      {submitted && j === q.correct && <CheckCircle2 size={17} />}
+                    </label>
+                  ))}
+                </fieldset>
+                {submitted && (
+                  <div className="answer-explanation">
+                    <strong>
+                      {answers[q.id] === q.correct
+                        ? t("A solid starting point.")
+                        : t("An opportunity to learn.")}
+                    </strong>
+                    <p>{q.explanation}</p>
+                  </div>
+                )}
+              </article>
+            );
+          })}
           <div className="button-row">
             {!submitted ? (
               <button
@@ -922,7 +949,7 @@ export function AssessmentsScreen() {
 
 export function LearningScreen() {
   const { state, update } = useWorkspace();
-  const { t, fmt } = useI18n();
+  const { t, fmt, locale } = useI18n();
   const skillNames = useSkillNames();
   const [targetId, setTargetId] = useState(jobs[0].id);
   const [showAll, setShowAll] = useState(false);
@@ -969,7 +996,7 @@ export function LearningScreen() {
           >
             {jobs.map((j) => (
               <option key={j.id} value={j.id}>
-                {j.title}
+                {localizedDemoJob(j, locale).title}
               </option>
             ))}
           </select>
@@ -992,7 +1019,8 @@ export function LearningScreen() {
         )}
       </div>
       <div className="course-grid">
-        {display.map(({ course, addresses, prerequisitesMissing }, i) => {
+        {display.map(({ course: source, addresses, prerequisitesMissing }, i) => {
+          const course = localizedDemoCourse(source, locale);
           const done = state.completedCourses.includes(course.id);
           return (
             <article className="course-card" key={course.id}>
@@ -1005,7 +1033,7 @@ export function LearningScreen() {
                 d<span>{course.provider}</span>
               </span>
               <h2>{course.title}</h2>
-              <p>{course.summary}</p>
+              <p lang={course.lang}>{course.summary}</p>
               <small className="course-reviewed">
                 {t("Catalog details checked {date}", { date: fmt.date(course.reviewedAt) })}
               </small>
@@ -1034,7 +1062,7 @@ export function LearningScreen() {
                   <Code2 size={15} />
                   {t("MAKE IT TANGIBLE")}
                 </strong>
-                <p>{course.exercise}</p>
+                <p lang={course.lang}>{course.exercise}</p>
               </div>
               <div className="course-actions">
                 <a className="text-link" href={course.url} target="_blank" rel="noreferrer">
@@ -1096,7 +1124,7 @@ export function LearningScreen() {
 
 export function ResumeScreen() {
   const { state, update } = useWorkspace();
-  const { t, fmt } = useI18n();
+  const { t, fmt, locale } = useI18n();
   const [targetId, setTargetId] = useState(jobs[0].id);
   const [review, setReview] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -1184,7 +1212,7 @@ export function ResumeScreen() {
             >
               {jobs.map((j) => (
                 <option key={j.id} value={j.id}>
-                  {j.title}
+                  {localizedDemoJob(j, locale).title}
                 </option>
               ))}
             </select>
@@ -1252,7 +1280,7 @@ export function ResumeScreen() {
 
 export function ApplicationsScreen() {
   const { state, update } = useWorkspace();
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const [adding, setAdding] = useState(false);
   const [jobId, setJobId] = useState(jobs[0].id);
   function add() {
@@ -1302,8 +1330,9 @@ export function ApplicationsScreen() {
                 <span className="column-count">{entries.length}</span>
               </h2>
               {entries.map((entry) => {
-                const job = jobs.find((j) => j.id === entry.jobId);
-                if (!job) return null;
+                const found = jobs.find((j) => j.id === entry.jobId);
+                if (!found) return null;
+                const job = localizedDemoJob(found, locale);
                 return (
                   <article className="application-card" key={entry.jobId}>
                     <div className="application-card-top">
@@ -1386,7 +1415,7 @@ export function ApplicationsScreen() {
             <select className="text-input" value={jobId} onChange={(e) => setJobId(e.target.value)}>
               {jobs.map((j) => (
                 <option key={j.id} value={j.id}>
-                  {j.title} · {j.company}
+                  {localizedDemoJob(j, locale).title} · {j.company}
                 </option>
               ))}
             </select>

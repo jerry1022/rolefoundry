@@ -3936,6 +3936,9 @@ h1 {
   background-clip: text;
   color: transparent;
   padding-bottom: 4px;
+  /* Size the box to the text so the gradient spans the words in every language, not the column. */
+  width: fit-content;
+  max-width: 100%;
 }
 .page-description {
   color: var(--muted);
