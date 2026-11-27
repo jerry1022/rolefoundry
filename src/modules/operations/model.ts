@@ -15,6 +15,7 @@ export const operationsTaskSchema = z.object({
   status: taskStatusSchema,
   attempts: z.number().int().nonnegative(),
   maxAttempts: z.number().int().positive(),
+  retryPolicy: z.enum(["bounded", "until-complete"]).default("bounded"),
   createdAt: z.string(),
   startedAt: z.string().nullable(),
   finishedAt: z.string().nullable(),
@@ -54,6 +55,7 @@ export const operationsEventSchema = z.object({
   id: z.string().regex(/^[1-9]\d*$/),
   event: z.enum([
     "task.queued",
+    "task.deferred",
     "task.claimed",
     "task.retry_scheduled",
     "task.released",
@@ -124,6 +126,13 @@ export function operationsAlerts(summary: OperationsSummary) {
         kind: item.kind,
         code: "expired-lease",
         message: "Running work has an expired or missing lease.",
+      });
+    if (item.kind === "account.delete" && item.retried24h >= 3)
+      alerts.push({
+        kind: item.kind,
+        code: "erasure-retries",
+        message:
+          "Account removal has retried repeatedly. Inspect worker configuration and service availability.",
       });
     const terminal = item.failed24h + item.succeeded24h;
     if (terminal >= 10 && item.failed24h / terminal >= 0.1)

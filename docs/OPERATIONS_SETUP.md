@@ -18,7 +18,7 @@ No additional hosted account, provider key or alert destination is needed for th
 
 ## Observations and thresholds
 
-The summary covers all ten task kinds, including the reserved `account.delete` kind that has no executable handler yet. Counts distinguish:
+The summary covers all ten task kinds, including the implemented `account.delete` erasure kind. Counts distinguish:
 
 - Queued tasks from **ready** tasks whose `next_run_at` is due. Delayed retries do not imply a worker outage.
 - Running tasks from expired or absent task leases. Queue delivery count is physical PGMQ delivery count, not the number of runnable domain tasks.
@@ -30,7 +30,7 @@ Diagnostic notices are computed from the observed summary: ready age at least 30
 
 ## Worker lifecycle
 
-The independent worker registers one random process UUID and its actual nine handler kinds. It reports immediately, every ten seconds, on graceful draining, and on stop. States advance `active → draining → stopped`; stale reports cannot move a stopped instance back to active. A hard crash cannot report stop; the UI marks an active/draining record stale after 45 seconds. Stopped records remain stopped.
+The independent worker registers one random process UUID and its actual ten handler kinds. It reports immediately, every ten seconds, on graceful draining, and on stop. States advance `active → draining → stopped`; stale reports cannot move a stopped instance back to active. A hard crash cannot report stop; the UI marks an active/draining record stale after 45 seconds. Stopped records remain stopped.
 
 Presence writes are serialized, redundant slow pulses coalesce, and failures emit only a safe unavailability event. A failed report does not fail a task or prevent subsequent processing/shutdown; transport requests have ten-second bounds. Task heartbeat/lease fencing remains authoritative and independent. Presence is self-reported service metadata, never a new access-control input.
 
@@ -48,10 +48,10 @@ Responses contain task IDs/kinds/state, attempts/timestamps, safe allowlisted er
 
 See [the executable isolated database/queue recovery rehearsal](OPERATIONS_RECOVERY.md). Diagnostics add no mutation control: replay must be a separately audited **domain** request that revalidates current owner/input/source permissions and preserves the original attempt. Never reset a task row or resend a queue message as an operational shortcut.
 
-Module 13 remains partial: consolidated skills/question/invitation/quota administration, authorized domain replay, full account deletion, external telemetry/alerts, and hosted/clean-cluster/Storage-object restore are outstanding. Source administration remains available through its [existing domain workflow](INGESTION_SETUP.md).
+Module 13 remains partial: consolidated skills/question/invitation/quota administration, authorized domain replay, restore deletion replay, external telemetry/alerts, and hosted/clean-cluster/Storage-object restore are outstanding. Source administration remains available through its [existing domain workflow](INGESTION_SETUP.md).
 
 ## Browser evidence
 
 The local acceptance suite captures the actual private administrator workspace with synthetic task metadata: [desktop queue/lease observations](assets/operations-admin-desktop.png) and [mobile task detail](assets/operations-admin-mobile.png). These are application screenshots, not live job/provider or production availability evidence.
 
-Private `account.export` jobs and their resumable artifact janitor are now implemented; see [account data setup](ACCOUNT_DATA_SETUP.md). The reserved `account.delete` kind still has no handler.
+Private `account.export` jobs and their resumable artifact janitor are now implemented; see [account data setup](ACCOUNT_DATA_SETUP.md). [Accepted account erasure](ACCOUNT_DELETION_SETUP.md) now has an executable handler and a separate administrator recovery panel. It uses persistent retry policy; other tasks remain bounded. At least three erasure retry events/24 hours produce a diagnostic notice.

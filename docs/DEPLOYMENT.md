@@ -36,6 +36,8 @@ For optional invitation-only authentication, local Supabase setup, runtime secre
 
 [Private account archives](ACCOUNT_DATA_SETUP.md) add a private bucket and background handler through the account export migration. Use the same worker secrets; validate hosted archive transport/expiry/cleanup separately from the preview build.
 
+[Live account removal](ACCOUNT_DELETION_SETUP.md) uses the same Auth/Storage/worker configuration after its migration. Keep a long-lived worker available for cleanup/retries, verify intended hosted behavior, and protect deletion ledgers outside the database backup before relying on restored-environment erasure.
+
 ## Vercel
 
 Import `jerry1022/rolefoundry` into Vercel, select Next.js, keep the repository root as Root Directory, and use the default install/build settings (`npm ci`, `npm run build`). Choose Node.js 24. No environment variables are needed for the demo. Leave `STATIC_EXPORT` and `NEXT_PUBLIC_BASE_PATH` unset. The repository's Deploy button opens this import flow; it does not imply that a deployment already exists.

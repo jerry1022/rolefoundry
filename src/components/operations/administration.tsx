@@ -315,7 +315,8 @@ export function OperationsAdministration({
                   {item.kind} · {item.status}
                 </strong>
                 <p>
-                  {item.id} · attempts {item.attempts}/{item.maxAttempts} ·{" "}
+                  {item.id} · attempts {item.attempts}/
+                  {item.retryPolicy === "until-complete" ? "persistent" : item.maxAttempts} ·{" "}
                   {item.errorCode || "no classified issue"}
                 </p>
                 <button
@@ -351,7 +352,8 @@ export function OperationsAdministration({
               <dl>
                 <dt>Attempts</dt>
                 <dd>
-                  {task.attempts}/{task.maxAttempts}
+                  {task.attempts}/
+                  {task.retryPolicy === "until-complete" ? "persistent" : task.maxAttempts}
                 </dd>
                 <dt>Created / started</dt>
                 <dd>

@@ -119,4 +119,17 @@ All endpoints derive the current owner from the verified session and repeat data
 | GET `/api/v1/account/exports/{id}/download` | Owner-only integrity-checked ZIP stream, attachment filename and `no-store`; checks access before/after Storage read; missing/expired/invalidated/foreign resource is 404 |
 | DELETE `/api/v1/account/exports/{id}` | Empty JSON, same-origin; `{data: export}` with `invalidated` state; idempotently cancels publication/denies downloads and schedules physical artifact cleanup |
 
-Export metadata contains ID, task ID, status (`queued`, `running`, `ready`, `failed`, `expired`, `invalidated`), request/expiry timestamps and optional byte count. It excludes the sealed payload and private object keys. Unknown/duplicate parameters, malformed IDs/cursors and owner/body spoofing are rejected. Internal snapshot/worker/cleanup functions and raw application tables are service-only. No account-deletion endpoint is implemented yet.
+Export metadata contains ID, task ID, status (`queued`, `running`, `ready`, `failed`, `expired`, `invalidated`), request/expiry timestamps and optional byte count. It excludes the sealed payload and private object keys. Unknown/duplicate parameters, malformed IDs/cursors and owner/body spoofing are rejected. Internal snapshot/worker/cleanup functions and raw application tables are service-only. Live removal is documented below.
+
+## Account deletion and private progress
+
+All requests use `no-store`. Mutations require the configured same-origin header. Receipt secrets are accepted only in bounded JSON bodies; query parameters are rejected. See [flow, recovery and retention](ACCOUNT_DELETION_SETUP.md).
+
+| Method and path | Contract |
+| --- | --- |
+| POST `/api/v1/account/deletion` | Verified owner; strict `{id: UUID,secret: 64 lowercase hex characters,confirmation: "DELETE"}`; `202 {data: status}`. An existing valid receipt recovers its already accepted request after sign-out; it cannot create a different operation. |
+| POST `/api/v1/account/deletion/status` | Strict `{id,secret}`; no active session required; `{data: status}`; missing/wrong receipt is uniformly 404. |
+| GET `/api/v1/admin/account-deletions/tasks/{taskId}` | Current administrator; `{data: status}` for an accepted request associated with that task; no subject/contact/secret is returned. |
+| POST `/api/v1/admin/account-deletions/{id}/resume` | Current administrator; `{reason}` from `storage-restored`, `directory-restored`, `configuration-restored`, `operator-reviewed`; `202 {data: status}` for a new audited attempt. Only an existing terminal/missing task of an accepted incomplete request is recoverable. |
+
+Status contains request ID, status (`queued`, `cleaning-files`, `removing-account`, `completed`, `needs-attention`), request/completion/retry timestamps and service-failure count. It excludes subject UUIDs, receipt/contact digests, paths and raw diagnostics. Raw erasure tables and execution/cleanup helpers remain service-only; normal account role cannot forge task capabilities. Normal task metadata may include `retryPolicy: bounded | until-complete`; the latter is reported only for registered erasure history. Durable `task.deferred` events are allowlisted in administrator event history.

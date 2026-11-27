@@ -19,7 +19,7 @@ export interface TaskQueue {
   release(lease: TaskLease): Promise<boolean>;
 }
 export interface TaskHandler {
-  execute(lease: TaskLease, signal: AbortSignal): Promise<void>;
+  execute(lease: TaskLease, signal: AbortSignal): Promise<void | "deferred">;
 }
 export interface TaskLog {
   event: string;

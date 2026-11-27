@@ -3568,3 +3568,8 @@ tr:last-child td {
 .account-data-workspace .button { white-space: normal; max-width: 100%; height: auto; }
 .account-data-workspace p { margin-block: 12px; }
 .account-data-workspace article .button { margin: 6px 8px 6px 0; }
+.account-deletion-workspace { min-width: 0; overflow-wrap: anywhere; }
+.account-deletion-workspace p, .account-deletion-workspace form { margin-block: 12px; }
+.account-deletion-workspace .button { max-width: 100%; height: auto; white-space: normal; margin-block: 6px; }
+.account-deletion-workspace .button-row { display: flex; flex-wrap: wrap; gap: 12px; }
+.account-deletion-workspace input, .account-deletion-workspace select { min-width: 0; max-width: 100%; }
