@@ -24,6 +24,8 @@ export interface Course {
   id: string;
   title: string;
   provider: "DeepLearning.AI";
+  /** ISO date the title/level/format/URL were last checked against the official catalog. */
+  reviewedAt: string;
   url: string;
   skills: Skill[];
   prerequisites: Skill[];

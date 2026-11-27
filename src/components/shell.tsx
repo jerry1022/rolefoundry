@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 import { useState, type ReactNode } from "react";
 import { WorkspaceProvider, useWorkspace } from "@/lib/workspace";
+import { courses } from "@/lib/fixtures";
 import { LocaleProvider, msg, useI18n } from "@/lib/i18n";
 import { LocaleSwitcher } from "./ui/locale-switcher";
 import { ThemeSwitcher } from "./ui/theme-switcher";
@@ -82,7 +83,7 @@ function ShellContent({ children }: { children: ReactNode }) {
             >
               <item.icon size={19} />
               <span>{t(item.label)}</span>
-              {item.href === "/learning/" && <span className="nav-count">6</span>}
+              {item.href === "/learning/" && <span className="nav-count">{courses.length}</span>}
             </Link>
           ))}
         </nav>

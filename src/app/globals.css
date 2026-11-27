@@ -5101,3 +5101,10 @@ input[type="radio"] {
 .wording-suggestion .button {
   justify-self: start;
 }
+
+.course-reviewed {
+  display: block;
+  margin-top: 8px;
+  color: var(--muted-2);
+  font-size: 11.5px;
+}

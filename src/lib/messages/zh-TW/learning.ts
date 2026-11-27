@@ -30,4 +30,6 @@ export const learning = {
   "Browse all resources": "瀏覽所有資源",
   "Independent editorial recommendations. Not affiliated with DeepLearning.AI. Availability and pricing are set by the provider. Completion is self-reported and does not verify ability.":
     "這些是獨立的編輯推薦，與 DeepLearning.AI 無隸屬關係。課程開放狀態與價格由提供者決定；完成狀態為自行回報，不能證明能力。",
+  "Catalog details checked {date}": "課程資料查核於 {date}",
+  "Showing the {shown} best matches of {total}.": "顯示 {total} 項中最相符的 {shown} 項。",
 } satisfies Messages;

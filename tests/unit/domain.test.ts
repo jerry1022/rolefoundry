@@ -76,11 +76,26 @@ describe("learning recommendations", () => {
     expect(ranked.every((r) => r.addresses.length > 0)).toBe(true);
     expect(recommendCourses(courses, [], [])).toEqual([]);
   });
-  it("marks missing prerequisites explicitly", () => {
-    expect(recommendCourses(courses, ["rag"], [])[0].prerequisitesMissing).toEqual([
+  it("marks missing prerequisites explicitly and ranks achievable resources first", () => {
+    const ranked = recommendCourses(courses, ["rag"], []);
+    const missing = ranked.map((result) => result.prerequisitesMissing.length);
+    expect(missing).toEqual([...missing].sort((a, b) => a - b));
+    expect(ranked.find((result) => result.course.id === "dl-rag")!.prerequisitesMissing).toEqual([
       "python",
       "prompting",
     ]);
+  });
+  it("keeps a reviewed, unique catalog of official DeepLearning.AI links", () => {
+    expect(courses.length).toBeGreaterThanOrEqual(30);
+    expect(new Set(courses.map((course) => course.id)).size).toBe(courses.length);
+    expect(new Set(courses.map((course) => course.url)).size).toBe(courses.length);
+    for (const course of courses) {
+      expect(course.url).toMatch(
+        /^https:\/\/www\.deeplearning\.ai\/(courses|specializations)\/[a-z0-9-]+\/$/,
+      );
+      expect(course.reviewedAt).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+      expect(course.skills.length).toBeGreaterThan(0);
+    }
   });
 });
 describe("scenario scoring and browser persistence", () => {
