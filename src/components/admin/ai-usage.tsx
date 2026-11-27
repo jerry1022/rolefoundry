@@ -115,14 +115,17 @@ export function AiUsageReport({ client }: { client: UsageClient }) {
             </div>
             <div className={summary.spendComplete ? "" : "incomplete"}>
               <dt>{t("Estimated spend")}</dt>
-              <dd>{spend(summary.costMicros)}</dd>
-              {!summary.spendComplete && (
-                <small>
-                  {t("{count} successful calls had no price estimate.", {
-                    count: summary.unpricedCalls,
-                  })}
-                </small>
-              )}
+              <dd>
+                {spend(summary.costMicros)}
+                {/* A description list allows only dt/dd children, so the note stays inside dd. */}
+                {!summary.spendComplete && (
+                  <small>
+                    {t("{count} successful calls had no price estimate.", {
+                      count: summary.unpricedCalls,
+                    })}
+                  </small>
+                )}
+              </dd>
             </div>
           </dl>
           {report.daily.length > 0 && (

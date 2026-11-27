@@ -345,7 +345,8 @@ textarea:focus-visible {
   left: 20px;
   padding: 12px;
   background: var(--green);
-  color: white;
+  /* --bg is near-white in light mode and near-black in dark mode, opposite --green in both. */
+  color: var(--bg);
   z-index: 100;
 }
 .skip-link:focus {
@@ -3560,7 +3561,8 @@ tr:last-child td {
   font-size: 13px;
 }
 .operations-workspace th {
-  color: var(--green-dark);
+  /* --green is remapped for the dark theme; --green-dark is not. */
+  color: var(--green);
   font-size: 13px;
 }
 .account-data-workspace {
@@ -3744,7 +3746,8 @@ textarea:focus-visible {
   animation: rf-pulse 2.4s ease-in-out infinite;
 }
 .nav-label {
-  color: #5c6f65;
+  /* 5.8:1 on the always-dark sidebar (was 2.8:1). */
+  color: #8aa79a;
 }
 .nav-item {
   color: #b9cbc1;
@@ -4111,7 +4114,8 @@ h1 {
     0 18px 40px -10px rgb(200 241 105 / 75%);
 }
 .hero-footnote {
-  color: #8fb2a1;
+  /* At least 4.5:1 across the hero gradient behind it (was 3.8:1). */
+  color: #c6ddd1;
 }
 .orbit {
   border-color: rgb(255 255 255 / 14%);
@@ -5126,6 +5130,8 @@ input[type="radio"] {
 .ai-usage-tiles small {
   display: block;
   margin-top: 6px;
+  font-size: 12px;
+  font-weight: 400;
   color: var(--muted);
   line-height: 1.5;
 }

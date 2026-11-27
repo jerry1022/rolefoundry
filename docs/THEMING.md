@@ -26,3 +26,9 @@ Below 760px the sidebar is an off-canvas panel. The menu button exposes `aria-ex
 ## Vendor prefixes
 
 Write only standard properties in `globals.css`; the CSS compiler adds vendor prefixes for the supported browsers. Do not hand-write `-webkit-backdrop-filter`: a rule that declares both the standard and the prefixed property loses both in the compiled output. This silently removed the frosted top bar, hero card and floating labels until it was caught, and `tests/unit/styles.test.ts` now rejects it.
+
+## Token roles and contrast checks
+
+Light-theme tokens that the dark palette does not redefine are remapped per role by the generator (`tokenRoles` in `scripts/generate-dark-theme.mjs`). For example, text set to `var(--green-dark)` becomes `var(--green)` in dark mode, because dark ink on a dark surface measured 1.3:1. Components on lime surfaces that keep the dark ink are on the `keep` list.
+
+axe cannot compute contrast over gradient backgrounds, and it reports those nodes as incomplete rather than as violations. The dark-theme browser test therefore checks the checked skill labels' colour directly. The signed-in accessibility suite scans member screens and **every expanded administrator section** in both themes and both languages, because collapsed sections unmount their editors.

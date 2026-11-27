@@ -48,7 +48,7 @@ ${ROOT} .segmented button.selected {
 
 /** Already-dark or brand-gradient surfaces keep their light-theme colors. */
 const keep =
-  /(\.sidebar|\.brand|\.hero-|\.learning-hero|\.primary-node|\.button\.(primary|dark)|\.nav-item|\.nav-count|\.round-button|\.avatar|\.art-|\.floating-label|\.orbit|\.spark|\.tiny-star|\.status-dot|\.locale-switcher button\.selected|\.skip-link|\.mobile-scrim|::selection|\.workspace-tag)/;
+  /(\.sidebar|\.brand|\.hero-|\.learning-hero|\.primary-node|\.button\.(primary|dark)|\.nav-item|\.nav-label|\.nav-count|\.round-button|\.avatar|\.art-|\.floating-label|\.orbit|\.spark|\.tiny-star|\.status-dot|\.locale-switcher button\.selected|\.skip-link|\.mobile-scrim|::selection|\.workspace-tag)/;
 
 const roleOf = (prop) =>
   /^(color|fill|stroke|caret-color|text-decoration-color|-webkit-text-fill-color|outline-color)$/.test(
@@ -157,9 +157,22 @@ const format = ({ rgb, alpha }) =>
     ? `rgb(${rgb.join(" ")})`
     : `rgb(${rgb.join(" ")} / ${Math.round(alpha * 1000) / 10}%)`;
 
+/**
+ * Light-theme tokens that the dark palette does not redefine, mapped per role. `--green-dark` is a
+ * dark ink on light surfaces; as text on a dark surface it becomes unreadable (1.3:1), so text
+ * uses the remapped `--green`. Lime-backed components that keep it are on the `keep` list.
+ */
+const tokenRoles = { text: [["var(--green-dark)", "var(--green)"]] };
+
 function transformValue(value, role) {
   let changed = false;
-  const next = value.replace(colorPattern, (token) => {
+  let next = value;
+  for (const [from, to] of tokenRoles[role] ?? [])
+    if (next.includes(from)) {
+      next = next.replaceAll(from, to);
+      changed = true;
+    }
+  next = next.replace(colorPattern, (token) => {
     const color = parse(token);
     if (!color) return token;
     changed = true;

@@ -291,6 +291,21 @@ test("dark theme applies before paint, persists and follows the system setting",
   await page.goto("/jobs/");
   await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  // axe cannot judge text over gradients, so check the checked skill labels directly: dark ink
+  // on the dark gradient was unreadable.
+  await page.goto("/skills/");
+  const luminance = await page
+    .locator(".skill-checklist label.checked")
+    .first()
+    .evaluate((element) => {
+      const [r, g, b] = getComputedStyle(element).color.match(/\d+/g)!.map(Number);
+      const channel = (value: number) => {
+        const c = value / 255;
+        return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
+      };
+      return 0.2126 * channel(r) + 0.7152 * channel(g) + 0.0722 * channel(b);
+    });
+  expect(luminance).toBeGreaterThan(0.4);
 });
 
 test("demo routes meet WCAG 2.1 AA in light and dark themes and both languages", async ({
