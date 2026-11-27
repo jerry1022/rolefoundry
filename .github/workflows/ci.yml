@@ -46,6 +46,10 @@ jobs:
       - run: npx playwright install --with-deps chromium
       - run: npm run identity:start
       - run: npm run identity:test
+      - name: Rehearse isolated local database recovery
+        run: npm run recovery:local
+      - name: Verify failed recovery cleans its owned artifacts
+        run: npm run recovery:local -- --verify-failure-cleanup
       - name: Stop local identity services
         if: always()
         run: npm run identity:stop

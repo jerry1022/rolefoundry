@@ -51,6 +51,7 @@ export async function resolveActor(client: SupabaseClient): Promise<Actor> {
   return actor;
 }
 const adminActions = new Set([
+  "operations:read",
   "admin:invitations",
   "admin:quotas",
   "admin:refunds",

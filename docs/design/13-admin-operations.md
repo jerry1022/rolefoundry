@@ -4,9 +4,13 @@
 
 Provide reviewed publication, system visibility and safe operational controls. The admin UI consumes the same domain services as the public app; it is not a privileged database editor.
 
-## Current scaffold
+## Current implementation
 
-The public inspector displays fixture counts, source provenance and the integration roadmap. A local-only reset requires confirmation and never affects external accounts. It is intentionally labeled as a demo, not secure administration.
+The public static-demo inspector displays fixture counts, source provenance and the integration roadmap. A local-only reset requires confirmation and never affects external accounts. It is intentionally labeled as a demo, not secure administration.
+
+The private `/admin/` workspace now composes domain source administration with [administrator-only task/worker diagnostics](../OPERATIONS_SETUP.md). Independent service and database role checks guard every read. Fixed-size, stable task/event pages expose only minimized operational metadata; reads are audited. The independent worker reports active/draining/stopped presence and the UI distinguishes stale reports. Queue/lease observations and threshold notices are implemented; no replay or external alert delivery is implied.
+
+The [local database recovery rehearsal](../OPERATIONS_RECOVERY.md) is now executable. It restores a consistent project database/queue snapshot into an owned disposable database, compares content and authorization metadata, probes the restored queue and verifies cleanup on both success and an intentional failure. This is a partial operational delivery; hosted/clean-cluster and Storage-object recovery, account export/deletion, task replay and consolidated administration remain pending.
 
 ## Production interface
 

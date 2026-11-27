@@ -1,6 +1,6 @@
 # RoleFoundry — High-Level Design
 
-**Version:** 0.11 authorized ingestion and source scheduling · **Status:** career scaffold, server identity, private profile, catalog, dictionary and fixed-choice assessments, matching, learning, resume, manual tracking and reviewed ingestion workflows implemented; remaining production modules planned
+**Version:** 0.12 administrator diagnostics and local recovery · **Status:** career scaffold, server identity, private profile, catalog, dictionary and fixed-choice assessments, matching, learning, resume, manual tracking and reviewed ingestion workflows implemented; remaining production modules planned
 
 ## 1. Purpose and scope
 
@@ -14,7 +14,7 @@ Job discovery must work before account creation or assessment. Completing a cour
 
 ## 2. Current executable system
 
-The repository contains a Next.js App Router application with twelve navigable pages, a shared shell, typed career fixtures and browser-local persistence. Module 01 adds real Supabase identity APIs, a database migration, consent and quota transactions, and worker guards. Module 02 adds private preferences, immutable evidence and reference-only invalidations through replaceable ports/adapters. Module 03 adds anonymous/SSR published job browsing, source governance and private bookmarks. Module 04 adds the bilingual versioned dictionary, reviewed aliases/relationships/merges and historical-safe canonical projections. Module 05 adds private assessment APIs/UI and reviewed immutable questions. An independent pgmq/Node worker grades fixed answers and publishes scenario evidence atomically. Module 06 adds versioned private matching inputs/reports, explicit condition checks, evidence citations, atomic deletion purge and an actual worker handler. Module 07 adds source-governed reviewed course versions, private two-week plans, prerequisites, independent progress/practice references and an actual worker handler. Module 08 adds private Storage, isolated parsing, owner-confirmed immutable facts/claims, grounded order proposals and independently checked PDF exports with real handlers and deletion cleanup. Module 09 adds owner-scoped manual cycles, historical job snapshots, fixed resume references, event history and UTC follow-ups. Module 10 adds authorized upload/feed ingestion, source schedules, reviewed differences, immutable publication origins and actual fetch/import handlers. Required model-assisted wording remains pending module 11. The remaining domain ports are contracts; no external AI provider runs yet.
+The repository contains a Next.js App Router application with twelve navigable pages, a shared shell, typed career fixtures and browser-local persistence. Module 01 adds real Supabase identity APIs, a database migration, consent and quota transactions, and worker guards. Module 02 adds private preferences, immutable evidence and reference-only invalidations through replaceable ports/adapters. Module 03 adds anonymous/SSR published job browsing, source governance and private bookmarks. Module 04 adds the bilingual versioned dictionary, reviewed aliases/relationships/merges and historical-safe canonical projections. Module 05 adds private assessment APIs/UI and reviewed immutable questions. An independent pgmq/Node worker grades fixed answers and publishes scenario evidence atomically. Module 06 adds versioned private matching inputs/reports, explicit condition checks, evidence citations, atomic deletion purge and an actual worker handler. Module 07 adds source-governed reviewed course versions, private two-week plans, prerequisites, independent progress/practice references and an actual worker handler. Module 08 adds private Storage, isolated parsing, owner-confirmed immutable facts/claims, grounded order proposals and independently checked PDF exports with real handlers and deletion cleanup. Module 09 adds owner-scoped manual cycles, historical job snapshots, fixed resume references, event history and UTC follow-ups. Module 10 adds authorized upload/feed ingestion, source schedules, reviewed differences, immutable publication origins and actual fetch/import handlers. Required model-assisted wording remains pending module 11. Module 13 now adds administrator-only queue/lease/task/event observations, a separate worker-presence port and an executable local isolated database/queue recovery rehearsal. Consolidated administration, domain replay, account export/deletion, external telemetry and hosted/object restore remain pending. The remaining domain ports are contracts; no external AI provider runs yet.
 
 | Capability | Current state |
 | --- | --- |
@@ -26,7 +26,7 @@ The repository contains a Next.js App Router application with twelve navigable p
 | Resume | Private PDF/DOCX/paste sources, confirmation/claim history, grounded order proposals, individual acceptance, fixed PDF exports and deletion cleanup; local demo retained |
 | Ingestion | Authorized JSON/CSV uploads, approved remote feeds/source schedules, administrator review and real workers; hosted definitions/rights remain deployment gates |
 | Applications | Private manual cycles, notes, fixed resume references, event history and UTC follow-ups; local board retained |
-| Administration | Server-authorized source/publication, dictionary, course and question-bank review; local provenance inspector/reset retained |
+| Administration | Server-authorized domain review plus minimized task/event/worker diagnostics and real worker presence; static demo inspector retained; [local isolated database recovery](OPERATIONS_RECOVERY.md) implemented |
 | Identity/database | Configurable Supabase Auth/PostgreSQL, email OTP, invitations, roles, consent, quotas and audit |
 | Dictionary | Versioned bilingual concepts, exact aliases, independent DAGs, track mappings and reviewed merges |
 | Other career persistence/AI | Contracts and designs only; no live implementation |
@@ -55,7 +55,7 @@ flowchart TB
 
 No browser can call privileged database functions, provider APIs or worker credentials. Normal data operations must preserve the actor's identity. Administrative mutations require server-side authorization. The worker uses a restricted server identity and verifies task ownership and input versions.
 
-See [module dependency rules](MODULE_DEVELOPMENT.md) for the enforced ports/adapters direction, request-scoped composition and replacement/upgrade contract. New modules keep domain rules independent of Next.js and provider SDKs.
+See [module dependency rules](MODULE_DEVELOPMENT.md) for the enforced ports/adapters direction, request-scoped composition and replacement/upgrade contract. New modules keep domain rules independent of Next.js and provider SDKs. The [operations module](OPERATIONS_SETUP.md) owns its consumer read model and authorization ports; worker presence is an independent write port. Telemetry failures do not change task authority.
 
 ## 4. Modules
 
@@ -75,6 +75,7 @@ Job discovery distinguishes four foundational assessment tracks from ten detaile
 | Ingestion | Source authorization, batches, deduplication and review |
 | AI Gateway | Provider boundary, structured validation, costs and versions |
 | Task execution | Durable dispatch, leases, retries and idempotent results |
+| Operations | Minimized administrator read models, read audit, process presence and recovery runbooks |
 
 See [module designs](design/README.md) for interfaces and failure semantics.
 
@@ -89,10 +90,12 @@ See [module designs](design/README.md) for interfaces and failure semantics.
 | Storage | Browser-local demo; private PostgreSQL records and resume Storage; published job/course catalogs | Extend persistence to remaining domains |
 | Search | Local demo filters; published SQL catalog and skill aliases | Add evaluated pgvector reranking |
 | Tasks | Supabase Queues/pgmq, lease-aware Node worker with assessment/matching/learning/resume handlers | Add provider/catalog handlers and invalidation consumers |
-| AI | No provider connected | Gateway adapter selected through a fixed evaluation set |
+| AI | No provider connected | Evaluate direct OpenAI as a primary candidate and LunaRoute as a fallback candidate through replaceable gateway adapters; selection/credentials remain pending |
 | Documents | Private Storage, isolated PDF.js/Mammoth parsing and controlled PDFKit export | Add evaluated model-assisted wording through the gateway |
 | Checks | TypeScript, Vitest, Playwright, actual database authorization/integration and Linux processor checks | Add provider evaluations and operational recovery rehearsals |
 | Build | npm lockfile, Node 24, Next.js | Reproducible CI; standard Next deployment or Docker |
+
+LunaRoute is included as a planned fallback behind the same AI Gateway port. Failover requires reviewed per-purpose routes, recipient consent and shared task/budget limits; it is not enabled today. See [provider candidates and fallback policy](design/11-ai-gateway.md#provider-candidates-and-fallback-policy).
 
 The scaffold intentionally uses npm and CSS rather than adding a monorepo orchestrator or a utility-CSS framework before they are needed. The target service boundaries remain unchanged.
 
