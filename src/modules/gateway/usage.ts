@@ -71,22 +71,35 @@ export const usageReportSchema = z
   .strict();
 export type UsageReport = z.infer<typeof usageReportSchema>;
 
-/** Window totals. `spendComplete` is false when any successful call had no estimate. */
+/**
+ * Window totals. Calls, tokens and spend come from the daily series, which is complete; the
+ * provider table is capped at 32 rows. Failures and unpriced calls exist only per provider, so
+ * the failure rate uses the provider rows' own call count. `spendComplete` is false when any
+ * successful call had no estimate.
+ */
 export function summarizeUsage(report: UsageReport) {
-  const totals = report.providers.reduce(
+  const daily = report.daily.reduce(
+    (sum, day) => ({
+      calls: sum.calls + day.calls,
+      tokens: sum.tokens + day.tokens,
+      costMicros: sum.costMicros + day.costMicros,
+    }),
+    { calls: 0, tokens: 0, costMicros: 0 },
+  );
+  const providers = report.providers.reduce(
     (sum, row) => ({
       calls: sum.calls + row.calls,
       failures: sum.failures + row.failures,
-      tokens: sum.tokens + row.inputTokens + row.outputTokens,
-      costMicros: sum.costMicros + row.costMicros,
       unpricedCalls: sum.unpricedCalls + row.unpricedCalls,
     }),
-    { calls: 0, failures: 0, tokens: 0, costMicros: 0, unpricedCalls: 0 },
+    { calls: 0, failures: 0, unpricedCalls: 0 },
   );
   return {
-    ...totals,
-    failureRate: totals.calls ? totals.failures / totals.calls : null,
-    spendComplete: totals.unpricedCalls === 0,
+    ...daily,
+    failures: providers.failures,
+    unpricedCalls: providers.unpricedCalls,
+    failureRate: providers.calls ? providers.failures / providers.calls : null,
+    spendComplete: providers.unpricedCalls === 0,
   };
 }
 

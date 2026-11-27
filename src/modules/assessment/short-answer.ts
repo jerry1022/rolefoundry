@@ -112,7 +112,8 @@ export function calibrate(
     examples: cases.length,
     graded,
     criterionAgreement: total ? agree / total : 0,
-    kappa: expected < 1 ? (observed - expected) / (1 - expected) : observed === 1 ? 1 : 0,
+    // Undefined when every label is one class; 0 keeps such a set from passing the gate.
+    kappa: expected < 1 ? (observed - expected) / (1 - expected) : 0,
     meanScoreError: cases.length ? scoreError / cases.length : 1,
     ungraded: cases.length - graded,
   };

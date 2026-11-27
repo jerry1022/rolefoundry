@@ -64,7 +64,10 @@ export function AiUsageReport({ client }: { client: UsageClient }) {
   }, [client, windowDays]);
 
   const summary = report && summarizeUsage(report);
-  const peak = Math.max(1, ...(report?.daily.map((day) => day.costMicros || day.tokens) ?? []));
+  // One unit per chart: spend when every successful call was priced, tokens otherwise.
+  const byCost = summary?.spendComplete ?? false;
+  const amount = (day: UsageReport["daily"][number]) => (byCost ? day.costMicros : day.tokens);
+  const peak = Math.max(1, ...(report?.daily.map(amount) ?? []));
   const spend = (micros: number) => formatSpend(micros, locale);
 
   return (
@@ -82,7 +85,12 @@ export function AiUsageReport({ client }: { client: UsageClient }) {
               type="button"
               className={value === windowDays ? "selected" : ""}
               aria-pressed={value === windowDays}
-              onClick={() => setWindowDays(value)}
+              onClick={() => {
+                if (value === windowDays) return;
+                // Never show the previous window's numbers under the new selection.
+                setReport(undefined);
+                setWindowDays(value);
+              }}
             >
               {t(windowLabels[value])}
             </button>
@@ -131,7 +139,9 @@ export function AiUsageReport({ client }: { client: UsageClient }) {
           </dl>
           {report.daily.length > 0 && (
             <figure className="ai-usage-daily">
-              <figcaption>{t("Daily estimated spend (UTC)")}</figcaption>
+              <figcaption>
+                {byCost ? t("Daily estimated spend (UTC)") : t("Daily tokens (UTC)")}
+              </figcaption>
               <ol>
                 {report.daily.map((day) => (
                   <li
@@ -141,7 +151,7 @@ export function AiUsageReport({ client }: { client: UsageClient }) {
                     <span
                       className="bar"
                       style={{
-                        height: `${Math.max(4, ((day.costMicros || day.tokens) / peak) * 100)}%`,
+                        height: `${Math.max(4, (amount(day) / peak) * 100)}%`,
                       }}
                     />
                     <span className="sr-only">

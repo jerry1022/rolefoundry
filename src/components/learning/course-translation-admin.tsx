@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { LearningCourse } from "@/modules/learning/model";
 import type { CourseClient, LearningAdminClient } from "@/modules/learning/ports";
 import { msg, useI18n } from "@/lib/i18n";
@@ -44,13 +44,18 @@ export function CourseTranslationAdministration({
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
 
+  const loading = useRef(false);
   async function load(next?: string) {
+    if (loading.current) return;
+    loading.current = true;
     try {
       const page = await courses.list(next ? { cursor: next } : {});
       setList((current) => (next ? [...current, ...page.data] : page.data));
       setCursor(page.nextCursor);
     } catch (reason) {
       setError(failure(reason, msg("Published courses are temporarily unavailable.")));
+    } finally {
+      loading.current = false;
     }
   }
   useEffect(() => {
@@ -59,15 +64,21 @@ export function CourseTranslationAdministration({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [courses]);
 
+  // Only the most recent selection may populate the form (a slow earlier load is ignored).
+  const latest = useRef("");
   async function open(id: string) {
+    latest.current = id;
     setError("");
     setStatus("");
     try {
       const value = await courses.find(id);
+      if (latest.current !== id) return null;
       setCourse(value);
       setDraft(draftFor(value));
+      return value;
     } catch (reason) {
-      setError(failure(reason, msg("The course could not be loaded.")));
+      if (latest.current === id) setError(failure(reason, msg("The course could not be loaded.")));
+      return null;
     }
   }
 
@@ -89,7 +100,10 @@ export function CourseTranslationAdministration({
           locale: "zh-TW",
           reason: draft.reviewNote,
         });
-      await open(course.id);
+      const refreshed = await open(course.id);
+      if (!refreshed) return;
+      // Keep the list's "Translated" badge in step with the saved state.
+      setList((current) => current.map((item) => (item.id === refreshed.id ? refreshed : item)));
       setStatus(action === "save" ? msg("Translation saved.") : msg("Translation removed."));
     } catch (reason) {
       setError(failure(reason, msg("The change could not be confirmed. Refresh before retrying.")));
@@ -121,6 +135,7 @@ export function CourseTranslationAdministration({
               type="button"
               className={item.id === course?.id ? "selected" : ""}
               aria-pressed={item.id === course?.id}
+              disabled={busy}
               onClick={() => void open(item.id)}
             >
               <strong>{item.title}</strong>

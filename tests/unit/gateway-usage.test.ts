@@ -56,7 +56,13 @@ describe("AI usage report", () => {
     const partial = summarizeUsage(
       report([provider(), provider({ provider: "fake-b", unpricedCalls: 3, costMicros: 0 })]),
     );
-    expect(partial).toMatchObject({ calls: 20, unpricedCalls: 3, spendComplete: false });
+    expect(partial).toMatchObject({ unpricedCalls: 3, spendComplete: false });
+    // Totals come from the complete daily series, not the provider table capped at 32 rows.
+    const capped = {
+      ...report(),
+      daily: [{ day: "2026-11-24", calls: 500, tokens: 9000, costMicros: 7000 }],
+    };
+    expect(summarizeUsage(capped)).toMatchObject({ calls: 500, tokens: 9000, costMicros: 7000 });
     expect(summarizeUsage(report([])).failureRate).toBeNull();
   });
 

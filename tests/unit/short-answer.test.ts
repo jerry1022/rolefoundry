@@ -158,3 +158,28 @@ describe("reviewed example set", () => {
     ).toThrow(/every criterion/);
   });
 });
+
+describe("quote grounding strength", () => {
+  it("rejects trivial or partial-word quotes and accepts whole-word evidence", async () => {
+    const { quotedIn } = await import("../../src/modules/gateway/recipes");
+    const answer = "We keep the validation data separate; caching is not needed.";
+    const min = { words: 2, cjk: 4 };
+    expect(quotedIn(answer, "the", min)).toBe(false);
+    expect(quotedIn(answer, "ep the validation", min)).toBe(false);
+    expect(quotedIn(answer, "keep the VALIDATION data", min)).toBe(true);
+    expect(quotedIn("先檢索相關段落再回答", "檢索", min)).toBe(false);
+    expect(quotedIn("先檢索相關段落再回答", "檢索相關段落", min)).toBe(true);
+    expect(quotedIn("Wrote SQL queries", "SQL", { words: 1, cjk: 2 })).toBe(true);
+    expect(quotedIn("Used PostgreSQL daily", "SQL", { words: 1, cjk: 2 })).toBe(false);
+  });
+});
+
+describe("kappa on one-class labels", () => {
+  it("does not let a set with a single label class pass on kappa", () => {
+    const human = [
+      { criterionId: "c1", met: true },
+      { criterionId: "c2", met: true },
+    ];
+    expect(calibrate([{ rubric, human, model: human }]).kappa).toBe(0);
+  });
+});

@@ -8,15 +8,15 @@ export const glowSurfaces =
 /**
  * One passive document listener positions the spotlight on whichever card is under a fine
  * pointer, throttled to animation frames. Nothing runs for touch-only devices or when the
- * viewer prefers reduced motion.
+ * viewer prefers reduced motion, and it follows changes to either setting after load.
  */
 export function PointerGlow() {
   useEffect(() => {
     const finePointer = matchMedia("(hover: hover) and (pointer: fine)");
     const reduced = matchMedia("(prefers-reduced-motion: reduce)");
-    if (!finePointer.matches || reduced.matches) return;
     let frame = 0;
     let latest: PointerEvent | null = null;
+    let listening = false;
     const update = () => {
       frame = 0;
       const event = latest;
@@ -31,8 +31,20 @@ export function PointerGlow() {
       latest = event;
       if (!frame) frame = requestAnimationFrame(update);
     };
-    document.addEventListener("pointermove", onMove, { passive: true });
+    // Re-evaluate when the viewer attaches a mouse or changes their motion preference.
+    const sync = () => {
+      const wanted = finePointer.matches && !reduced.matches;
+      if (wanted === listening) return;
+      listening = wanted;
+      if (wanted) document.addEventListener("pointermove", onMove, { passive: true });
+      else document.removeEventListener("pointermove", onMove);
+    };
+    sync();
+    finePointer.addEventListener("change", sync);
+    reduced.addEventListener("change", sync);
     return () => {
+      finePointer.removeEventListener("change", sync);
+      reduced.removeEventListener("change", sync);
       document.removeEventListener("pointermove", onMove);
       if (frame) cancelAnimationFrame(frame);
     };
