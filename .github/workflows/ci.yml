@@ -47,6 +47,21 @@ jobs:
       - run: npx playwright install --with-deps chromium
       - run: npm run identity:start
       - run: npm run identity:test
+      - name: Verify private scrape, firing and resolved monitoring pipeline
+        run: npm run metrics:rehearse
+      - name: Verify failed monitoring startup cleans owned resources
+        run: |
+          node --input-type=module <<'JS'
+          import { spawnSync } from 'node:child_process';
+          import { writeFileSync } from 'node:fs';
+          const result = spawnSync(process.execPath, ['scripts/rehearse-metrics.mjs', '--fail-after-start'], { encoding: 'utf8', timeout: 420000 });
+          writeFileSync('.local/metrics-failure.log', `${result.stdout || ''}\n${result.stderr || ''}`, { mode: 0o600 });
+          if (result.status !== 1 || !result.stderr.includes('Intentional owned monitoring cleanup rehearsal.') || !result.stdout.includes('Authenticated Prometheus scrape') || !result.stdout.includes("Removed this run's monitoring containers"))
+            throw Error('Expected deliberate failure after an authenticated scrape and successful cleanup.');
+          console.log('Deliberate monitoring failure cleaned its owned resources.');
+          JS
+          test -z "$(docker ps -aq --filter label=com.rolefoundry.metrics-run)"
+          test -z "$(docker network ls -q --filter label=com.rolefoundry.metrics-run)"
       - name: Rehearse isolated local database recovery
         run: npm run recovery:local
       - name: Verify failed recovery cleans its owned artifacts

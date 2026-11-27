@@ -1,0 +1,10 @@
+{
+  "prometheus": {
+    "tag": "prom/prometheus:v3.13.5",
+    "image": "prom/prometheus@sha256:aafa9d694e6a883c02db516d9f6e5b84e14195f49a2a6456a4cca815edda72b9"
+  },
+  "alertmanager": {
+    "tag": "prom/alertmanager:v0.35.0",
+    "image": "prom/alertmanager@sha256:e638797febd034838eca8b98cdbd46f951e9bf7f178777aa8669167406a9946c"
+  }
+}

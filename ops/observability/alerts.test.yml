@@ -1,0 +1,63 @@
+rule_files:
+  - alerts.yml
+evaluation_interval: 1m
+tests:
+  - name: Missing workers must persist while ready work exists
+    interval: 1m
+    input_series:
+      - series: rolefoundry_tasks_ready{job="rolefoundry",instance="owned",kind="resume.parse"}
+        values: 1+0x10
+      - series: rolefoundry_tasks_active_workers{job="rolefoundry",instance="owned",kind="resume.parse"}
+        values: 0+0x10
+    alert_rule_test:
+      - eval_time: 1m
+        alertname: RoleFoundryMissingWorker
+        exp_alerts: []
+      - eval_time: 6m
+        alertname: RoleFoundryMissingWorker
+        exp_alerts:
+          - exp_labels:
+              job: rolefoundry
+              instance: owned
+              kind: resume.parse
+              severity: critical
+            exp_annotations:
+              summary: Ready work has no fresh worker coverage
+  - name: Idle worker absence does not page
+    interval: 1m
+    input_series:
+      - series: rolefoundry_tasks_ready{job="rolefoundry",instance="owned",kind="resume.parse"}
+        values: 0+0x10
+      - series: rolefoundry_tasks_active_workers{job="rolefoundry",instance="owned",kind="resume.parse"}
+        values: 0+0x10
+    alert_rule_test:
+      - eval_time: 10m
+        alertname: RoleFoundryMissingWorker
+        exp_alerts: []
+  - name: Error ratio needs minimum request volume
+    interval: 1m
+    input_series:
+      - series: rolefoundry_http_requests_total{job="rolefoundry",instance="owned",family="profile",status_class="5xx"}
+        values: 0+1x15
+    alert_rule_test:
+      - eval_time: 10m
+        alertname: RoleFoundryApiErrors
+        exp_alerts: []
+  - name: Sustained errors with enough traffic alert
+    interval: 1m
+    input_series:
+      - series: rolefoundry_http_requests_total{job="rolefoundry",instance="owned",family="profile",status_class="5xx"}
+        values: 0+2x15
+      - series: rolefoundry_http_requests_total{job="rolefoundry",instance="owned",family="profile",status_class="2xx"}
+        values: 0+8x15
+    alert_rule_test:
+      - eval_time: 10m
+        alertname: RoleFoundryApiErrors
+        exp_alerts:
+          - exp_labels:
+              job: rolefoundry
+              instance: owned
+              family: profile
+              severity: warning
+            exp_annotations:
+              summary: API server-error ratio is elevated with sufficient traffic

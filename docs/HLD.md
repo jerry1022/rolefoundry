@@ -91,6 +91,7 @@ See [module designs](design/README.md) for interfaces and failure semantics.
 | Storage | Browser-local demo; private PostgreSQL records and resume Storage; published job/course catalogs | Extend persistence to remaining domains |
 | Search | Local demo filters; published SQL catalog and skill aliases | Add evaluated pgvector reranking |
 | Tasks | Supabase Queues/pgmq, lease-aware Node worker with ten domain handlers and profile/dictionary invalidation maintenance | Add provider budgets/concurrency and hosted telemetry |
+| Monitoring | Optional API observer, aggregate-only SQL port and independent private OpenMetrics exporter; locally rehearsed Prometheus/Alertmanager transport | Hosted durable monitoring, owned notification delivery, live link checks and provider metrics |
 | AI | No provider connected | Evaluate direct OpenAI as a primary candidate and LunaRoute as a fallback candidate through replaceable gateway adapters; selection/credentials remain pending |
 | Documents | Private Storage, isolated PDF.js/Mammoth parsing and controlled PDFKit export | Add evaluated model-assisted wording through the gateway |
 | Checks | TypeScript, Vitest, Playwright, actual database authorization/integration and Linux processor checks | Add provider evaluations and operational recovery rehearsals |

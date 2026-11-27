@@ -27,7 +27,11 @@
     "recovery:local": "node --conditions=react-server --import tsx scripts/recovery/local-rehearsal.mjs",
     "account:ledger": "node scripts/export-deletion-ledger.mjs",
     "account:resume": "node scripts/resume-deletion.mjs",
-    "recovery:test": "node --test tests/recovery/*.test.mjs"
+    "recovery:test": "node --test tests/recovery/*.test.mjs",
+    "metrics:start": "node --conditions=react-server --import tsx apps/observability/src/main.ts",
+    "metrics:local": "node scripts/local-metrics.mjs start",
+    "metrics:probe": "node scripts/local-metrics.mjs probe",
+    "metrics:rehearse": "node scripts/rehearse-metrics.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.7",

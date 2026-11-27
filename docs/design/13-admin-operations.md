@@ -20,6 +20,8 @@ The [consolidated domain workspace](../ADMIN_WORKSPACE_SETUP.md) now reuses the 
 
 Server-authorized `/admin` routes manage catalog review, skills/aliases, question/rubric versions, source policies, invitations, quotas and failed task inspection. `audit_events` records actor, action, resource ID, timestamp and a non-sensitive change summary. Large operations use the task system. Publication changes are versioned and reversible through a new reviewed version.
 
+[Private operations telemetry](../TELEMETRY_SETUP.md) implements optional API observation, fixed-label OpenMetrics export and local Prometheus/Alertmanager firing/resolved verification. Queue/lease/worker coverage, invalidation delivery and reviewed catalog metadata use existing contracts. Provider spend, live course-link probes, hosted durable monitoring and real notification ownership remain release gates.
+
 ## Operational design
 
 Use structured logs with request/task IDs, module, version, latency and error code. Track API p95 latency, error rate, oldest queue age, task success/retry rates, per-purpose provider spend, source freshness and invalid course links. Do not log raw resumes, answers, private URLs or provider secrets. Alert on accumulating queue age and repeated auth/provider failures rather than individual transient errors.
