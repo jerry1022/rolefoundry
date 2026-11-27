@@ -102,7 +102,12 @@ it("publishes reviewed translations for the exact current version only", async (
 
   // The specialization's own aliases can contain Chinese terms, so use translation-only text.
   expect(await search(`${prefix} 設計評估資料集`)).not.toContain(jobId);
+  const catalogRevision = async () =>
+    (await stack.sql.query("select revision from public.catalog_state")).rows[0].revision;
+  const before = await catalogRevision();
   expect((await put(translation(first.versionId))).status).toBe(200);
+  // Display text must not bump the revision that marks match reports and plans stale.
+  expect(await catalogRevision()).toBe(before);
   // Reviewed translations are searchable alongside the source text.
   expect(await search(`${prefix} 設計評估資料集`)).toContain(jobId);
   expect(await search("交付檢索功能")).toContain(jobId);
@@ -112,10 +117,12 @@ it("publishes reviewed translations for the exact current version only", async (
     responsibilities: ["設計評估資料集", "交付檢索功能"],
   });
   const audit = await stack.sql.query(
-    "select action from public.catalog_audit where resource_id=$1 and action='job.translated'",
+    "select reason from public.catalog_audit where resource_id=$1 and action='job.translated'",
     [jobId],
   );
-  expect(audit.rows).toHaveLength(1);
+  expect(audit.rows).toEqual([
+    { reason: "Synthetic fixture reviewed against the published listing" },
+  ]);
 
   // A revision creates a new version: the old translation is hidden until reviewed again.
   const revised = await stack.request(`admin/catalog/jobs/${jobId}`, admin, "PATCH", {
@@ -136,7 +143,7 @@ it("publishes reviewed translations for the exact current version only", async (
     `admin/catalog/jobs/${jobId}/translations/remove`,
     admin,
     "POST",
-    { versionId: second.versionId, locale: "zh-TW" },
+    { versionId: second.versionId, locale: "zh-TW", reason: "Reviewer withdrew the translation" },
   );
   expect(removal.status).toBe(200);
   expect((await published()).translations).toEqual({});

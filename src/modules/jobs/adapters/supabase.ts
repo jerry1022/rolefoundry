@@ -186,6 +186,7 @@ export class SupabaseCatalogAdminRepository implements CatalogAdminRepository {
       p_job: id,
       p_version: input.versionId,
       p_locale: input.locale,
+      p_reason: input.reason,
     });
   }
 }

@@ -64,7 +64,7 @@ Each question version in the administrator bank has a **Traditional Chinese tran
 - Saves need a review note and removals need a reason. Both are recorded in `assessment_audit` (`question.translated`, `question.translation_removed`).
 - `localizedQuestion` in `src/modules/assessment/model.ts` renders translated prompts, options and explanations for zh-TW viewers with `lang="zh-Hant"`.
 
-Scenario evidence keeps the source-language label recorded at grading time.
+A translation saved or changed while an attempt is in progress changes the zh-TW text that attempt shows. Grading is unaffected because option order and count are enforced. Scenario evidence keeps the source-language label recorded at grading time.
 
 ## Storage and consistency
 

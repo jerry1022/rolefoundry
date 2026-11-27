@@ -178,7 +178,9 @@ export const jobTranslationInputSchema = z
 export type JobTranslationInput = z.infer<typeof jobTranslationInputSchema>;
 export const jobTranslationRemovalSchema = jobTranslationInputSchema
   .pick({ versionId: true, locale: true })
+  .extend({ reason: catalogText(1000).trim().min(1) })
   .strict();
+export type JobTranslationRemoval = z.infer<typeof jobTranslationRemovalSchema>;
 
 /**
  * Text to show for the viewer's locale. A reviewed translation replaces only the fields it
