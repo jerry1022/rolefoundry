@@ -6,6 +6,7 @@ import type { SkillDictionary } from "@/modules/skills/model";
 import { questionInputSchema, type QuestionBank } from "@/modules/assessment/model";
 import { tracks, type Track } from "@/modules/skills/catalog";
 import { ApplicationError } from "@/modules/platform/errors";
+import { useI18n } from "@/lib/i18n";
 type Mutation = (work: () => Promise<unknown>) => Promise<void>;
 function RubricForm({
   client,
@@ -16,12 +17,13 @@ function RubricForm({
   busy: boolean;
   onMutation: Mutation;
 }) {
+  const { t } = useI18n();
   const [key, setKey] = useState(""),
     [version, setVersion] = useState(1),
     [description, setDescription] = useState("");
   return (
     <section className="panel">
-      <h3>Create an immutable rubric version</h3>
+      <h3>{t("Create an immutable rubric version")}</h3>
       <form
         onSubmit={(event) => {
           event.preventDefault();
@@ -30,9 +32,9 @@ function RubricForm({
       >
         <fieldset className="profile-form-fields" disabled={busy}>
           <label>
-            Rubric key
+            {t("Rubric key")}
             <input
-              aria-label="Rubric key"
+              aria-label={t("Rubric key")}
               className="text-input"
               required
               maxLength={100}
@@ -41,9 +43,9 @@ function RubricForm({
             />
           </label>
           <label>
-            Rubric version
+            {t("Rubric version")}
             <input
-              aria-label="Rubric version"
+              aria-label={t("Rubric version")}
               className="text-input"
               type="number"
               required
@@ -53,9 +55,9 @@ function RubricForm({
             />
           </label>
           <label>
-            Rubric description
+            {t("Rubric description")}
             <textarea
-              aria-label="Rubric description"
+              aria-label={t("Rubric description")}
               className="text-input"
               required
               maxLength={2000}
@@ -63,7 +65,7 @@ function RubricForm({
               onChange={(event) => setDescription(event.target.value)}
             />
           </label>
-          <button className="button primary">Create rubric version</button>
+          <button className="button primary">{t("Create rubric version")}</button>
         </fieldset>
       </form>
     </section>
@@ -82,6 +84,7 @@ function QuestionForm({
   busy: boolean;
   onMutation: Mutation;
 }) {
+  const { t } = useI18n();
   const [key, setKey] = useState(""),
     [version, setVersion] = useState(1),
     [track, setTrack] = useState<Track>(tracks[0]),
@@ -97,10 +100,11 @@ function QuestionForm({
   const choices = options.split("\n").filter((line) => line.trim());
   return (
     <section className="panel">
-      <h3>Create a question version</h3>
+      <h3>{t("Create a question version")}</h3>
       <p className="muted">
-        Correct answers and explanations stay private until completion. New content must be reviewed
-        before it can be selected.
+        {t(
+          "Correct answers and explanations stay private until completion. New content must be reviewed before it can be selected.",
+        )}
       </p>
       <form
         onSubmit={(event) => {
@@ -117,7 +121,7 @@ function QuestionForm({
             explanation,
           });
           if (!parsed.success) {
-            setError("Check the fields, choose a rubric and provide 2–10 answer options.");
+            setError(t("Check the fields, choose a rubric and provide 2–10 answer options."));
             return;
           }
           setError("");
@@ -126,9 +130,9 @@ function QuestionForm({
       >
         <fieldset className="profile-form-fields" disabled={busy || !bank.rubrics.length}>
           <label>
-            Question key
+            {t("Question key")}
             <input
-              aria-label="Question key"
+              aria-label={t("Question key")}
               className="text-input"
               required
               maxLength={100}
@@ -137,9 +141,9 @@ function QuestionForm({
             />
           </label>
           <label>
-            Question version
+            {t("Question version")}
             <input
-              aria-label="Question version"
+              aria-label={t("Question version")}
               className="text-input"
               type="number"
               min={1}
@@ -149,22 +153,24 @@ function QuestionForm({
             />
           </label>
           <label>
-            Track
+            {t("Track")}
             <select
-              aria-label="Question track"
+              aria-label={t("Question track")}
               className="text-input"
               value={track}
               onChange={(event) => setTrack(event.target.value as Track)}
             >
               {tracks.map((track) => (
-                <option key={track}>{track}</option>
+                <option key={track} value={track}>
+                  {t(track)}
+                </option>
               ))}
             </select>
           </label>
           <label>
-            Skill
+            {t("Skill")}
             <select
-              aria-label="Question skill"
+              aria-label={t("Question skill")}
               className="text-input"
               value={skillId}
               onChange={(event) => setSkill(event.target.value)}
@@ -179,24 +185,24 @@ function QuestionForm({
             </select>
           </label>
           <label>
-            Rubric
+            {t("Rubric")}
             <select
-              aria-label="Question rubric"
+              aria-label={t("Question rubric")}
               className="text-input"
               value={rubricId}
               onChange={(event) => setRubric(event.target.value)}
             >
               {bank.rubrics.map((rubric) => (
                 <option key={rubric.id} value={rubric.id}>
-                  {rubric.key} · version {rubric.version}
+                  {t("{key} · version {version}", { key: rubric.key, version: rubric.version })}
                 </option>
               ))}
             </select>
           </label>
           <label>
-            Prompt
+            {t("Prompt")}
             <textarea
-              aria-label="Question prompt"
+              aria-label={t("Question prompt")}
               className="text-input"
               required
               maxLength={3000}
@@ -205,9 +211,9 @@ function QuestionForm({
             />
           </label>
           <label>
-            Options (one per line)
+            {t("Options (one per line)")}
             <textarea
-              aria-label="Question options"
+              aria-label={t("Question options")}
               className="text-input"
               required
               maxLength={10000}
@@ -216,9 +222,9 @@ function QuestionForm({
             />
           </label>
           <label>
-            Correct answer
+            {t("Correct answer")}
             <select
-              aria-label="Correct answer"
+              aria-label={t("Correct answer")}
               className="text-input"
               value={correctIndex}
               onChange={(event) => setCorrect(Number(event.target.value))}
@@ -231,9 +237,9 @@ function QuestionForm({
             </select>
           </label>
           <label>
-            Feedback explanation
+            {t("Feedback explanation")}
             <textarea
-              aria-label="Question explanation"
+              aria-label={t("Question explanation")}
               className="text-input"
               required
               maxLength={3000}
@@ -242,10 +248,12 @@ function QuestionForm({
             />
           </label>
           {error && <p role="alert">{error}</p>}
-          <button className="button primary">Create draft question</button>
+          <button className="button primary">{t("Create draft question")}</button>
         </fieldset>
       </form>
-      {!bank.rubrics.length && <p className="muted">Create a rubric before authoring questions.</p>}
+      {!bank.rubrics.length && (
+        <p className="muted">{t("Create a rubric before authoring questions.")}</p>
+      )}
     </section>
   );
 }
@@ -256,6 +264,7 @@ export function AssessmentBank({
   client: AssessmentAdminClient;
   skills: SkillClient;
 }) {
+  const { t } = useI18n();
   const [bank, setBank] = useState<QuestionBank | null>(null),
     [dictionary, setDictionary] = useState<SkillDictionary | null>(null),
     [busy, setBusy] = useState(false),
@@ -272,7 +281,7 @@ export function AssessmentBank({
     setError(
       error instanceof ApplicationError
         ? error.message
-        : "Unable to load the private question bank.",
+        : t("Unable to load the private question bank."),
     );
   }
   useEffect(() => {
@@ -298,7 +307,7 @@ export function AssessmentBank({
     try {
       await work();
       setBank(await client.bank());
-      setMessage("Question bank change saved. Existing attempts keep their original versions.");
+      setMessage(t("Question bank change saved. Existing attempts keep their original versions."));
     } catch (error) {
       failed(error);
     } finally {
@@ -307,11 +316,11 @@ export function AssessmentBank({
   }
   return (
     <section className="section-block">
-      <h2>Question bank administration</h2>
+      <h2>{t("Question bank administration")}</h2>
       <p className="muted">
-        Reviewed scenarios support a learning preview. Review does not claim professional
-        calibration or certification. Correct-answer data in this panel is restricted to
-        administrators.
+        {t(
+          "Reviewed scenarios support a learning preview. Review does not claim professional calibration or certification. Correct-answer data in this panel is restricted to administrators.",
+        )}
       </p>
       {error && (
         <p className="notice" role="alert">
@@ -337,11 +346,11 @@ export function AssessmentBank({
             />
           </div>
           <section className="panel section-block">
-            <h3>Review versions for selection</h3>
+            <h3>{t("Review versions for selection")}</h3>
             <label>
-              Review reason
+              {t("Review reason")}
               <input
-                aria-label="Question review reason"
+                aria-label={t("Question review reason")}
                 className="text-input"
                 maxLength={1000}
                 value={reason}
@@ -353,10 +362,15 @@ export function AssessmentBank({
                 <article className="assessment-question" key={question.id}>
                   <h4>{question.prompt}</h4>
                   <p className="muted">
-                    {question.track} · {question.key} version {question.version} ·{" "}
-                    {question.reviewed ? "Reviewed for selection" : "Draft or retired"}
+                    {t(question.track)} ·{" "}
+                    {t("{key} version {version}", { key: question.key, version: question.version })}{" "}
+                    · {question.reviewed ? t("Reviewed for selection") : t("Draft or retired")}
                   </p>
-                  <p>Correct answer: {question.options[question.correctIndex]}</p>
+                  <p>
+                    {t("Correct answer: {answer}", {
+                      answer: question.options[question.correctIndex],
+                    })}
+                  </p>
                   <p>{question.explanation}</p>
                   <button
                     className="button secondary"
@@ -369,7 +383,9 @@ export function AssessmentBank({
                       )
                     }
                   >
-                    {question.reviewed ? "Retire question version" : "Review question version"}
+                    {question.reviewed
+                      ? t("Retire question version")
+                      : t("Review question version")}
                   </button>
                 </article>
               ))}

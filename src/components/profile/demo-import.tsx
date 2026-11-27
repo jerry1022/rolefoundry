@@ -3,6 +3,7 @@ import { useState } from "react";
 import { skillLabels } from "@/modules/skills/catalog";
 import { workspaceSchema, type Workspace } from "@/lib/domain";
 import type { ProfileClient } from "@/modules/profile/ports";
+import { msg, useI18n } from "@/lib/i18n";
 
 export function DemoImport({
   busy,
@@ -11,15 +12,17 @@ export function DemoImport({
   busy: boolean;
   onImport: (value: Parameters<ProfileClient["importDemo"]>[0]) => Promise<void>;
 }) {
+  const { t } = useI18n();
   const [preview, setPreview] = useState<Workspace | null>(null);
   const [approved, setApproved] = useState(false);
   const [error, setError] = useState("");
   return (
     <section className="panel section-block">
-      <h2>Bring selected demo data into this account</h2>
+      <h2>{t("Bring selected demo data into this account")}</h2>
       <p className="muted">
-        Optional, available only before the first account edit. Review what will be sent. Resume
-        drafts, bookmarks, local scenario results and tracker notes are excluded.
+        {t(
+          "Optional, available only before the first account edit. Review what will be sent. Resume drafts, bookmarks, local scenario results and tracker notes are excluded.",
+        )}
       </p>
       {!preview ? (
         <button
@@ -32,21 +35,25 @@ export function DemoImport({
               setPreview(workspaceSchema.parse(JSON.parse(raw)));
               setError("");
             } catch {
-              setError("No compatible saved demo was found, or browser storage is unavailable.");
+              setError(
+                msg("No compatible saved demo was found, or browser storage is unavailable."),
+              );
             }
           }}
         >
-          Preview demo import
+          {t("Preview demo import")}
         </button>
       ) : (
         <>
           <dl>
-            <dt>Name</dt>
-            <dd>{preview.name || "Not supplied"}</dd>
-            <dt>Direction</dt>
-            <dd>{preview.track}</dd>
-            <dt>Skills to import as self-reports</dt>
-            <dd>{preview.knownSkills.map((skill) => skillLabels[skill]).join(", ") || "None"}</dd>
+            <dt>{t("Name")}</dt>
+            <dd>{preview.name || t("Not supplied")}</dd>
+            <dt>{t("Direction")}</dt>
+            <dd>{t(preview.track)}</dd>
+            <dt>{t("Skills to import as self-reports")}</dt>
+            <dd>
+              {preview.knownSkills.map((skill) => t(skillLabels[skill])).join(", ") || t("None")}
+            </dd>
           </dl>
           <label className="profile-consent">
             <input
@@ -55,7 +62,7 @@ export function DemoImport({
               disabled={busy}
               onChange={(e) => setApproved(e.target.checked)}
             />
-            I approve uploading these preferences and self-reported skills to my account.
+            {t("I approve uploading these preferences and self-reported skills to my account.")}
           </label>
           <button
             className="button primary"
@@ -73,11 +80,11 @@ export function DemoImport({
               })
             }
           >
-            Import reviewed data
+            {t("Import reviewed data")}
           </button>
         </>
       )}
-      {error && <p role="alert">{error}</p>}
+      {error && <p role="alert">{t(error)}</p>}
     </section>
   );
 }

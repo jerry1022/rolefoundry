@@ -6,6 +6,8 @@ import type { CoursePage, CourseProgress, CourseQuery } from "@/modules/learning
 import type { SkillClient } from "@/modules/skills/ports";
 import { skillLabel } from "@/modules/skills/model";
 import { ApplicationError } from "@/modules/platform/errors";
+import { msg, useI18n } from "@/lib/i18n";
+const difficulties = [msg("Beginner"), msg("Intermediate"), msg("Advanced"), msg("Unknown")];
 export function CourseCatalog({
   client,
   skills,
@@ -23,6 +25,7 @@ export function CourseCatalog({
   version: number;
   privateEnabled: boolean;
 }) {
+  const { t } = useI18n();
   const [page, setPage] = useState<CoursePage | null>(null),
     [query, setQuery] = useState<CourseQuery>({}),
     [labels, setLabels] = useState<Record<string, string>>({}),
@@ -31,7 +34,7 @@ export function CourseCatalog({
     [reload, setReload] = useState(0);
   function failed(error: unknown) {
     setError(
-      error instanceof ApplicationError ? error.message : "The course catalog is unavailable.",
+      error instanceof ApplicationError ? error.message : t("The course catalog is unavailable."),
     );
   }
   useEffect(() => {
@@ -74,22 +77,22 @@ export function CourseCatalog({
   }, [skills, page?.dictionaryVersion]);
   return (
     <section className="section-block">
-      <h2>Reviewed course resources</h2>
+      <h2>{t("Reviewed course resources")}</h2>
       <p className="muted">
-        DeepLearning.AI is the initial curated provider. Course summaries, mappings and practice
-        prompts are independent editorial metadata. Access and prices belong to the provider; check
-        the official page.
+        {t(
+          "DeepLearning.AI is the initial curated provider. Course summaries, mappings and practice prompts are independent editorial metadata. Access and prices belong to the provider; check the official page.",
+        )}
       </p>
       <div className="learning-filter-row">
         <label>
-          Skill
+          {t("Skill")}
           <select
-            aria-label="Course skill filter"
+            aria-label={t("Course skill filter")}
             className="text-input"
             value={query.skill || ""}
             onChange={(event) => setQuery({ ...query, skill: event.target.value || undefined })}
           >
-            <option value="">All skills</option>
+            <option value="">{t("All skills")}</option>
             {Object.entries(labels).map(([id, name]) => (
               <option key={id} value={id}>
                 {name}
@@ -98,9 +101,9 @@ export function CourseCatalog({
           </select>
         </label>
         <label>
-          Difficulty
+          {t("Difficulty")}
           <select
-            aria-label="Course difficulty filter"
+            aria-label={t("Course difficulty filter")}
             className="text-input"
             value={query.difficulty || ""}
             onChange={(event) =>
@@ -110,9 +113,11 @@ export function CourseCatalog({
               })
             }
           >
-            <option value="">All levels</option>
-            {["Beginner", "Intermediate", "Advanced", "Unknown"].map((value) => (
-              <option key={value}>{value}</option>
+            <option value="">{t("All levels")}</option>
+            {difficulties.map((value) => (
+              <option key={value} value={value}>
+                {t(value)}
+              </option>
             ))}
           </select>
         </label>
@@ -121,15 +126,16 @@ export function CourseCatalog({
         <div className="notice" role="alert">
           <p>{error}</p>
           <button className="button secondary" onClick={() => setReload((value) => value + 1)}>
-            Reload course catalog
+            {t("Reload course catalog")}
           </button>
         </div>
       )}
-      {loading && <p role="status">Loading course resources…</p>}
+      {loading && <p role="status">{t("Loading course resources…")}</p>}
       {!loading && page && !page.data.length && (
         <p className="panel">
-          No reviewed resources match these filters. This provider may not cover the topic; no
-          course is invented to fill the list.
+          {t(
+            "No reviewed resources match these filters. This provider may not cover the topic; no course is invented to fill the list.",
+          )}
         </p>
       )}
       <div className="learning-course-grid">
@@ -143,26 +149,28 @@ export function CourseCatalog({
               </p>
               <h3>{course.title}</h3>
               {course.source.isDemo && (
-                <p className="pill">Demonstration metadata · fictional offering</p>
+                <p className="pill">{t("Demonstration metadata · fictional offering")}</p>
               )}
               <p>{course.summary}</p>
               <p className="muted">
-                {course.difficulty} · {course.language || "Language not supplied"} ·{" "}
+                {t(course.difficulty)} · {course.language || t("Language not supplied")} ·{" "}
                 {course.officialMinutes !== null
-                  ? `${course.officialMinutes} official minutes`
+                  ? t("{n} official minutes", { n: course.officialMinutes })
                   : course.editorialMinutes !== null
-                    ? `${course.editorialMinutes} editorial estimated minutes`
-                    : "Duration unknown; an estimate is needed for planning"}
+                    ? t("{n} editorial estimated minutes", { n: course.editorialMinutes })
+                    : t("Duration unknown; an estimate is needed for planning")}
               </p>
               <p className="pill">
                 {course.availability === "available"
-                  ? "Reviewed resource"
+                  ? t("Reviewed resource")
                   : course.availability === "uncertain"
-                    ? "Availability or metadata needs confirmation"
-                    : "Retired resource"}
+                    ? t("Availability or metadata needs confirmation")
+                    : t("Retired resource")}
               </p>
               <p className="muted">
-                Last reviewed: {course.lastReviewedAt?.slice(0, 10) || "Not supplied"}.{" "}
+                {t("Last reviewed: {date}.", {
+                  date: course.lastReviewedAt?.slice(0, 10) || t("Not supplied"),
+                })}{" "}
                 {course.durationNote}
               </p>
               <div className="tags">
@@ -173,13 +181,16 @@ export function CourseCatalog({
                 ))}
               </div>
               <p>
-                Prerequisite skills:{" "}
-                {course.prerequisiteSkills.map((skill) => skillLabel(skill, labels)).join(", ") ||
-                  "None listed"}
-                . Required foundation resources: {course.prerequisiteCourseIds.length}.
+                {t("Prerequisite skills: {skills}. Required foundation resources: {count}.", {
+                  skills:
+                    course.prerequisiteSkills
+                      .map((skill) => skillLabel(skill, labels))
+                      .join(", ") || t("None listed"),
+                  count: course.prerequisiteCourseIds.length,
+                })}
               </p>
               <details>
-                <summary>Practice outcome</summary>
+                <summary>{t("Practice outcome")}</summary>
                 <p>{course.practice.prompt}</p>
                 <p>{course.practice.completionCriteria}</p>
               </details>
@@ -190,7 +201,7 @@ export function CourseCatalog({
                   target="_blank"
                   rel="noopener noreferrer"
                 >
-                  Open official resource ↗
+                  {t("Open official resource ↗")}
                 </a>
                 {progress ? (
                   <button
@@ -198,14 +209,14 @@ export function CourseCatalog({
                     disabled={busy}
                     onClick={() => onProgress(course.id, !completed)}
                   >
-                    {completed ? "Reported complete · undo" : "Report entire course complete"}
+                    {completed ? t("Reported complete · undo") : t("Report entire course complete")}
                   </button>
                 ) : privateEnabled ? (
                   <Link className="text-link" href="/account/">
-                    Sign in to save private progress
+                    {t("Sign in to save private progress")}
                   </Link>
                 ) : (
-                  <span className="muted">Private progress is not enabled here.</span>
+                  <span className="muted">{t("Private progress is not enabled here.")}</span>
                 )}
               </div>
             </article>
@@ -225,7 +236,7 @@ export function CourseCatalog({
               .finally(() => setLoading(false));
           }}
         >
-          Load more course resources
+          {t("Load more course resources")}
         </button>
       )}
     </section>

@@ -50,6 +50,16 @@ for (const [section, messages] of Object.entries(zhTWSections))
       problems.push(`duplicate key in ${section} and ${owners.get(key)}: ${key}`);
     owners.set(key, section);
   }
+// Object literals silently keep the last duplicate, so also scan each section file's text.
+const keyLine = /^\s+(?:"((?:[^"\\]|\\.)*)"|([A-Za-z_$][\w$]*)):\s*["\n]/gm;
+for (const file of await walk("src/lib/messages/zh-TW")) {
+  const seen = new Set<string>();
+  for (const match of (await readFile(file, "utf8")).matchAll(keyLine)) {
+    const key = match[1] !== undefined ? JSON.parse(`"${match[1]}"`) : match[2];
+    if (seen.has(key)) problems.push(`duplicate key within ${file}: ${key}`);
+    seen.add(key);
+  }
+}
 for (const [key, from] of used)
   if (!(key in zhTW)) problems.push(`missing zh-TW: ${JSON.stringify(key)} (${from})`);
 for (const [key, section] of owners)

@@ -10,6 +10,7 @@ import { AccountDataEntry } from "./account-data/entry";
 import { IdentityAdministration } from "./identity/administration";
 import { createIdentityAdminClient } from "@/modules/identity/adapters/admin-client";
 import { z } from "zod";
+import { msg, useI18n } from "@/lib/i18n";
 import { CheckCircle2, LogOut, Mail, ShieldCheck } from "lucide-react";
 import {
   actorSchema,
@@ -17,7 +18,20 @@ import {
   policySchema,
   usageSchema,
   type Actor,
+  type AnalysisFeature,
 } from "@/modules/identity/core";
+
+/** Typed per purpose: a new consent purpose fails to compile until it has labels. */
+const purposeTitles: Record<AnalysisFeature, string> = {
+  assessment: msg("Assessment analysis"),
+  resume: msg("Resume analysis"),
+  matching: msg("Semantic role ranking"),
+};
+const allowanceLabels: Record<AnalysisFeature, string> = {
+  assessment: msg("assessment analysis"),
+  resume: msg("resume analysis"),
+  matching: msg("semantic ranking"),
+};
 
 const identityAdminClient = createIdentityAdminClient();
 const enabled = process.env.NEXT_PUBLIC_IDENTITY_ENABLED === "true";
@@ -43,7 +57,8 @@ async function request(path: string, method = "GET", data?: unknown) {
   if (!response.ok)
     throw new AccountRequestError(
       response.status,
-      result.error?.message || "The request could not be completed.",
+      // An empty message falls back to translated client text where the error is shown.
+      result.error?.message || "",
     );
   return result.data;
 }
@@ -52,6 +67,7 @@ type Consent = z.infer<typeof consentSchema>;
 type Usage = z.infer<typeof usageSchema>;
 
 export function AccountScreen() {
+  const { t } = useI18n();
   const [actor, setActor] = useState<Actor | null>(null);
   const [deletionReceipt, setDeletionReceipt] = useState<DeletionReceipt | null>(null);
   const [policies, setPolicies] = useState<Policy[]>([]);
@@ -88,7 +104,11 @@ export function AccountScreen() {
     if (enabled)
       refresh()
         .catch((failure) =>
-          setError(failure instanceof Error ? failure.message : "Unable to load your account."),
+          setError(
+            failure instanceof Error && failure.message
+              ? failure.message
+              : t("Unable to load your account."),
+          ),
         )
         .finally(() => setLoading(false));
   }, []);
@@ -99,7 +119,11 @@ export function AccountScreen() {
     try {
       await operation();
     } catch (failure) {
-      setError(failure instanceof Error ? failure.message : "The request could not be completed.");
+      setError(
+        failure instanceof Error && failure.message
+          ? failure.message
+          : t("The request could not be completed."),
+      );
     } finally {
       setBusy(false);
     }
@@ -113,25 +137,28 @@ export function AccountScreen() {
     <>
       <div className="page-heading">
         <div>
-          <p className="eyebrow">YOUR ACCOUNT, YOUR CHOICE</p>
-          <h1>Account &amp; privacy.</h1>
+          <p className="eyebrow">{t("YOUR ACCOUNT, YOUR CHOICE")}</p>
+          <h1>{t("Account & privacy.")}</h1>
           <p className="page-description">
-            Invitation-only sign-in, explicit analysis consent and a clear view of your weekly
-            limits.
+            {t(
+              "Invitation-only sign-in, explicit analysis consent and a clear view of your weekly limits.",
+            )}
           </p>
         </div>
       </div>
       {!enabled ? (
         <section className="panel account-demo">
           <ShieldCheck size={30} />
-          <h2>You&apos;re exploring the local demo.</h2>
+          <h2>{t("You're exploring the local demo.")}</h2>
           <p>
-            This static demo does not connect to an identity service. Your workspace remains in this
-            browser.
+            {t(
+              "This static demo does not connect to an identity service. Your workspace remains in this browser.",
+            )}
           </p>
           <p>
-            Email sign-in and account controls are available in configured server deployments. See
-            the repository&apos;s identity setup guide to run them locally.
+            {t(
+              "Email sign-in and account controls are available in configured server deployments. See the repository's identity setup guide to run them locally.",
+            )}
           </p>
           <a
             className="text-link"
@@ -139,7 +166,7 @@ export function AccountScreen() {
             target="_blank"
             rel="noreferrer"
           >
-            Identity setup guide
+            {t("Identity setup guide")}
           </a>
         </section>
       ) : (
@@ -147,8 +174,9 @@ export function AccountScreen() {
           <div className="notice inline">
             <ShieldCheck size={18} />
             <span>
-              Sign-in protects your private career data. Browser-local demo data is imported only
-              through an explicit reviewed action; signing in does not upload or merge it.
+              {t(
+                "Sign-in protects your private career data. Browser-local demo data is imported only through an explicit reviewed action; signing in does not upload or merge it.",
+              )}
             </span>
           </div>
           {error && (
@@ -163,7 +191,7 @@ export function AccountScreen() {
           )}
           {loading ? (
             <section className="panel" aria-live="polite">
-              Loading your account…
+              {t("Loading your account…")}
             </section>
           ) : deletionReceipt ? (
             <DeletionProgressEntry receipt={deletionReceipt} />
@@ -172,9 +200,9 @@ export function AccountScreen() {
               <span className="large-icon">
                 <Mail size={24} />
               </span>
-              <h2>Sign in with an invitation.</h2>
+              <h2>{t("Sign in with an invitation.")}</h2>
               <p className="muted">
-                Use your invited email address. Enter the code from your email to continue.
+                {t("Use your invited email address. Enter the code from your email to continue.")}
               </p>
               <form
                 onSubmit={(event) =>
@@ -186,7 +214,7 @@ export function AccountScreen() {
                 }
               >
                 <label className="field-label">
-                  Email address
+                  {t("Email address")}
                   <input
                     className="text-input"
                     type="email"
@@ -202,7 +230,7 @@ export function AccountScreen() {
                   />
                 </label>
                 <button className="button primary" disabled={busy || !email} type="submit">
-                  {codeSent ? "Request another code" : "Send sign-in code"}
+                  {codeSent ? t("Request another code") : t("Send sign-in code")}
                 </button>
               </form>
               {codeSent && (
@@ -212,12 +240,12 @@ export function AccountScreen() {
                       await request("verify", "POST", { email, code });
                       setCode("");
                       await refresh();
-                      setMessage("You are signed in.");
+                      setMessage(t("You are signed in."));
                     })
                   }
                 >
                   <label className="field-label">
-                    Sign-in code
+                    {t("Sign-in code")}
                     <input
                       className="text-input"
                       inputMode="numeric"
@@ -229,7 +257,7 @@ export function AccountScreen() {
                     />
                   </label>
                   <button className="button primary" disabled={busy} type="submit">
-                    Verify and sign in
+                    {t("Verify and sign in")}
                   </button>
                 </form>
               )}
@@ -241,9 +269,13 @@ export function AccountScreen() {
                   <CheckCircle2 size={20} />
                 </span>
                 <div>
-                  <h2>Signed in as a {actor.role}</h2>
+                  <h2>
+                    {t("Signed in as a {role}", {
+                      role: actor.role === "admin" ? t("admin") : t("member"),
+                    })}
+                  </h2>
                   <p className="muted">
-                    Account {actor.userId.slice(0, 8)} · verified server session
+                    {t("Account {id} · verified server session", { id: actor.userId.slice(0, 8) })}
                   </p>
                 </div>
                 <button
@@ -257,20 +289,20 @@ export function AccountScreen() {
                       setUsage([]);
                       setEmail("");
                       setCodeSent(false);
-                      setMessage("You have signed out of this device.");
+                      setMessage(t("You have signed out of this device."));
                     })
                   }
                 >
                   <LogOut size={15} />
-                  Sign out
+                  {t("Sign out")}
                 </button>
               </section>
               <section className="panel section-block">
-                <h2>Analysis permissions</h2>
+                <h2>{t("Analysis permissions")}</h2>
                 <p className="muted account-intro">
-                  Choose separately for each purpose. Revoking permission cancels queued work and
-                  prevents an in-progress result from being published. This page does not run an AI
-                  analysis.
+                  {t(
+                    "Choose separately for each purpose. Revoking permission cancels queued work and prevents an in-progress result from being published. This page does not run an AI analysis.",
+                  )}
                 </p>
                 <div className="account-consents">
                   {policies.map((policy) => {
@@ -281,15 +313,11 @@ export function AccountScreen() {
                     return (
                       <article key={policy.purpose} className="account-consent">
                         <span className="pill">
-                          {granted ? "Permission granted" : "No current permission"}
+                          {granted ? t("Permission granted") : t("No current permission")}
                         </span>
-                        <h3>
-                          {policy.purpose === "assessment"
-                            ? "Assessment analysis"
-                            : "Resume analysis"}
-                        </h3>
+                        <h3>{t(purposeTitles[policy.purpose])}</h3>
                         <p>{policy.description}</p>
-                        <small>Policy version {policy.version}</small>
+                        <small>{t("Policy version {version}", { version: policy.version })}</small>
                         <button
                           className={`button ${granted ? "secondary" : "primary"}`}
                           disabled={busy}
@@ -305,13 +333,15 @@ export function AccountScreen() {
                               await refresh();
                               setMessage(
                                 granted
-                                  ? "Permission revoked. A provider call already in progress cannot be recalled, but its result cannot be published after revocation."
-                                  : "Your permission has been recorded for this policy version.",
+                                  ? t(
+                                      "Permission revoked. A provider call already in progress cannot be recalled, but its result cannot be published after revocation.",
+                                    )
+                                  : t("Your permission has been recorded for this policy version."),
                               );
                             })
                           }
                         >
-                          {granted ? "Revoke permission" : "I agree to this policy"}
+                          {granted ? t("Revoke permission") : t("I agree to this policy")}
                         </button>
                       </article>
                     );
@@ -319,19 +349,22 @@ export function AccountScreen() {
                 </div>
               </section>
               <section className="panel section-block">
-                <h2>Weekly analysis allowance</h2>
+                <h2>{t("Weekly analysis allowance")}</h2>
                 <div className="account-usage">
                   {usage.map((item) => (
                     <article className="stat-card" key={item.feature}>
-                      <span className="mini-label">{item.feature} analysis</span>
+                      <span className="mini-label">{t(allowanceLabels[item.feature])}</span>
                       <strong className="stat-number">
                         {Math.max(0, item.limit - item.reserved - item.consumed)}
-                        <small> / {item.limit} remaining</small>
+                        <small> {t("/ {limit} remaining", { limit: item.limit })}</small>
                       </strong>
                       <p>
-                        {item.reserved} reserved · {item.consumed} consumed
+                        {t("{reserved} reserved · {consumed} consumed", {
+                          reserved: item.reserved,
+                          consumed: item.consumed,
+                        })}
                       </p>
-                      <p>Resets Monday 00:00 UTC</p>
+                      <p>{t("Resets Monday 00:00 UTC")}</p>
                     </article>
                   ))}
                 </div>

@@ -8,9 +8,16 @@ import type { SkillClient } from "@/modules/skills/ports";
 import type { AssessmentAttempt, attemptPageSchema } from "@/modules/assessment/model";
 import type { z } from "zod";
 import { ApplicationError } from "@/modules/platform/errors";
+import { msg, useI18n } from "@/lib/i18n";
 import { AttemptForm } from "./attempt-form";
 import { AttemptResult } from "./attempt-result";
 import { AssessmentBank } from "./bank-editor";
+const statusLabels: Record<AssessmentAttempt["status"], string> = {
+  draft: msg("draft"),
+  submitted: msg("submitted"),
+  completed: msg("completed"),
+  failed: msg("failed"),
+};
 export function AssessmentScreen({
   client,
   adminClient,
@@ -22,6 +29,7 @@ export function AssessmentScreen({
   skills: SkillClient;
   isAdmin: () => Promise<boolean>;
 }) {
+  const { t } = useI18n();
   const [openVersion, setOpenVersion] = useState(0);
   const [list, setList] = useState<z.infer<typeof attemptPageSchema> | null>(null),
     [active, setActive] = useState<AssessmentAttempt | null>(null),
@@ -33,7 +41,9 @@ export function AssessmentScreen({
     [polling, setPolling] = useState(true);
   function failed(error: unknown) {
     setError(
-      error instanceof ApplicationError ? error.message : "The assessment service is unavailable.",
+      error instanceof ApplicationError
+        ? error.message
+        : t("The assessment service is unavailable."),
     );
     setLogin(error instanceof ApplicationError && error.status === 401);
   }
@@ -140,16 +150,18 @@ export function AssessmentScreen({
   return (
     <>
       <PageHeading
-        eyebrow="PRIVATE ATTEMPTS · TRACEABLE FEEDBACK"
-        title="Find a useful starting point."
-        description="Try three reviewed scenarios for your direction. Fixed-answer scoring stays in this system and uses no external AI provider."
+        eyebrow={t("PRIVATE ATTEMPTS · TRACEABLE FEEDBACK")}
+        title={t("Find a useful starting point.")}
+        description={t(
+          "Try three reviewed scenarios for your direction. Fixed-answer scoring stays in this system and uses no external AI provider.",
+        )}
       />
       {error && (
         <div className="notice" role="alert">
           <p>{error}</p>
           {login ? (
             <Link className="button secondary" href="/account/">
-              Sign in to start an assessment
+              {t("Sign in to start an assessment")}
             </Link>
           ) : (
             <button
@@ -160,7 +172,7 @@ export function AssessmentScreen({
                 void client.list().then(setList).catch(failed);
               }}
             >
-              Reload assessment history
+              {t("Reload assessment history")}
             </button>
           )}
         </div>
@@ -168,26 +180,29 @@ export function AssessmentScreen({
       {!login && list && (
         <>
           <section className="panel">
-            <h2>Choose your direction</h2>
+            <h2>{t("Choose your direction")}</h2>
             <label>
-              Assessment track
+              {t("Assessment track")}
               <select
-                aria-label="Assessment track"
+                aria-label={t("Assessment track")}
                 className="text-input"
                 value={track}
                 onChange={(event) => setTrack(event.target.value as Track)}
               >
                 {tracks.map((track) => (
-                  <option key={track}>{track}</option>
+                  <option key={track} value={track}>
+                    {t(track)}
+                  </option>
                 ))}
               </select>
             </label>
             <button className="button primary" disabled={busy} onClick={() => void start()}>
-              Start a private assessment
+              {t("Start a private assessment")}
             </button>
             <p className="muted">
-              A new attempt keeps earlier results. Fixed-choice grading does not send answers to a
-              model or consume AI analysis allowance.
+              {t(
+                "A new attempt keeps earlier results. Fixed-choice grading does not send answers to a model or consume AI analysis allowance.",
+              )}
             </p>
           </section>
           {active?.status === "draft" && (
@@ -201,9 +216,11 @@ export function AssessmentScreen({
           )}
           {active?.status === "submitted" && (
             <section className="panel section-block">
-              <h2>Scoring is queued</h2>
+              <h2>{t("Scoring is queued")}</h2>
               <p>
-                Your answers are sealed and saved. You can leave and return while scoring completes.
+                {t(
+                  "Your answers are sealed and saved. You can leave and return while scoring completes.",
+                )}
               </p>
               <button
                 className="button secondary"
@@ -212,16 +229,17 @@ export function AssessmentScreen({
                   setPolling(true);
                 }}
               >
-                Check scoring status
+                {t("Check scoring status")}
               </button>
             </section>
           )}
           {active?.status === "failed" && (
             <section className="panel section-block">
-              <h2>Scoring could not finish</h2>
+              <h2>{t("Scoring could not finish")}</h2>
               <p>
-                Your submitted answers are retained. A retry uses these sealed answers; invalid or
-                stale inputs require a new attempt.
+                {t(
+                  "Your submitted answers are retained. A retry uses these sealed answers; invalid or stale inputs require a new attempt.",
+                )}
               </p>
               <button
                 className="button secondary"
@@ -236,27 +254,27 @@ export function AssessmentScreen({
                     .finally(() => setBusy(false));
                 }}
               >
-                Retry scoring with saved answers
+                {t("Retry scoring with saved answers")}
               </button>
             </section>
           )}
           {active?.status === "completed" && <AttemptResult attempt={active} />}
           <section className="section-block">
-            <h2>Your assessment history</h2>
-            {!list.data.length && <p className="muted">No private attempts yet.</p>}
+            <h2>{t("Your assessment history")}</h2>
+            {!list.data.length && <p className="muted">{t("No private attempts yet.")}</p>}
             <div className="assessment-history">
               {list.data.map((attempt) => (
                 <article className="panel" key={attempt.id}>
-                  <h3>{attempt.track}</h3>
+                  <h3>{t(attempt.track)}</h3>
                   <p>
-                    {attempt.status} · {attempt.createdAt.slice(0, 10)}
+                    {t(statusLabels[attempt.status])} · {attempt.createdAt.slice(0, 10)}
                   </p>
                   <button
                     className="button secondary"
                     disabled={busy}
                     onClick={() => void open(attempt.id)}
                   >
-                    Open assessment
+                    {t("Open assessment")}
                   </button>
                 </article>
               ))}
@@ -274,7 +292,7 @@ export function AssessmentScreen({
                     .finally(() => setBusy(false));
                 }}
               >
-                Load more assessments
+                {t("Load more assessments")}
               </button>
             )}
           </section>

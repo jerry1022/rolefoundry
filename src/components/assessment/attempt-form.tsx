@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import type { AssessmentAttempt } from "@/modules/assessment/model";
 import type { AssessmentClient } from "@/modules/assessment/ports";
 import { ApplicationError } from "@/modules/platform/errors";
+import { useI18n } from "@/lib/i18n";
 export function AttemptForm({
   initial,
   client,
@@ -14,6 +15,7 @@ export function AttemptForm({
   onChanged: (attempt: AssessmentAttempt) => void;
   onReload: () => Promise<void>;
 }) {
+  const { t } = useI18n();
   const [answers, setAnswers] = useState(initial.answers),
     [saved, setSaved] = useState(initial),
     [saving, setSaving] = useState(false),
@@ -48,7 +50,7 @@ export function AttemptForm({
       setError(
         error instanceof ApplicationError
           ? error.message
-          : "Draft saving failed. Reload before continuing.",
+          : t("Draft saving failed. Reload before continuing."),
       );
     } finally {
       working.current = false;
@@ -76,7 +78,7 @@ export function AttemptForm({
       setError(
         error instanceof ApplicationError
           ? error.message
-          : "Submission could not be confirmed. Check the saved assessment before retrying.",
+          : t("Submission could not be confirmed. Check the saved assessment before retrying."),
       );
     } finally {
       setSubmitting(false);
@@ -84,10 +86,11 @@ export function AttemptForm({
   }
   return (
     <section className="panel section-block">
-      <h2>{initial.track} scenarios</h2>
+      <h2>{t("{track} scenarios", { track: t(initial.track) })}</h2>
       <p className="muted">
-        Answers save automatically. Submit seals this version for scoring; this is a narrow
-        observation, not certification.
+        {t(
+          "Answers save automatically. Submit seals this version for scoring; this is a narrow observation, not certification.",
+        )}
       </p>
       {error && (
         <div className="notice" role="alert">
@@ -97,7 +100,7 @@ export function AttemptForm({
             disabled={saving || submitting}
             onClick={() => void onReload()}
           >
-            Reload saved assessment
+            {t("Reload saved assessment")}
           </button>
         </div>
       )}
@@ -128,7 +131,7 @@ export function AttemptForm({
       </fieldset>
       <div className="assessment-submit-row">
         <p role="status" className="muted">
-          {saving || dirty ? "Saving draft…" : "All answers saved."}
+          {saving || dirty ? t("Saving draft…") : t("All answers saved.")}
         </p>
         <button
           className="button primary"
@@ -142,10 +145,10 @@ export function AttemptForm({
           onClick={() => void submit()}
         >
           {submitting
-            ? "Confirming submission…"
+            ? t("Confirming submission…")
             : sealed
-              ? "Retry the same submission"
-              : "Submit for scoring"}
+              ? t("Retry the same submission")
+              : t("Submit for scoring")}
         </button>
       </div>
     </section>

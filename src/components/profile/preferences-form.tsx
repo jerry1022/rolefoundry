@@ -2,6 +2,7 @@
 import { useId, useState } from "react";
 import { tracks } from "@/modules/skills/catalog";
 import type { CareerProfile, Preferences } from "@/modules/profile/model";
+import { useI18n } from "@/lib/i18n";
 
 export function PreferencesForm({
   profile,
@@ -12,6 +13,7 @@ export function PreferencesForm({
   busy: boolean;
   onSave: (value: Preferences) => Promise<void>;
 }) {
+  const { t } = useI18n();
   const formId = useId();
   const [form, setForm] = useState<Preferences>({
     name: profile.name,
@@ -21,8 +23,12 @@ export function PreferencesForm({
   });
   return (
     <section className="panel">
-      <h2>Career preferences</h2>
-      <p className="muted">Saved privately to this account. Revision {profile.revision}.</p>
+      <h2>{t("Career preferences")}</h2>
+      <p className="muted">
+        {t("Saved privately to this account. Revision {revision}.", {
+          revision: profile.revision,
+        })}
+      </p>
       <form
         onSubmit={(event) => {
           event.preventDefault();
@@ -31,7 +37,7 @@ export function PreferencesForm({
       >
         <fieldset disabled={busy} className="profile-form-fields">
           <div className="profile-field">
-            <label htmlFor={`${formId}-name`}> Display name</label>
+            <label htmlFor={`${formId}-name`}> {t("Display name")}</label>
             <input
               id={`${formId}-name`}
               className="text-input"
@@ -41,7 +47,7 @@ export function PreferencesForm({
             />
           </div>
           <div className="profile-field">
-            <label htmlFor={`${formId}-track`}> Career direction</label>
+            <label htmlFor={`${formId}-track`}> {t("Career direction")}</label>
             <select
               id={`${formId}-track`}
               className="text-input"
@@ -49,12 +55,14 @@ export function PreferencesForm({
               onChange={(e) => setForm({ ...form, track: e.target.value as Preferences["track"] })}
             >
               {tracks.map((track) => (
-                <option key={track}>{track}</option>
+                <option key={track} value={track}>
+                  {t(track)}
+                </option>
               ))}
             </select>
           </div>
           <div className="profile-field">
-            <label htmlFor={`${formId}-hours`}> Weekly learning hours</label>
+            <label htmlFor={`${formId}-hours`}> {t("Weekly learning hours")}</label>
             <input
               id={`${formId}-hours`}
               className="text-input"
@@ -67,7 +75,7 @@ export function PreferencesForm({
             />
           </div>
           <fieldset className="profile-options">
-            <legend>Preferred workplaces</legend>
+            <legend>{t("Preferred workplaces")}</legend>
             {(["Remote", "Hybrid", "On-site"] as const).map((mode) => (
               <label key={mode}>
                 <input
@@ -82,12 +90,12 @@ export function PreferencesForm({
                     })
                   }
                 />
-                {mode}
+                {t(mode)}
               </label>
             ))}
           </fieldset>
           <button className="button primary" type="submit">
-            Save preferences
+            {t("Save preferences")}
           </button>
         </fieldset>
       </form>

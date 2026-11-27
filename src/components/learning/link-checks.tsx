@@ -1,24 +1,26 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
+import { msg, useI18n } from "@/lib/i18n";
 import type { LinkAdminPage } from "@/modules/course-links/model";
 import type { CourseLinkClient } from "@/modules/course-links/ports";
 import { ApplicationError } from "@/modules/platform/errors";
 const observations: Record<LinkAdminPage["checks"][number]["reason"], string> = {
-  unknown: "Not checked",
-  ok: "Responding",
-  "not-found": "Page not found",
-  "rate-limit": "Provider rate limit",
-  unsupported: "Status check unsupported",
-  "access-denied": "Access restricted",
-  redirect: "Redirect needs review",
-  blocked: "Address blocked",
-  timeout: "Check timed out",
-  network: "Connection unavailable",
-  "http-error": "Response needs review",
-  "server-error": "Provider unavailable",
-  "invalid-response": "Invalid response",
+  unknown: msg("Not checked"),
+  ok: msg("Responding"),
+  "not-found": msg("Page not found"),
+  "rate-limit": msg("Provider rate limit"),
+  unsupported: msg("Status check unsupported"),
+  "access-denied": msg("Access restricted"),
+  redirect: msg("Redirect needs review"),
+  blocked: msg("Address blocked"),
+  timeout: msg("Check timed out"),
+  network: msg("Connection unavailable"),
+  "http-error": msg("Response needs review"),
+  "server-error": msg("Provider unavailable"),
+  "invalid-response": msg("Invalid response"),
 };
 export function CourseLinkChecks({ client }: { client: CourseLinkClient }) {
+  const { t, locale } = useI18n();
   const [data, setData] = useState<LinkAdminPage>(),
     [query, setQuery] = useState<{ cursor?: string; hostCursor?: string }>({}),
     [reload, setReload] = useState(0),
@@ -43,7 +45,7 @@ export function CourseLinkChecks({ client }: { client: CourseLinkClient }) {
           setError(
             failure instanceof ApplicationError
               ? failure.message
-              : "Link observations are temporarily unavailable.",
+              : t("Link observations are temporarily unavailable."),
           );
       })
       .finally(() => {
@@ -72,7 +74,7 @@ export function CourseLinkChecks({ client }: { client: CourseLinkClient }) {
         setError(
           failure instanceof ApplicationError
             ? failure.message
-            : "Recovery could not be confirmed. Refresh before trying again.",
+            : t("Recovery could not be confirmed. Refresh before trying again."),
         );
       }
     } finally {
@@ -81,18 +83,19 @@ export function CourseLinkChecks({ client }: { client: CourseLinkClient }) {
     }
   }
   return (
-    <section className="course-link-panel" aria-label="Course link observations">
+    <section className="course-link-panel" aria-label={t("Course link observations")}>
       <p>
-        Link checks observe reviewed official URLs. They do not verify lesson content, price, access
-        or editorial freshness. Failed checks require review; successful checks do not clear an
-        editorial warning.
+        {t(
+          "Link checks observe reviewed official URLs. They do not verify lesson content, price, access or editorial freshness. Failed checks require review; successful checks do not clear an editorial warning.",
+        )}
       </p>
       <p>
-        Checks run only for deployment-approved sources. Dates show the last observation, not an
-        active check on this page.
+        {t(
+          "Checks run only for deployment-approved sources. Dates show the last observation, not an active check on this page.",
+        )}
       </p>
       {error && <p role="alert">{error}</p>}
-      {busy && <p role="status">Loading or updating link observations…</p>}
+      {busy && <p role="status">{t("Loading or updating link observations…")}</p>}
       <button
         className="button secondary"
         disabled={busy}
@@ -101,15 +104,16 @@ export function CourseLinkChecks({ client }: { client: CourseLinkClient }) {
           setReload((value) => value + 1);
         }}
       >
-        Refresh link observations
+        {t("Refresh link observations")}
       </button>
       {data && (
         <>
-          <h3>Published course observations</h3>
+          <h3>{t("Published course observations")}</h3>
           {!data.checks.length && (
             <p>
-              No observations on this page. Automatic checks are disabled until a source policy is
-              configured.
+              {t(
+                "No observations on this page. Automatic checks are disabled until a source policy is configured.",
+              )}
             </p>
           )}
           <div className="course-link-grid">
@@ -119,21 +123,23 @@ export function CourseLinkChecks({ client }: { client: CourseLinkClient }) {
                 <code>{check.id}</code>
                 <dl>
                   <div>
-                    <dt>Observation</dt>
+                    <dt>{t("Observation")}</dt>
                     <dd>
-                      {check.busy ? "Checking" : observations[check.reason]}
+                      {check.busy ? t("Checking") : t(observations[check.reason])}
                       {check.httpStatus ? ` (${check.httpStatus})` : ""}
                     </dd>
                   </div>
                   <div>
-                    <dt>Last checked</dt>
+                    <dt>{t("Last checked")}</dt>
                     <dd>
-                      {check.checkedAt ? new Date(check.checkedAt).toLocaleString() : "Not checked"}
+                      {check.checkedAt
+                        ? new Date(check.checkedAt).toLocaleString(locale)
+                        : t("Not checked")}
                     </dd>
                   </div>
                   <div>
-                    <dt>Next eligible check</dt>
-                    <dd>{new Date(check.nextCheckAt).toLocaleString()}</dd>
+                    <dt>{t("Next eligible check")}</dt>
+                    <dd>{new Date(check.nextCheckAt).toLocaleString(locale)}</dd>
                   </div>
                 </dl>
               </article>
@@ -145,16 +151,17 @@ export function CourseLinkChecks({ client }: { client: CourseLinkClient }) {
               disabled={busy}
               onClick={() => setQuery((value) => ({ ...value, cursor: data.nextCursor! }))}
             >
-              Next course observations
+              {t("Next course observations")}
             </button>
           )}
-          <h3>Shared host limits</h3>
+          <h3>{t("Shared host limits")}</h3>
           <p>
-            At most one probe per approved host set per minute across checker instances. A known
-            provider wait cannot be shortened by clearing a manual pause.
+            {t(
+              "At most one probe per approved host set per minute across checker instances. A known provider wait cannot be shortened by clearing a manual pause.",
+            )}
           </p>
           <label>
-            Recovery reason
+            {t("Recovery reason")}
             <input
               className="text-input"
               value={reason}
@@ -163,13 +170,18 @@ export function CourseLinkChecks({ client }: { client: CourseLinkClient }) {
               onChange={(event) => setReason(event.target.value)}
             />
           </label>
-          {!data.hosts.length && <p>No host state has been created.</p>}
+          {!data.hosts.length && <p>{t("No host state has been created.")}</p>}
           {data.hosts.map((host) => (
             <div className="course-link-card" key={host.host}>
               <p>
                 <strong>{host.host}</strong> —{" "}
-                {host.manualPause ? "Paused for operator review" : "Scheduled"}; not before{" "}
-                {new Date(host.notBefore).toLocaleString()}
+                {host.manualPause
+                  ? t("Paused for operator review; not before {time}", {
+                      time: new Date(host.notBefore).toLocaleString(locale),
+                    })
+                  : t("Scheduled; not before {time}", {
+                      time: new Date(host.notBefore).toLocaleString(locale),
+                    })}
               </p>
               {host.manualPause && (
                 <button
@@ -177,7 +189,7 @@ export function CourseLinkChecks({ client }: { client: CourseLinkClient }) {
                   disabled={busy || !reason.trim()}
                   onClick={() => void resume(host)}
                 >
-                  Clear manual pause for {host.host}
+                  {t("Clear manual pause for {host}", { host: host.host })}
                 </button>
               )}
             </div>
@@ -188,7 +200,7 @@ export function CourseLinkChecks({ client }: { client: CourseLinkClient }) {
               disabled={busy}
               onClick={() => setQuery((value) => ({ ...value, hostCursor: data.nextHostCursor! }))}
             >
-              Next host limits
+              {t("Next host limits")}
             </button>
           )}
         </>

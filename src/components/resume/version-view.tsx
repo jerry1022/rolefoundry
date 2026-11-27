@@ -1,4 +1,5 @@
 "use client";
+import { useI18n } from "@/lib/i18n";
 import type { ResumeVersion } from "@/modules/resume/model";
 import type { SkillDictionary } from "@/modules/skills/model";
 export function ResumeVersionView({
@@ -8,15 +9,17 @@ export function ResumeVersionView({
   version: ResumeVersion;
   dictionary: SkillDictionary | null;
 }) {
+  const { t } = useI18n();
   const labels = new Map(
     (dictionary?.skills || []).map((skill) => [skill.id, skill.nameEn] as const),
   );
   return (
     <section className="panel section-block">
-      <h2>Confirmed version {version.version}</h2>
+      <h2>{t("Confirmed version {version}", { version: version.version })}</h2>
       <p className="muted">
-        Saved {version.createdAt.slice(0, 10)}. This version is immutable. Later edits create
-        separate versions.
+        {t("Saved {date}. This version is immutable. Later edits create separate versions.", {
+          date: version.createdAt.slice(0, 10),
+        })}
       </p>
       {version.content.sections.map((section) => (
         <section className="section-block" key={section.id}>
@@ -27,12 +30,12 @@ export function ResumeVersionView({
               <article className="resume-version-statement" key={id}>
                 <p className="pill">
                   {fact.state === "learning"
-                    ? "Learning goal"
+                    ? t("Learning goal")
                     : fact.state === "in-progress"
-                      ? "In progress"
+                      ? t("In progress")
                       : fact.state === "completed"
-                        ? "Owner-reported complete"
-                        : "Owner-confirmed statement"}
+                        ? t("Owner-reported complete")
+                        : t("Owner-confirmed statement")}
                 </p>
                 <p className="resume-preserve-text">{fact.text}</p>
                 <div className="tags">

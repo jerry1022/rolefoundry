@@ -3,6 +3,7 @@ import { useState } from "react";
 import Link from "next/link";
 import type { PublishedJob } from "@/modules/jobs/model";
 import type { MatchConstraints } from "@/modules/matching/model";
+import { useI18n } from "@/lib/i18n";
 export function MatchingConditionsForm({
   target,
   workplaces,
@@ -14,6 +15,7 @@ export function MatchingConditionsForm({
   busy: boolean;
   onSubmit: (constraints: MatchConstraints) => void;
 }) {
+  const { t } = useI18n();
   const [years, setYears] = useState(""),
     [answers, setAnswers] = useState<Record<string, "confirmed" | "conflict" | "unknown">>({});
   return (
@@ -35,19 +37,23 @@ export function MatchingConditionsForm({
         });
       }}
     >
-      <h2>Conditions for a new report</h2>
+      <h2>{t("Conditions for a new report")}</h2>
       <p className="muted">
-        Changes here apply to the next report. Existing reports keep their saved inputs.
+        {t("Changes here apply to the next report. Existing reports keep their saved inputs.")}
       </p>
       <p className="muted">
-        Workplace preferences: {workplaces.length ? workplaces.join(", ") : "Not specified"}.{" "}
-        <Link href="/skills/">Edit my profile</Link>.
+        {t("Workplace preferences: {workplaces}.", {
+          workplaces: workplaces.length
+            ? workplaces.map((workplace) => t(workplace)).join(", ")
+            : t("Not specified"),
+        })}{" "}
+        <Link href="/skills/">{t("Edit my profile")}</Link>.
       </p>
       <fieldset className="profile-form-fields" disabled={busy}>
         <label>
-          Self-reported relevant experience (years, optional)
+          {t("Self-reported relevant experience (years, optional)")}
           <input
-            aria-label="Relevant experience years"
+            aria-label={t("Relevant experience years")}
             className="text-input"
             type="number"
             min={0}
@@ -58,19 +64,24 @@ export function MatchingConditionsForm({
           />
         </label>
         <p className="muted">
-          Leaving a field unknown does not count as a conflict. Years alone do not verify relevant
-          experience.
+          {t(
+            "Leaving a field unknown does not count as a conflict. Years alone do not verify relevant experience.",
+          )}
         </p>
         {target &&
           (["workAuthorization", "education"] as const).map(
             (field) =>
               target.conditions[field] && (
                 <label key={field}>
-                  {field === "education" ? "Education" : "Work authorization"}:{" "}
+                  {field === "education" ? t("Education") : t("Work authorization")}:{" "}
                   {target.conditions[field]}
                   <select
                     className="text-input"
-                    aria-label={`${field} confirmation`}
+                    aria-label={
+                      field === "education"
+                        ? t("education confirmation")
+                        : t("workAuthorization confirmation")
+                    }
                     value={answers[field] || "unknown"}
                     onChange={(event) =>
                       setAnswers({
@@ -79,26 +90,28 @@ export function MatchingConditionsForm({
                       })
                     }
                   >
-                    <option value="unknown">I am not sure</option>
-                    <option value="confirmed">I report meeting this requirement</option>
-                    <option value="conflict">I report not meeting this requirement</option>
+                    <option value="unknown">{t("I am not sure")}</option>
+                    <option value="confirmed">{t("I report meeting this requirement")}</option>
+                    <option value="conflict">{t("I report not meeting this requirement")}</option>
                   </select>
                 </label>
               ),
           )}
         {!target && (
           <p className="muted">
-            Education and work authorization stay unknown in a direction-wide report. Choose one
-            role to confirm its exact listed conditions.
+            {t(
+              "Education and work authorization stay unknown in a direction-wide report. Choose one role to confirm its exact listed conditions.",
+            )}
           </p>
         )}
         <button className="button primary" disabled={busy}>
-          {busy ? "Creating report…" : "Create a fresh matching report"}
+          {busy ? t("Creating report…") : t("Create a fresh matching report")}
         </button>
       </fieldset>
       <p className="fine-print">
-        This rule-based analysis uses no external AI provider or AI allowance. It helps you explore
-        opportunities; it does not decide employment eligibility.
+        {t(
+          "This rule-based analysis uses no external AI provider or AI allowance. It helps you explore opportunities; it does not decide employment eligibility.",
+        )}
       </p>
     </form>
   );

@@ -2,6 +2,7 @@
 import { useState } from "react";
 import type { SkillEntry } from "@/modules/skills/model";
 import type { SkillAdminClient } from "@/modules/skills/ports";
+import { useI18n } from "@/lib/i18n";
 export type DictionaryMutation = (work: () => Promise<{ version: number }>) => Promise<void>;
 export function SkillEditor({
   entry,
@@ -18,6 +19,7 @@ export function SkillEditor({
   onMutation: DictionaryMutation;
   onCancel: () => void;
 }) {
+  const { t } = useI18n();
   const [id, setId] = useState(entry?.id || ""),
     [nameEn, setEn] = useState(entry?.nameEn || ""),
     [nameZhTw, setZh] = useState(entry?.nameZhTw || ""),
@@ -28,7 +30,7 @@ export function SkillEditor({
     [reason, setReason] = useState("");
   return (
     <section className="panel">
-      <h3>{entry ? "Edit skill labels" : "Create a canonical skill"}</h3>
+      <h3>{entry ? t("Edit skill labels") : t("Create a canonical skill")}</h3>
       <form
         onSubmit={(event) => {
           event.preventDefault();
@@ -55,9 +57,9 @@ export function SkillEditor({
       >
         <fieldset disabled={busy} className="profile-form-fields">
           <label>
-            Stable skill ID
+            {t("Stable skill ID")}
             <input
-              aria-label="Stable skill ID"
+              aria-label={t("Stable skill ID")}
               className="text-input"
               pattern="[a-z0-9][a-z0-9._-]{0,63}"
               required
@@ -67,9 +69,9 @@ export function SkillEditor({
             />
           </label>
           <label>
-            English name
+            {t("English name")}
             <input
-              aria-label="English name"
+              aria-label={t("English name")}
               className="text-input"
               maxLength={160}
               required
@@ -78,9 +80,9 @@ export function SkillEditor({
             />
           </label>
           <label>
-            Traditional Chinese name
+            {t("Traditional Chinese name")}
             <input
-              aria-label="Traditional Chinese name"
+              aria-label={t("Traditional Chinese name")}
               className="text-input"
               maxLength={160}
               required
@@ -89,9 +91,9 @@ export function SkillEditor({
             />
           </label>
           <label>
-            Description
+            {t("Description")}
             <textarea
-              aria-label="Skill description"
+              aria-label={t("Skill description")}
               className="text-input"
               maxLength={2000}
               value={description}
@@ -100,22 +102,22 @@ export function SkillEditor({
           </label>
           {entry && (
             <label>
-              Status
+              {t("Status")}
               <select
-                aria-label="Skill status"
+                aria-label={t("Skill status")}
                 className="text-input"
                 value={status}
                 onChange={(event) => setStatus(event.target.value as typeof status)}
               >
-                <option value="active">Active</option>
-                <option value="deprecated">Deprecated; retain history</option>
+                <option value="active">{t("Active")}</option>
+                <option value="deprecated">{t("Deprecated; retain history")}</option>
               </select>
             </label>
           )}
           <label>
-            Change reason
+            {t("Change reason")}
             <input
-              aria-label="Skill change reason"
+              aria-label={t("Skill change reason")}
               className="text-input"
               required
               maxLength={1000}
@@ -125,10 +127,10 @@ export function SkillEditor({
           </label>
           <div className="button-row">
             <button className="button primary" type="submit">
-              {entry ? "Publish label update" : "Publish new skill"}
+              {entry ? t("Publish label update") : t("Publish new skill")}
             </button>
             <button className="button secondary" type="button" onClick={onCancel}>
-              Cancel
+              {t("Cancel")}
             </button>
           </div>
         </fieldset>

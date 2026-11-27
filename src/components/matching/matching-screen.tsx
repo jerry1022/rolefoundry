@@ -15,9 +15,17 @@ import type { ProfileClient } from "@/modules/profile/ports";
 import type { CareerProfile } from "@/modules/profile/model";
 import type { SkillClient } from "@/modules/skills/ports";
 import { ApplicationError } from "@/modules/platform/errors";
+import { msg, useI18n } from "@/lib/i18n";
 import { acceptMatchRead } from "@/modules/matching/report-state";
 import { MatchingConditionsForm } from "./conditions-form";
 import { MatchingResultCard } from "./result-card";
+const statusLabels: Record<MatchRun["status"], string> = {
+  queued: msg("queued"),
+  running: msg("running"),
+  succeeded: msg("succeeded"),
+  failed: msg("failed"),
+  invalidated: msg("invalidated"),
+};
 export function MatchingScreen({
   client,
   catalog,
@@ -29,6 +37,7 @@ export function MatchingScreen({
   profile: ProfileClient;
   skills: SkillClient;
 }) {
+  const { t } = useI18n();
   const [history, setHistory] = useState<MatchHistory | null>(null),
     [jobs, setJobs] = useState<CatalogPage | null>(null),
     [target, setTarget] = useState<PublishedJob | null>(null),
@@ -44,7 +53,7 @@ export function MatchingScreen({
     openVersion = useRef(0);
   function failed(error: unknown) {
     setError(
-      error instanceof ApplicationError ? error.message : "Matching is temporarily unavailable.",
+      error instanceof ApplicationError ? error.message : t("Matching is temporarily unavailable."),
     );
     setLogin((current) => current || (error instanceof ApplicationError && error.status === 401));
   }
@@ -198,20 +207,22 @@ export function MatchingScreen({
   return (
     <>
       <PageHeading
-        eyebrow="REQUIREMENTS · EVIDENCE · NEXT ACTIONS"
-        title="Find opportunities with a clear reason."
-        description="Compare published requirements with your own evidence. Unknown conditions stay unknown; coverage never means hiring probability."
+        eyebrow={t("REQUIREMENTS · EVIDENCE · NEXT ACTIONS")}
+        title={t("Find opportunities with a clear reason.")}
+        description={t(
+          "Compare published requirements with your own evidence. Unknown conditions stay unknown; coverage never means hiring probability.",
+        )}
       />
       {error && (
         <div role="alert" className="notice">
           <p>{error}</p>
           {login ? (
             <Link className="button secondary" href="/account/">
-              Sign in to use private matching
+              {t("Sign in to use private matching")}
             </Link>
           ) : (
             <button className="button secondary" onClick={() => window.location.reload()}>
-              Reload matching workspace
+              {t("Reload matching workspace")}
             </button>
           )}
         </div>
@@ -219,16 +230,16 @@ export function MatchingScreen({
       {!login && preferences && history && jobs && (
         <>
           <section className="panel">
-            <h2>Choose a direction or one target role</h2>
+            <h2>{t("Choose a direction or one target role")}</h2>
             <p className="muted">
-              Direction-wide reports use {preferences.track}.{" "}
-              <Link href="/skills/">Change my direction</Link>.
+              {t("Direction-wide reports use {track}.", { track: t(preferences.track) })}{" "}
+              <Link href="/skills/">{t("Change my direction")}</Link>.
             </p>
             <label>
-              Target role
+              {t("Target role")}
               <select
                 className="text-input"
-                aria-label="Matching target role"
+                aria-label={t("Matching target role")}
                 disabled={busy}
                 value={target?.id || ""}
                 onChange={(event) => {
@@ -251,7 +262,7 @@ export function MatchingScreen({
                     });
                 }}
               >
-                <option value="">All published roles in my direction</option>
+                <option value="">{t("All published roles in my direction")}</option>
                 {target && !jobs.data.some((job) => job.id === target.id) && (
                   <option value={target.id}>
                     {target.title} · {target.company}
@@ -277,7 +288,7 @@ export function MatchingScreen({
                     .finally(() => setBusy(false));
                 }}
               >
-                Load more target roles
+                {t("Load more target roles")}
               </button>
             )}
           </section>
@@ -295,63 +306,72 @@ export function MatchingScreen({
           <div className="matching-report-heading">
             <h2>
               {active.status === "invalidated"
-                ? "Report content removed"
+                ? t("Report content removed")
                 : active.status === "failed"
-                  ? "Matching could not finish"
+                  ? t("Matching could not finish")
                   : ["queued", "running"].includes(active.status)
-                    ? "Matching is queued or running"
-                    : "Your matching report"}
+                    ? t("Matching is queued or running")
+                    : t("Your matching report")}
             </h2>
             <button
               className="button secondary"
               disabled={busy}
               onClick={() => void open(active.id)}
             >
-              Check report status
+              {t("Check report status")}
             </button>
           </div>
           {active.stale && active.status !== "invalidated" && (
             <p className="notice" role="status">
-              This report is historical because its inputs changed. Create a fresh report before
-              using it to prioritize current opportunities.
+              {t(
+                "This report is historical because its inputs changed. Create a fresh report before using it to prioritize current opportunities.",
+              )}
             </p>
           )}
           {active.status === "invalidated" && (
             <p className="notice">
-              An input evidence record was deleted. Its copied report content has been removed.
-              Create a fresh report with current evidence.
+              {t(
+                "An input evidence record was deleted. Its copied report content has been removed. Create a fresh report with current evidence.",
+              )}
             </p>
           )}
           {active.status === "failed" && (
             <p className="notice">
-              No partial report is published. Create a fresh report using current inputs; your
-              previous report history stays separate.
+              {t(
+                "No partial report is published. Create a fresh report using current inputs; your previous report history stays separate.",
+              )}
             </p>
           )}
           {["queued", "running"].includes(active.status) && (
             <p className="muted">
-              Your inputs are saved. You can leave and return while the independent worker computes
-              the report.
+              {t(
+                "Your inputs are saved. You can leave and return while the independent worker computes the report.",
+              )}
             </p>
           )}
           {active.status === "succeeded" && (
             <>
               <p className="muted">
-                {active.candidateCount} source roles · Rule-based analysis ·{" "}
-                {active.createdAt.slice(0, 10)}. Conditions and evidence describe the saved inputs
-                for this report.
+                {t(
+                  "{count} source roles · Rule-based analysis · {date}. Conditions and evidence describe the saved inputs for this report.",
+                  { count: active.candidateCount, date: active.createdAt.slice(0, 10) },
+                )}
               </p>
               <p className="muted">
-                Saved relevant experience:{" "}
-                {active.constraints?.experienceYears === null || active.constraints === null
-                  ? "Not supplied"
-                  : `${active.constraints.experienceYears} years (self-reported)`}
-                .
+                {t("Saved relevant experience: {value}.", {
+                  value:
+                    active.constraints?.experienceYears === null || active.constraints === null
+                      ? t("Not supplied")
+                      : t("{years} years (self-reported)", {
+                          years: active.constraints.experienceYears,
+                        }),
+                })}
               </p>
               {!active.data.length && (
                 <p className="panel">
-                  No published roles matched the selected direction. Try a specific target or review
-                  the catalog later.
+                  {t(
+                    "No published roles matched the selected direction. Try a specific target or review the catalog later.",
+                  )}
                 </p>
               )}
               <div className="matching-results">
@@ -381,7 +401,7 @@ export function MatchingScreen({
                       .finally(() => setBusy(false));
                   }}
                 >
-                  Load more matching results
+                  {t("Load more matching results")}
                 </button>
               )}
             </>
@@ -390,21 +410,21 @@ export function MatchingScreen({
       )}
       {history && (
         <section className="section-block">
-          <h2>Your report history</h2>
-          {!history.data.length && <p className="muted">No private matching reports yet.</p>}
+          <h2>{t("Your report history")}</h2>
+          {!history.data.length && <p className="muted">{t("No private matching reports yet.")}</p>}
           <div className="assessment-history">
             {history.data.map((run) => (
               <article className="panel" key={run.id}>
-                <h3>{run.targetJobId ? "Target role report" : "Direction report"}</h3>
+                <h3>{run.targetJobId ? t("Target role report") : t("Direction report")}</h3>
                 <p>
-                  {run.status} · {run.createdAt.slice(0, 10)}
+                  {t(statusLabels[run.status])} · {run.createdAt.slice(0, 10)}
                 </p>
                 <button
                   className="button secondary"
                   disabled={busy}
                   onClick={() => void open(run.id)}
                 >
-                  Open matching report
+                  {t("Open matching report")}
                 </button>
               </article>
             ))}
@@ -422,7 +442,7 @@ export function MatchingScreen({
                   .finally(() => setBusy(false));
               }}
             >
-              Load more report history
+              {t("Load more report history")}
             </button>
           )}
         </section>

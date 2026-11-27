@@ -3,6 +3,9 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import type { AccountDataClient } from "@/modules/account-data/ports";
 import type { AccountExportPage } from "@/modules/account-data/model";
 import { ApplicationError } from "@/modules/platform/errors";
+import { msg, useI18n } from "@/lib/i18n";
+/** Client fallback; translated when shown so a stable callback can set it. */
+const unavailable = msg("Your export is temporarily unavailable.");
 function date(value: string) {
   return (
     new Intl.DateTimeFormat("en", {
@@ -13,6 +16,7 @@ function date(value: string) {
   );
 }
 export function AccountDataWorkspace({ client }: { client: AccountDataClient }) {
+  const { t } = useI18n();
   const [page, setPage] = useState<AccountExportPage | null>(null),
     [busy, setBusy] = useState(false),
     [error, setError] = useState("");
@@ -22,9 +26,7 @@ export function AccountDataWorkspace({ client }: { client: AccountDataClient }) 
     generation = useRef(0);
   const fail = useCallback((error: unknown) => {
     if (!mounted.current) return;
-    setError(
-      error instanceof ApplicationError ? error.message : "Your export is temporarily unavailable.",
-    );
+    setError(error instanceof ApplicationError ? error.message : unavailable);
     if (error instanceof ApplicationError && [401, 403].includes(error.status)) setPage(null);
   }, []);
   const refresh = useCallback(async () => {
@@ -82,26 +84,27 @@ export function AccountDataWorkspace({ client }: { client: AccountDataClient }) 
   return (
     <section
       className="panel section-block account-data-workspace"
-      aria-label="Your account data export"
+      aria-label={t("Your account data export")}
     >
-      <h2>Download your account data</h2>
+      <h2>{t("Download your account data")}</h2>
       <p>
-        Create a private ZIP with your retained career records, resume source files and generated
-        PDFs. It is available for 24 hours. Deleting source data or disabling your account
-        invalidates retained archives.
+        {t(
+          "Create a private ZIP with your retained career records, resume source files and generated PDFs. It is available for 24 hours. Deleting source data or disabling your account invalidates retained archives.",
+        )}
       </p>
       <p className="muted">
-        The archive contains personal information. Save it somewhere you trust. Public catalogs,
-        credentials and other accounts&apos; private records are excluded. An export does not delete
-        your account.
+        {t(
+          "The archive contains personal information. Save it somewhere you trust. Public catalogs, credentials and other accounts' private records are excluded. An export does not delete your account.",
+        )}
       </p>
       <p>
-        Up to three requests per 24 hours and one pending request. Large requests fail explicitly;
-        records and files are never silently truncated.
+        {t(
+          "Up to three requests per 24 hours and one pending request. Large requests fail explicitly; records and files are never silently truncated.",
+        )}
       </p>
       {error && (
         <p role="alert" className="notice">
-          {error}
+          {error === unavailable ? t(unavailable) : error}
         </p>
       )}
       <div className="button-row">
@@ -117,27 +120,33 @@ export function AccountDataWorkspace({ client }: { client: AccountDataClient }) 
             })
           }
         >
-          Create private account export
+          {t("Create private account export")}
         </button>
         <button className="button secondary" disabled={busy} onClick={() => void run(refresh)}>
-          Refresh account exports
+          {t("Refresh account exports")}
         </button>
       </div>
-      {!page && !error && <p role="status">Loading your exports…</p>}
+      {!page && !error && <p role="status">{t("Loading your exports…")}</p>}
       {pending && (
         <p role="status">
-          Your archive is being prepared by the background worker. You may leave this page and
-          return.
+          {t(
+            "Your archive is being prepared by the background worker. You may leave this page and return.",
+          )}
         </p>
       )}
-      {page?.data.length === 0 && <p>No account exports yet.</p>}
+      {page?.data.length === 0 && <p>{t("No account exports yet.")}</p>}
       {page?.data.map((item) => (
         <article key={item.id} className="panel section-block">
-          <h3>Account archive · {item.status}</h3>
+          <h3>{t("Account archive · {status}", { status: item.status })}</h3>
           <p>{item.id}</p>
           <p>
-            Requested {date(item.createdAt)}. Available until {date(item.expiresAt)}.
-            {item.byteCount ? ` ${Math.ceil(item.byteCount / 1024)} KB.` : ""}
+            {t("Requested {requested}. Available until {expires}.", {
+              requested: date(item.createdAt),
+              expires: date(item.expiresAt),
+            })}
+            {item.byteCount
+              ? ` ${t("{size} KB.", { size: Math.ceil(item.byteCount / 1024) })}`
+              : ""}
           </p>
           {item.status === "ready" && (
             <button
@@ -157,7 +166,7 @@ export function AccountDataWorkspace({ client }: { client: AccountDataClient }) 
                 })
               }
             >
-              Download account archive
+              {t("Download account archive")}
             </button>
           )}
           {["queued", "running", "ready"].includes(item.status) && (
@@ -171,11 +180,13 @@ export function AccountDataWorkspace({ client }: { client: AccountDataClient }) 
                 })
               }
             >
-              Remove account archive
+              {t("Remove account archive")}
             </button>
           )}
           {["failed", "invalidated", "expired"].includes(item.status) && (
-            <p>This archive cannot be downloaded. Request a new snapshot of your current data.</p>
+            <p>
+              {t("This archive cannot be downloaded. Request a new snapshot of your current data.")}
+            </p>
           )}
         </article>
       ))}
@@ -190,7 +201,7 @@ export function AccountDataWorkspace({ client }: { client: AccountDataClient }) 
             })
           }
         >
-          Load older account exports
+          {t("Load older account exports")}
         </button>
       )}
     </section>

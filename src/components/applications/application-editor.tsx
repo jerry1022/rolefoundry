@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useI18n } from "@/lib/i18n";
 import { applicationStages } from "@/modules/applications/model";
 import type { Application, EditInput, ResumeChoicePage } from "@/modules/applications/model";
 type Props = {
@@ -11,6 +12,7 @@ type Props = {
   onSave: (input: EditInput) => Promise<boolean>;
 };
 export function ApplicationEditor({ record, choices, busy, onMoreResumes, onSave }: Props) {
+  const { t } = useI18n();
   const initial = () => ({
     expectedRevision: record.revision,
     stage: record.stage,
@@ -36,17 +38,18 @@ export function ApplicationEditor({ record, choices, busy, onMoreResumes, onSave
   if (record.resume && !options.some((item) => item.id === record.resume!.id))
     options.unshift(record.resume);
   return (
-    <section className="panel application-editor" aria-label="Edit tracked role">
-      <h3>Record your progress</h3>
+    <section className="panel application-editor" aria-label={t("Edit tracked role")}>
+      <h3>{t("Record your progress")}</h3>
       <p className="muted">
-        Stages are your own report. Saving here sends no application or message. No response does
-        not mean rejection.
+        {t(
+          "Stages are your own report. Saving here sends no application or message. No response does not mean rejection.",
+        )}
       </p>
       {stale && (
         <div className="notice" role="status">
-          This record changed. Your unsaved draft is retained.{" "}
+          {t("This record changed. Your unsaved draft is retained.")}{" "}
           <button type="button" className="button secondary" disabled={busy} onClick={reset}>
-            Load latest saved fields
+            {t("Load latest saved fields")}
           </button>
           <button
             type="button"
@@ -60,7 +63,7 @@ export function ApplicationEditor({ record, choices, busy, onMoreResumes, onSave
               }))
             }
           >
-            Keep draft for review on latest revision
+            {t("Keep draft for review on latest revision")}
           </button>
         </div>
       )}
@@ -72,23 +75,25 @@ export function ApplicationEditor({ record, choices, busy, onMoreResumes, onSave
       >
         <fieldset disabled={busy || stale}>
           <label>
-            Stage
+            {t("Stage")}
             <select
-              aria-label="Application stage"
+              aria-label={t("Application stage")}
               value={draft.stage}
               onChange={(event) => change({ stage: event.target.value as EditInput["stage"] })}
             >
               {applicationStages
                 .filter((stage) => record.stage !== "Closed" || stage === "Closed")
                 .map((stage) => (
-                  <option key={stage}>{stage}</option>
+                  <option key={stage} value={stage}>
+                    {t(stage)}
+                  </option>
                 ))}
             </select>
           </label>
           <label>
-            Private note
+            {t("Private note")}
             <textarea
-              aria-label="Application note"
+              aria-label={t("Application note")}
               rows={5}
               maxLength={4000}
               value={draft.note}
@@ -96,49 +101,52 @@ export function ApplicationEditor({ record, choices, busy, onMoreResumes, onSave
             />
           </label>
           <label>
-            Submission reference (optional)
+            {t("Submission reference (optional)")}
             <input
-              aria-label="Submission reference"
+              aria-label={t("Submission reference")}
               maxLength={300}
               value={draft.confirmationReference ?? ""}
               onChange={(event) => change({ confirmationReference: event.target.value || null })}
             />
           </label>
           <p className="muted">
-            This is a private reference you supply; it is not independent confirmation.
+            {t("This is a private reference you supply; it is not independent confirmation.")}
           </p>
           <label>
-            Confirmed resume version
+            {t("Confirmed resume version")}
             <select
-              aria-label="Confirmed resume version"
+              aria-label={t("Confirmed resume version")}
               value={draft.resumeVersionId ?? ""}
               onChange={(event) => change({ resumeVersionId: event.target.value || null })}
             >
-              <option value="">No version selected</option>
+              <option value="">{t("No version selected")}</option>
               {options.map((item) => (
                 <option value={item.id} key={item.id}>
-                  {item.filename} · version {item.version}
+                  {t("{filename} · version {version}", {
+                    filename: item.filename,
+                    version: item.version,
+                  })}
                 </option>
               ))}
             </select>
           </label>
           {choices.nextCursor && (
             <button type="button" className="button secondary" onClick={onMoreResumes}>
-              Show more resume versions
+              {t("Show more resume versions")}
             </button>
           )}
           <button className="button primary" disabled={!dirty}>
-            Save application record
+            {t("Save application record")}
           </button>
         </fieldset>
       </form>
       {record.resume && (
         <Link className="text-link" href={`/resume/?version=${record.resume.id}`}>
-          View selected fixed resume version ↗
+          {t("View selected fixed resume version ↗")}
         </Link>
       )}
       <p className="muted">
-        Deleting that source removes this link. Tracking keeps no copy of its statements.
+        {t("Deleting that source removes this link. Tracking keeps no copy of its statements.")}
       </p>
     </section>
   );
