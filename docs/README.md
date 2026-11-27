@@ -6,6 +6,8 @@ RoleFoundry is an open-source AI career workspace. This documentation separates 
 
 - [Configuration status and handoff](CONFIGURATION.md): applied local settings, exact start commands and account-bound hosted verification.
 
+- [Private manual application tracking](APPLICATIONS_SETUP.md): owner cycles, historical snapshots, fixed resume references, UTC follow-ups and event history.
+
 - [Private resume studio](RESUME_SETUP.md): source upload, immutable facts/claims, individual proposals, fixed exports, deletion cleanup and hosted setup.
 
 - [Reviewed courses and private learning](LEARNING_SETUP.md): versioned resources, two-week budgets, prerequisites and independent progress.
@@ -37,4 +39,4 @@ RoleFoundry is an open-source AI career workspace. This documentation separates 
 - **Contract:** a TypeScript interface or schema, with no production adapter yet.
 - **Planned:** design only. Requires implementation and validation before use.
 
-The public catalog inspector is a demo route, not an administrative security boundary. Identity admin operations live behind server verification in Account & privacy. Live job feeds, model calls, document uploads and external applications remain unconnected. Static exports do not include dynamic identity, profile or catalog APIs.
+The public catalog inspector is a demo route, not an administrative security boundary. Identity admin operations live behind server verification in Account & privacy. Private document uploads and manual tracking are implemented in configured deployments. Live job feeds, model calls and external applications remain unconnected. Static exports do not include dynamic identity, profile or catalog APIs.

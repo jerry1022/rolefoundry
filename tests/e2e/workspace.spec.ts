@@ -215,6 +215,7 @@ test("public demo labels identity as unavailable and fails closed", async ({ pag
   expect((await request.get("/api/v1/courses")).status()).toBe(503);
   expect((await request.get("/api/v1/learning-plans")).status()).toBe(503);
   expect((await request.get("/api/v1/learning-progress")).status()).toBe(503);
+  expect((await request.get("/api/v1/applications")).status()).toBe(503);
   const unavailableId = crypto.randomUUID();
   for (const [route, method] of [
     ["resumes", "GET"],

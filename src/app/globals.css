@@ -3374,3 +3374,109 @@ tr:last-child td {
 .resume-file-title {
   overflow-wrap: anywhere;
 }
+
+/* Private application records use the shared workspace tokens and bounded forms. */
+.application-add {
+  margin-bottom: 24px;
+}
+.application-add select {
+  width: 100%;
+  max-width: 100%;
+}
+.application-record-list {
+  display: grid;
+  gap: 10px;
+  margin-block: 16px;
+}
+.application-record-choice {
+  display: grid;
+  gap: 6px;
+  text-align: left;
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: transparent;
+  color: inherit;
+  overflow-wrap: anywhere;
+}
+.application-record-choice[aria-pressed="true"] {
+  border-color: var(--green);
+  background: var(--mint);
+}
+.application-detail {
+  display: grid;
+  gap: 24px;
+  margin-top: 24px;
+  min-width: 0;
+}
+.application-detail .panel {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.application-detail fieldset {
+  display: grid;
+  gap: 14px;
+  border: 0;
+  margin: 0;
+  padding: 0;
+  min-width: 0;
+}
+.application-detail label {
+  display: grid;
+  gap: 8px;
+}
+.application-detail input:not([type="checkbox"]),
+.application-detail select,
+.application-detail textarea {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+}
+.application-detail .check-row {
+  display: flex;
+  align-items: center;
+}
+.application-detail .button {
+  width: fit-content;
+  max-width: 100%;
+  margin: 4px 6px 4px 0;
+  white-space: normal;
+}
+.application-follow-ups,
+.application-events {
+  display: grid;
+  gap: 18px;
+  padding-left: 22px;
+}
+.application-follow-up-form {
+  margin-block: 16px;
+}
+.application-events p {
+  margin-block: 6px;
+}
+.application-add label {
+  display: grid;
+  gap: 8px;
+  margin-block: 14px;
+}
+.application-add select,
+.application-detail input:not([type="checkbox"]),
+.application-detail select,
+.application-detail textarea {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: #fbfcf8;
+  color: var(--ink);
+  padding: 12px;
+  min-height: 44px;
+  font: inherit;
+}
+.application-detail .panel > p {
+  margin-block: 12px;
+}
+.application-editor form {
+  margin-block: 18px;
+}
+.application-detail + section {
+  margin-top: 24px;
+}

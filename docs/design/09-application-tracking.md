@@ -6,11 +6,11 @@ Keep the user's next action visible without pretending that the platform submitt
 
 ## Current scaffold
 
-Users add fictional roles to a local board, select Saved/Applied/Interview/Offer/Closed, write a note and remove an entry. Duplicate job additions are idempotent. All status changes are manual; no messages or applications are sent.
+The public demo retains its local manual board. Configured identity deployments implement private cycles, historical job snapshots, fixed owner resume references, revision-checked stages/notes, immutable event history, UTC follow-ups and deletion. See [setup, exact API and verification](../APPLICATIONS_SETUP.md). All status changes are manual; no messages or applications are sent.
 
 ## Target records and interface
 
-`applications` stores owner, canonical job ID, title/company/source snapshot, selected resume version and current state. `application_events` records prior/new state, actor, timestamp and optional user-provided confirmation reference. `follow_up_tasks` stores a due date and next step. `track(actor, jobId)` creates or returns a tracker item; `move(actor, applicationId, stage)` adds an event.
+`applications` stores owner, canonical job ID, title/company/source snapshot, selected resume version and current state. The implementation keeps the job snapshot after catalog deletion and unlinks a deleted resume source without retaining its statements. `application_events` records prior/new state, actor, timestamp and optional user-provided confirmation reference. `follow_up_tasks` stores a due date and next step. `track(actor, jobId)` creates or returns a tracker item; `move(actor, applicationId, stage)` adds an event.
 
 ## State behavior
 

@@ -22,13 +22,13 @@
 - [x] Explicit preview/approval import of demo preferences and self-reported skills only.
 - [x] Profile change/deletion outbox and revision contract for later derived data.
 - [x] Repository/client ports, request-scoped adapters and dependency checks.
-- [ ] Migration/persistence for other demo career modules.
+- [x] Private persistence for the implemented career modules 01–09, including manual tracking.
 - [ ] Private storage, delete/export account workflows and recovery tests.
 - [x] Identity task ledger and transactional outbox.
 - [x] Durable pgmq adapter, independent grading/matching/learning/resume worker, leases/retries and safe task metrics.
 - [ ] Remaining module 12 handlers, provider reservation/invalidation dispatch and hosted alerts.
 
-See [module-by-module delivery status](MODULE_DEVELOPMENT.md); module 09 is the next implementation.
+See [module-by-module delivery status](MODULE_DEVELOPMENT.md); module 10 is the next implementation.
 
 ## v0.3 — Real catalogs and reviewed evidence
 

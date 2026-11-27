@@ -1,4 +1,4 @@
-import type { AIProvider, CourseRepository, Job, JobRepository, Stage, Task } from "./domain";
+import type { AIProvider, CourseRepository, Job, JobRepository, Task } from "./domain";
 import { courses, jobs } from "./fixtures";
 
 export class FixtureJobRepository implements JobRepository {
@@ -40,10 +40,8 @@ export type {
   ResumeRenderer,
   ResumeReviser,
 } from "../modules/resume/ports";
-export interface ApplicationService {
-  track(actor: Actor, jobId: string): Promise<string>;
-  move(actor: Actor, applicationId: string, stage: Stage): Promise<void>;
-}
+export type { ApplicationService } from "../modules/applications/service";
+export type { ApplicationRepository, ApplicationClient } from "../modules/applications/ports";
 export interface IngestionService {
   import(
     actor: Actor,

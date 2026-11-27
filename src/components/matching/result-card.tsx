@@ -115,6 +115,11 @@ export function MatchingResultCard({
         </Link>
       )}
       <h4>Useful next actions</h4>
+      {result.available && (
+        <Link className="button secondary" href={`/applications/?job=${result.jobId}`}>
+          Prepare a tracking record
+        </Link>
+      )}
       <ul>
         {result.gaps.length ? (
           result.gaps.map((gap, index) => (
