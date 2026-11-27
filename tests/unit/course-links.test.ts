@@ -222,3 +222,45 @@ it("rotates source admission so a continuously due first source cannot starve la
     second.sourceId,
   ]);
 });
+it("pauses for an operator instead of honouring waits beyond seven days", async () => {
+  for (const retryAfter of [String(8 * 24 * 3600), "315360000", "Fri, 01 Jan 2100 00:00:00 GMT"]) {
+    const port = network();
+    port.head = vi.fn(async () => ({ status: 503, retryAfter }));
+    expect(await new SafeCourseLinkProbe(port).check(target, signal())).toEqual({
+      reason: "server-error",
+      httpStatus: 503,
+      notBefore: null,
+      manualPause: true,
+    });
+  }
+});
+it("follows an approved redirect that adds a tracking or login query", async () => {
+  const port = network();
+  port.head = vi
+    .fn()
+    .mockResolvedValueOnce({
+      status: 301,
+      location: `https://${host}/courses/x/?utm_source=feed#top`,
+    })
+    .mockResolvedValueOnce({ status: 200 });
+  expect(await new SafeCourseLinkProbe(port).check(target, signal())).toEqual(outcome());
+  expect((port.head as ReturnType<typeof vi.fn>).mock.calls[1][0].href).toBe(
+    `https://${host}/courses/x/`,
+  );
+});
+it("keeps checking other sources when one source's claim fails", async () => {
+  const second = { ...policy, sourceId: "a1a1a1a1-1111-4111-8111-555555555555" };
+  const store = {
+      claim: vi
+        .fn()
+        .mockRejectedValueOnce(new Error("claim unavailable"))
+        .mockResolvedValueOnce(lease),
+      complete: vi.fn(async () => true),
+    },
+    probe = { check: vi.fn(async () => outcome()) };
+  expect(await new CourseLinkChecker(store, probe, [policy, second]).tick(signal())).toBe(1);
+  expect(store.claim.mock.calls.map((call) => call[0].sourceId)).toEqual([
+    policy.sourceId,
+    second.sourceId,
+  ]);
+});

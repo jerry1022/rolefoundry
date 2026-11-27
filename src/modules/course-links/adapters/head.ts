@@ -103,11 +103,13 @@ export const nodeHeadNetwork: HeadNetwork = {
   head: pinnedHttpsHead,
   now: () => Date.now(),
 };
+/** Longer advertised waits need an operator instead of silently stopping a source for years. */
+export const maxProviderWaitMs = 7 * 24 * 60 * 60 * 1000;
 function providerWait(value: string | undefined, now: number) {
   if (!value) return { notBefore: null, manualPause: false };
   const date = /^\d+$/.test(value) ? now + Number(value) * 1000 : Date.parse(value);
-  // Unrepresentable advertised waits require operator review; never silently retry early.
-  if (!Number.isFinite(date) || date > 253402300799000)
+  // Unrepresentable or excessive waits require operator review; never silently retry early.
+  if (!Number.isFinite(date) || date > 253402300799000 || date - now > maxProviderWaitMs)
     return { notBefore: null, manualPause: true };
   return { notBefore: new Date(Math.max(now, date)).toISOString(), manualPause: false };
 }
@@ -158,7 +160,12 @@ export class SafeCourseLinkProbe implements CourseLinkProbe {
         if ([301, 302, 303, 307, 308].includes(status)) {
           if (redirects >= 3 || !response.location) return result("redirect", status);
           try {
-            url = allowedCourseLink(new URL(response.location, url).href, target.allowedHosts);
+            // Redirect targets often add tracking or login queries; nothing about the target is
+            // stored, so validate (and follow) it without query or fragment.
+            const next = new URL(response.location, url);
+            next.search = "";
+            next.hash = "";
+            url = allowedCourseLink(next.href, target.allowedHosts);
           } catch {
             return result("blocked", status);
           }
