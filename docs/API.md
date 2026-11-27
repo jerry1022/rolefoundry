@@ -1,6 +1,6 @@
 # Production API contract
 
-**Mixed implementation status.** The identity endpoints under `/api/v1/identity` are implemented for configured server deployments; see [their exact API and setup](IDENTITY_SETUP.md). Profile/evidence endpoints are also implemented: see [their exact inputs, versions and pagination](PROFILE_SETUP.md). Published job/bookmark APIs and source/lifecycle administration are also implemented: see [catalog API](CATALOG_SETUP.md). Public/versioned skill reads and role-verified dictionary mutations are implemented: see [dictionary API](SKILL_DICTIONARY_SETUP.md). Private assessment/task APIs and question-bank administration are implemented: see [assessment API](ASSESSMENT_SETUP.md). Private versioned matching/report APIs are implemented: see [matching API](MATCHING_SETUP.md). Public reviewed course/private plan/progress and course administration APIs are implemented: see [exact learning API](LEARNING_SETUP.md). Private resume/source/confirmation/proposal/export/download APIs are implemented: see [exact resume API](RESUME_SETUP.md). Private application tracking APIs are implemented: see [exact cycle/history/follow-up API](APPLICATIONS_SETUP.md). Administrator upload/feed/schedule/review/publication APIs are implemented: see [the workflow contract and deployment gates](INGESTION_SETUP.md). Other resource contracts below remain planned. The public static demo excludes all dynamic identity handlers.
+**Mixed implementation status.** The identity endpoints under `/api/v1/identity` are implemented for configured server deployments; see [their exact API and setup](IDENTITY_SETUP.md). Profile/evidence endpoints are also implemented: see [their exact inputs, versions and pagination](PROFILE_SETUP.md). Published job/bookmark APIs and source/lifecycle administration are also implemented: see [catalog API](CATALOG_SETUP.md). Public/versioned skill reads and role-verified dictionary mutations are implemented: see [dictionary API](SKILL_DICTIONARY_SETUP.md). Private assessment/task APIs and question-bank administration are implemented: see [assessment API](ASSESSMENT_SETUP.md). Private versioned matching/report APIs are implemented: see [matching API](MATCHING_SETUP.md). Public reviewed course/private plan/progress and course administration APIs are implemented: see [exact learning API](LEARNING_SETUP.md). Private resume/source/confirmation/proposal/export/download APIs are implemented: see [exact resume API](RESUME_SETUP.md). Private application tracking APIs are implemented: see [exact cycle/history/follow-up API](APPLICATIONS_SETUP.md). Administrator upload/feed/schedule/review/publication APIs are implemented: see [the workflow contract and deployment gates](INGESTION_SETUP.md). Administrator AI-recipient approvals (`/api/v1/identity/admin/ai-recipients`) and course link-check administration are implemented: see [AI gateway setup](AI_GATEWAY_SETUP.md#identity-backed-authority-and-records) and [course link setup](COURSE_LINKS_SETUP.md#administration-and-monitoring). Other resource contracts below remain planned. The public static demo excludes all dynamic identity handlers.
 
 ## Conventions
 
@@ -32,9 +32,9 @@
 | POST `/assessments/{id}/submit` | Expected revision, full answers and idempotency header | Fixed-choice grading task; no provider allowance |
 | POST `/assessments/{id}/retry` | Prior task ID and idempotency header | Retry exhausted infrastructure failure with sealed answers |
 | GET `/assessments/{id}` | Attempt ID | Owner attempt and published result |
-| POST `/matches` | Target job ID or null, explicit constraints and idempotency header | Versioned private run and task |
+| POST `/matches` | Target job ID or null, explicit constraints, optional `semantic: true` and idempotency header | Versioned private run and task; `semantic` reports `unavailable` with a code when consent/allowance is missing ([semantic ordering](MATCHING_SETUP.md#optional-semantic-ordering)) |
 | GET `/matches` | History cursor | Owner report history |
-| GET `/matches/{id}` | Owner run ID, result cursor | Cited results/gaps, input versions, stale/availability flags |
+| GET `/matches/{id}` | Owner run ID, result cursor | Cited results/gaps, input versions, `ranking {recipe, state, code}`, stale/availability flags |
 | GET `/courses` | Skill, difficulty, cursor | Published editorial metadata; public |
 | POST `/learning-plans` | Target job ID, weekly hours, duration overrides and idempotency header | Private plan generation task |
 | GET `/learning-plans` | Optional history cursor | Owner plan history |
@@ -52,8 +52,8 @@
 | GET/DELETE `/resumes/{id}` | Owner ID; expected revision for deletion | Private source/versions or deletion/cleanup status |
 | POST `/resumes/{id}/confirm` | Expected document revision and confirmed fact/section content | New immutable version and unreviewed claims |
 | GET `/resume-versions/{id}` | Version ID | Exact owner source and dictionary history |
-| POST `/resumes/{id}/revisions` | Current version, target job, expected revision and idempotency header | Grounded order-proposal task |
-| GET `/resume-revisions/{id}` | Owner proposal ID | Versioned changes, stale state and accepted choices |
+| POST `/resumes/{id}/revisions` | Current version, target job, expected revision, optional `wording: true` and idempotency header | Grounded order-proposal task; `wording` reports `unavailable` with a code when consent/allowance is missing ([wording suggestions](RESUME_SETUP.md#optional-ai-wording-suggestions)) |
+| GET `/resume-revisions/{id}` | Owner proposal ID | Versioned changes, stale state, accepted choices and optional `wording` state/suggestions |
 | POST `/resume-revisions/{id}/accept` | Selected change IDs and expected document revision | New immutable version; identical repeated choices reuse it |
 | POST `/resumes/{id}/exports` | Selected confirmed version and idempotency header | Fixed-version PDF task |
 | POST `/resume-exports/{id}/download-intents` | Owner export ID | 60-second owner-bound permit |
@@ -146,13 +146,19 @@ GET `/api/v1/admin/operations/tasks/{taskId}/replay` returns minimized eligibili
 
 GET `/api/v1/identity/admin/invitations` and GET `/api/v1/identity/admin/quota-policies` accept only an optional opaque cursor and return `{data,nextCursor}`, fixed 20. Invitations omit email/hashes/actor IDs; quota IDs are exact decimal strings. POST `/api/v1/identity/admin/invitations/{id}/revoke` accepts a same-origin strict empty JSON body (128 bytes), expires only an unused invitation and is idempotent for already expired unused records. Every route independently verifies administrator authority in the service and SQL, and successful reads/revocation are audited. See [directory schemas, paging, revocation and retained old controls](ADMIN_WORKSPACE_SETUP.md).
 
+## AI recipients and course link observations (administrator)
+
+GET/POST/DELETE `/api/v1/identity/admin/ai-recipients` list, approve and revoke reviewed AI recipients per consent purpose and policy version; every change requires a reason and writes `identity_audit`. Approval alone sends nothing: a routing policy, provider credentials and owner consent are still required. See [AI gateway setup](AI_GATEWAY_SETUP.md#identity-backed-authority-and-records).
+
+GET `/api/v1/admin/courses/link-checks` returns paged published-version observations and host waits; POST `/api/v1/admin/courses/link-checks/resume` clears a manual host pause with a reason and expected revision, audited in `course_audit`. See [course link setup](COURSE_LINKS_SETUP.md#administration-and-monitoring).
+
 ## Worker-only invalidation RPCs
 
 There is no browser invalidation endpoint. The worker service role alone can execute `invalidation_claim(p_ids uuid[] default null)` (up to four opaque `{id,token}` leases), `invalidation_apply(p_id uuid,p_token uuid)` (`{completed,canceled}`) and `invalidation_retry(p_id uuid,p_token uuid)` (persisted backoff). Optional claim scope is bounded to four IDs for controlled operator/integration runs. Raw receipts and private consumer/task helpers are not granted even to the service role. Every apply/retry requires a current fenced lease. See [transaction, scope and retry contracts](INVALIDATION_SETUP.md).
 
 ## Worker resource-aware acquisition
 
-Service-only `task_read_resources(p_worker uuid,p_kinds text[],p_seconds integer,p_quantity integer,p_limits jsonb)` accepts exactly `documents`, `fetch` and `general` integer ceilings 0–8. It returns the existing task lease DTOs, up to the total quantity (1–8), without issuing attempts to capacity-blocked work. The private pool mapper is not granted to callers. The existing four-argument `task_read` remains compatible through the same implementation. There is no new browser endpoint or global provider semaphore. See [acquisition, membership and execution contracts](WORKER_RESOURCE_SETUP.md).
+Service-only `task_read_resources(p_worker uuid,p_kinds text[],p_seconds integer,p_quantity integer,p_limits jsonb)` accepts exactly `documents`, `fetch` and `general` integer ceilings 0–8. It returns the existing task lease DTOs, up to the total quantity (1–8), without issuing attempts to capacity-blocked work. The private pool mapper is not granted to callers. The existing four-argument `task_read` remains compatible through the same implementation. There is no new browser endpoint, and task acquisition adds no global provider semaphore (provider-wide AI call slots and token budgets are separate gateway RPCs; see [AI gateway setup](AI_GATEWAY_SETUP.md)). See [acquisition, membership and execution contracts](WORKER_RESOURCE_SETUP.md).
 
 ## Private metrics transport
 

@@ -8,11 +8,11 @@ Help users express real experience in relation to a target role. Preserve source
 
 Configured deployments implement private file/paste sources, bounded isolated PDF/DOCX parsing, owner-reviewed immutable facts and unreviewed claim histories, source-grounded order proposals, individual acceptance and verified bilingual fixed-version PDF exports. Actual pgmq/Node handlers enforce owner/input/lease guards; a service-only Storage janitor reclaims abandoned writes and deleted sources. [Setup, exact API, configuration and verification](../RESUME_SETUP.md).
 
-The public/static mode retains its local plain-text editor/checklist/export without automatic import. The deterministic order fallback is not model-assisted rewriting or an ATS score. Required gateway wording/evaluation remains pending with module 11; hosted containment/recovery and human review remain release gates.
+The public/static mode retains its local plain-text editor/checklist/export without automatic import. The deterministic order recipe is not model-assisted rewriting or an ATS score. [Optional AI wording suggestions](../RESUME_SETUP.md#optional-ai-wording-suggestions) run through module 11: each suggestion rewrites one confirmed fact without new facts or numbers, and only becomes a fact when the owner applies it to a draft and confirms a new version. Live provider evaluation, hosted containment/recovery and human review remain release gates.
 
 ## Data and contracts
 
-`resume_documents` owns a private file reference. `resume_versions` stores immutable structured sections and confirmed fact references. `revision_proposals` contains per-section before/after text, reason and supporting fact IDs. `resume_exports` links an accepted version to an expiring private download. Service operations `parse`, `revise` and `export` return tasks.
+`resume_documents` owns a private file reference. `resume_versions` stores immutable structured sections and confirmed fact references. `revision_proposals` contains per-section before/after text, reason and supporting fact IDs, plus optional wording suggestions (`wording`, state/code and the identity reservation). `resume_exports` links an accepted version to an expiring private download. Service operations `parse`, `revise` and `export` return tasks.
 
 ## Flow
 

@@ -77,8 +77,16 @@ The [consolidated administrator workspace](ADMIN_WORKSPACE_SETUP.md) requires th
 
 [Durable invalidation delivery](INVALIDATION_SETUP.md) requires the additive dispatch migration and compatible worker code. Review catch-up sizing for retained producer events in staging before hosted application. Existing secrets are sufficient. Failure-isolated maintenance leaves ordinary task processing and existing synchronous privacy/version guards in place; verify backlog, stale queued cancellation and safe retry after rollout.
 
-[Per-instance worker resource budgets](WORKER_RESOURCE_SETUP.md) require the additive resource-reader migration before compatible worker rollout. The legacy reader delegates to the same lease/owner/erasure implementation. Restart workers with reviewed per-pool settings and verify safe `worker.resources` startup metadata and queue progress. Limits scale per instance; they do not establish provider-wide admission or host capacity.
+[Per-instance worker resource budgets](WORKER_RESOURCE_SETUP.md) require the additive resource-reader migration before compatible worker rollout. The legacy reader delegates to the same lease/owner/erasure implementation. Restart workers with reviewed per-pool settings and verify safe `worker.resources` startup metadata and queue progress. Limits scale per instance; they do not establish host capacity. Provider-wide AI call admission is configured separately through the gateway policy below.
 
 ## Independent operations exporter
 
 `Dockerfile.metrics` runs the private OpenMetrics exporter as a non-root Node process. Enable optional web observations only after applying the telemetry migration. Run the exporter outside Vercel Functions with a separate scrape token, existing server-only storage credential and protected networking. Prometheus and Alertmanager do not receive the storage credential. [Local setup, rehearsals, production thresholds and hosted handoff](TELEMETRY_SETUP.md) describe the actual implemented boundary; a local firing/resolved test does not configure hosted monitoring or human recipients.
+
+## Optional course link checker
+
+`Dockerfile.course-links` runs the independent HEAD-only [course link checker](COURSE_LINKS_SETUP.md) as one long-lived container, separate from the web server and task worker. Apply `20261114180000_course_link_checks.sql` first and reuse the existing Supabase URL/service-role secret. `ROLEFOUNDRY_COURSE_LINK_SOURCES` defaults to `[]`, which sends no request; list only reviewed sources whose hosts are already allowed by the source and provider records.
+
+## Optional AI gateway on the worker
+
+No model provider is enabled by default. The [AI gateway](AI_GATEWAY_SETUP.md) runs inside the worker: set `ROLEFOUNDRY_AI_POLICY` (per-purpose `routes` for `matching.semantic-rank` and `resume.wording`, plus optional `providerLimits` with per-provider `concurrency` and `dailyTokens`) and the matching provider keys (`OPENAI_API_KEY`, or `LUNAROUTE_API_KEY` with `ROLEFOUNDRY_LUNAROUTE_BASE_URL`) in the worker's secret manager. Apply the gateway, consent registry, semantic matching, resume wording, provider slot and provider budget migrations before compatible worker code. An invalid policy, or a route without credentials, fails worker startup. Calls still require approved recipients for the current consent version and owner consent. Provider selection, live evaluation and reviewed data-use terms remain release gates; keys never belong in `NEXT_PUBLIC_*` variables or images.

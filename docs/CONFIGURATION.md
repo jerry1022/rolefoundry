@@ -1,6 +1,6 @@
 # Configuration status and handoff
 
-This guide distinguishes settings applied by the project from account-bound hosted setup. It is updated with each module. Current implemented module coverage is 01–10; the [complete audit](IMPLEMENTATION_AUDIT.md) retains remaining implementation, provider, operations and release gates.
+This guide distinguishes settings applied by the project from account-bound hosted setup. It is updated with each module. Current implemented module coverage is 01–10 plus the module 11 AI gateway core and module 12/13 operations work; the [complete audit](IMPLEMENTATION_AUDIT.md) retains remaining implementation, provider, operations and release gates.
 
 ## Configured and verified locally
 
@@ -24,6 +24,7 @@ This guide distinguishes settings applied by the project from account-bound host
 | Local isolated database recovery | `npm run recovery:local` and `--verify-failure-cleanup` | Same-snapshot data/security/queue comparison, isolated send/archive and owned-resource cleanup; [scope and remaining gates](OPERATIONS_RECOVERY.md) |
 | Private operations telemetry | Optional web observation, service-only aggregate RPCs and independent Node exporter | [Setup, private token, local scrape/alert/recovery rehearsal and hosted gates](TELEMETRY_SETUP.md) |
 | Course link observations | Optional `Dockerfile.course-links` process, `ROLEFOUNDRY_COURSE_LINK_SOURCES` (default `[]`) | [Setup, request safety, shared cadence and alerts](COURSE_LINKS_SETUP.md); empty policy sends no request |
+| AI Gateway core | `ROLEFOUNDRY_AI_POLICY` (empty by default), gateway migrations, fake-adapter tests | `npm test -- tests/unit/gateway.test.ts`, offline `npm run gateway:eval`; [setup](AI_GATEWAY_SETUP.md). No provider is called |
 | Automated repository checks | GitHub Actions | PR checks cover types, unit/process/browser/database tests and worker image |
 
 Local test keys are generated and stored only in the ignored, owner-readable local environment file. They are not hosted credentials. Tests start their own web/worker processes and stop them when finished; a passing suite does not mean a private web server or production worker was left running. The local database/Auth/Storage services remain available for development.
@@ -63,15 +64,15 @@ The repository provides deployable web/worker code and migrations. A Vercel prev
 | Private source Storage | Migration 08 creates a private PDF/DOCX bucket and restrictive policies; project-wide limit must allow at least 5 MiB | Cross-user/public downloads fail; fixed owner download, expiry and deletion pass |
 | Authorized catalogs and expert content | Record source permissions, reviewed metadata and question/rubric review in the implemented admin UIs | Audit provenance and inspect representative results; fixtures do not satisfy real-content review |
 | Backups, alerts and restore deletion replay | Live erasure, ledger export and local isolated overlay/service erasure are implemented; hosted/off-host recovery remains in progress | Store a protected ledger outside snapshots, then validate reapplication and object restoration before a real-person pilot |
-| Model-assisted ranking/wording | Required module 11 integration and evaluation are still pending | Complete the gateway/provider/data-use evaluation before claiming AI features |
+| Model-assisted ranking/wording | Gateway integration is implemented but disabled; choose a provider, set the worker policy/keys and approve recipients per consent version | Run live synthetic evaluation and review data-use terms before enabling; provider quality is not yet evaluated |
 
-No new model key is needed for current fixed-choice scoring, rule-based matching/learning or exact-statement resume ordering. Any later provider setup will be documented with its actual chosen integration and verification, without placing secrets in tracked files or browser variables.
+No model key is needed for fixed-choice scoring, rule-based matching/learning or exact-statement resume ordering. Optional AI ordering and wording use the [AI gateway settings](#ai-gateway) below; secrets never go in tracked files or browser variables.
 
-## Planned LunaRoute fallback
+## LunaRoute fallback candidate
 
-LunaRoute is recorded as an alternative provider in the [AI Gateway design](design/11-ai-gateway.md#provider-candidates-and-fallback-policy). This documentation change creates no credential, makes no provider request and enables no fallback. Primary-provider selection remains unresolved.
+LunaRoute is recorded as an alternative provider in the [AI Gateway design](design/11-ai-gateway.md#provider-candidates-and-fallback-policy). An adapter exists, but no credential is configured, no provider request is made and no fallback is enabled. Primary-provider selection remains unresolved.
 
-The planned adapter uses a separate server/worker secret named `LUNAROUTE_API_KEY`, a deployment-approved gateway URL, and reviewed model IDs per purpose. Exact runtime configuration will be added with the adapter; these are planned requirements, not working application settings. Do not place provider keys in browser variables or silently forward another provider's key. Before activation, verify model/schema capabilities, recipient/data-use consent, shared quota/deadline handling and bilingual evaluation. Embedding replacement requires an isolated index/reindex. Official references: [API](https://docs.lunaroute.com/api/), [authentication](https://docs.lunaroute.com/getting-started/authentication/), [models](https://docs.lunaroute.com/api/models/).
+The adapter uses a separate server/worker secret named `LUNAROUTE_API_KEY`, an explicit `ROLEFOUNDRY_LUNAROUTE_BASE_URL` (no default) and reviewed model IDs per purpose in `ROLEFOUNDRY_AI_POLICY`; see [AI gateway setup](AI_GATEWAY_SETUP.md). Do not place provider keys in browser variables or silently forward another provider's key. Before activation, verify model/schema capabilities, recipient/data-use consent, shared quota/deadline handling and bilingual evaluation. Embedding replacement requires an isolated index/reindex. Official references: [API](https://docs.lunaroute.com/api/), [authentication](https://docs.lunaroute.com/getting-started/authentication/), [models](https://docs.lunaroute.com/api/models/).
 
 ## Detailed guides
 
@@ -89,6 +90,9 @@ The planned adapter uses a separate server/worker secret named `LUNAROUTE_API_KE
 - [Private account exports and cleanup](ACCOUNT_DATA_SETUP.md)
 - [Administrator diagnostics and worker presence](OPERATIONS_SETUP.md)
 - [Local database recovery rehearsal and remaining hosted/object recovery gates](OPERATIONS_RECOVERY.md)
+- [AI gateway policy, recipients, provider limits and evaluation](AI_GATEWAY_SETUP.md)
+- [Course link observations](COURSE_LINKS_SETUP.md)
+- [Localization](LOCALIZATION.md) and [theming](THEMING.md)
 - [Web/static/container deployment](DEPLOYMENT.md)
 
 Configuration that can be completed with the available project/account authority is applied and tested as work proceeds. Unavailable account-bound steps remain explicit here with their purpose and verification. Hosted setup is not claimed complete from local tests or an unconfigured preview.
@@ -113,7 +117,7 @@ Apply `20261114150000_invalidation_dispatch.sql` and run compatible worker code 
 
 ## Worker resource limits
 
-Apply `20261114160000_worker_resource_budgets.sql`, then use compatible worker code. `WORKER_DOCUMENT_CONCURRENCY` and `WORKER_FETCH_CONCURRENCY` default to 1; `WORKER_GENERAL_CONCURRENCY` defaults to total `WORKER_CONCURRENCY`. Pool values are integers 0–8; total remains integer 1–8, default 2. No new credential or table is required. Local helpers inherit shell settings; independent workers do not automatically read Next env files. See [group membership, pause behavior and verification](WORKER_RESOURCE_SETUP.md). Provider-wide concurrency remains pending.
+Apply `20261114160000_worker_resource_budgets.sql`, then use compatible worker code. `WORKER_DOCUMENT_CONCURRENCY` and `WORKER_FETCH_CONCURRENCY` default to 1; `WORKER_GENERAL_CONCURRENCY` defaults to total `WORKER_CONCURRENCY`. Pool values are integers 0–8; total remains integer 1–8, default 2. No new credential or table is required. Local helpers inherit shell settings; independent workers do not automatically read Next env files. See [group membership, pause behavior and verification](WORKER_RESOURCE_SETUP.md). Provider-wide AI call concurrency is configured separately through the gateway `providerLimits`.
 
 ## Course link observations
 
@@ -121,4 +125,4 @@ Apply `20261114180000_course_link_checks.sql`. Set `ROLEFOUNDRY_COURSE_LINK_SOUR
 
 ## AI Gateway
 
-`ROLEFOUNDRY_AI_POLICY` is empty by default, which disables every model purpose. Provider keys (`OPENAI_API_KEY`, `LUNAROUTE_API_KEY` with an explicit `ROLEFOUNDRY_LUNAROUTE_BASE_URL`) are server/worker-only and never shared between providers. Set the same policy and keys on the worker to enable opt-in matching tie ordering (`matching.semantic-rank`); an invalid policy fails worker startup. See [policy format, failure semantics and evaluation](AI_GATEWAY_SETUP.md).
+`ROLEFOUNDRY_AI_POLICY` is empty by default, which disables every model purpose. Provider keys (`OPENAI_API_KEY`, `LUNAROUTE_API_KEY` with an explicit `ROLEFOUNDRY_LUNAROUTE_BASE_URL`) are server/worker-only and never shared between providers. Set the policy and keys on the worker to enable opt-in matching tie ordering (`matching.semantic-rank`) and resume wording suggestions (`resume.wording`); an invalid policy, or a route without credentials, fails worker startup. Optional `providerLimits` per provider set cross-worker `concurrency` and rolling 24-hour `dailyTokens`, backed by the provider slot and budget migrations. Apply `20261114190000` through `20261114250000` first. Administrators must also approve recipients for each current consent version (empty by default), and owners must consent. See [policy format, failure semantics and evaluation](AI_GATEWAY_SETUP.md).
