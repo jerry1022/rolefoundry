@@ -1,0 +1,311 @@
+import { afterAll, beforeAll, expect, it, vi } from "vitest";
+import { createClient } from "@supabase/supabase-js";
+import { LocalFixtures, type LocalMember } from "../support/local-fixtures";
+import { AIGateway } from "../../src/modules/gateway/service";
+import { FakeAdapter } from "../../src/modules/gateway/adapters/fake";
+import {
+  SupabaseGatewayAuthority,
+  SupabaseGatewayRecorder,
+} from "../../src/modules/gateway/adapters/supabase";
+import { parseGatewayPolicy } from "../../src/modules/gateway/policy";
+import { gatewayTemplates, wordingSpec } from "../../src/modules/gateway/recipes";
+import type { GatewayRequest } from "../../src/modules/gateway/model";
+import { telemetrySnapshotSchema } from "../../src/modules/telemetry/model";
+
+vi.mock("server-only", () => ({}));
+
+// Unique recipient IDs keep this test's approvals separate from any other local data.
+const suffix = crypto.randomUUID().slice(0, 8);
+const primary = `fake-${suffix}`;
+const upstream = `fake-up-${suffix}`;
+let stack: LocalFixtures, owner: LocalMember, other: LocalMember, admin: LocalMember;
+const resource = crypto.randomUUID();
+
+const good = JSON.stringify({
+  suggestions: [
+    { factRef: "fact-1", text: "Built a retrieval prototype for 3 teams.", rationale: "Clearer." },
+  ],
+});
+
+function gateway(adapter = new FakeAdapter(primary, [{ text: good }]), recipients = [primary]) {
+  const policy = parseGatewayPolicy(
+    JSON.stringify({
+      routes: {
+        "resume.wording": {
+          primary: { adapter: primary, model: "fake-model", recipients },
+          deadlineMs: 5000,
+          primaryAttempts: 1,
+          maxInputChars: 4000,
+          maxOutputTokens: 200,
+          concurrency: 1,
+        },
+      },
+    }),
+  );
+  return new AIGateway(
+    policy,
+    [adapter],
+    gatewayTemplates,
+    new SupabaseGatewayAuthority(stack.privileged),
+  );
+}
+
+const request = (
+  taskId: string,
+  ownerId: string,
+  inputVersion = "resume-version:1",
+): GatewayRequest => ({
+  taskId,
+  purpose: "resume.wording",
+  ownerId,
+  inputVersion,
+  templateVersion: "resume-wording-v1",
+  locale: "en",
+  instructions: "Improve wording.",
+  segments: [{ ref: "fact-1", label: "fact", text: "Built a retrieval prototype for 3 teams." }],
+  allowedRefs: ["fact-1"],
+});
+
+/** Grants owner consent, reserves budget and starts the identity task like a real worker. */
+async function startedTask(member: LocalMember, inputVersion = "resume-version:1", start = true) {
+  const policies = await member.client.rpc("identity_policies");
+  const version = (policies.data as { purpose: string; version: string }[]).find(
+    (p) => p.purpose === "resume",
+  )!.version;
+  expect(
+    (
+      await member.client.rpc("identity_grant_consent", {
+        p_purpose: "resume",
+        p_policy_version: version,
+      })
+    ).error,
+  ).toBeNull();
+  const reserved = await stack.privileged.rpc("identity_reserve_analysis", {
+    p_user: member.id,
+    p_feature: "resume",
+    p_resource_ref: resource,
+    p_input_version: inputVersion,
+    p_idempotency_key: `gateway-test-${crypto.randomUUID()}`,
+  });
+  expect(reserved.error).toBeNull();
+  const taskId = (reserved.data as { taskId: string }).taskId;
+  if (start)
+    expect(
+      (await stack.privileged.rpc("identity_start_task", { p_task: taskId })).error,
+    ).toBeNull();
+  return taskId;
+}
+
+beforeAll(async () => {
+  stack = await LocalFixtures.open();
+  owner = await stack.member();
+  other = await stack.member();
+  admin = await stack.member(true);
+});
+afterAll(async () => {
+  if (!stack) return;
+  await stack.sql.query("delete from public.ai_recipient_approvals where recipient = any($1)", [
+    [primary, upstream],
+  ]);
+  await stack.close();
+});
+
+it("keeps recipient approval administrator-only, audited and invisible to raw table reads", async () => {
+  const change = { purpose: "resume", recipient: primary, reason: "Reviewed synthetic test route" };
+  expect((await stack.request("identity/admin/ai-recipients", owner, "POST", change)).status).toBe(
+    403,
+  );
+  expect((await stack.request("identity/admin/ai-recipients", owner)).status).toBe(403);
+  expect((await stack.request("identity/admin/ai-recipients")).status).toBe(401);
+  expect(
+    (
+      await stack.request("identity/admin/ai-recipients", admin, "POST", {
+        ...change,
+        recipient: "Bad ID",
+      })
+    ).status,
+  ).toBe(400);
+  const approved = await stack.request("identity/admin/ai-recipients", admin, "POST", change);
+  expect(approved.status).toBe(201);
+  expect((await stack.request("identity/admin/ai-recipients", admin, "POST", change)).status).toBe(
+    409,
+  );
+  const listed = await (await stack.request("identity/admin/ai-recipients", admin)).json();
+  expect(listed.data.approvals).toEqual(
+    expect.arrayContaining([expect.objectContaining({ purpose: "resume", recipient: primary })]),
+  );
+  const audit = await stack.sql.query(
+    "select 1 from public.identity_audit where actor_id=$1 and action='ai.recipient_approved' and reason like $2",
+    [admin.id, `resume:${primary}%`],
+  );
+  expect(audit.rowCount).toBe(1);
+  const anonymous = createClient(stack.env.API_URL, stack.env.ANON_KEY, {
+    auth: { persistSession: false },
+  });
+  for (const client of [anonymous, owner.client, admin.client, stack.privileged])
+    for (const table of ["ai_recipient_approvals", "gateway_results", "gateway_attempts"])
+      expect((await client.from(table).select("*")).error).toBeTruthy();
+  for (const client of [owner.client, admin.client])
+    expect(
+      (
+        await client.rpc("gateway_admit", {
+          p_task: crypto.randomUUID(),
+          p_owner: owner.id,
+          p_purpose: "resume.wording",
+          p_input_version: "x",
+          p_recipients: [primary],
+        })
+      ).error,
+    ).toBeTruthy();
+});
+
+it("admits only a started, consented task for its exact owner, input version and approved recipients", async () => {
+  const taskId = await startedTask(owner);
+  const ok = await gateway().execute(
+    request(taskId, owner.id),
+    wordingSpec,
+    new AbortController().signal,
+  );
+  expect(ok).toMatchObject({ state: "succeeded", provider: primary });
+
+  const cases: [GatewayRequest, string][] = [
+    [request(taskId, other.id), "RF_FORBIDDEN"],
+    [request(taskId, owner.id, "resume-version:2"), "RF_FORBIDDEN"],
+    [request(crypto.randomUUID(), owner.id), "RF_FORBIDDEN"],
+  ];
+  for (const [input, code] of cases) {
+    const adapter = new FakeAdapter(primary, [{ text: good }]);
+    expect(
+      await gateway(adapter).execute(input, wordingSpec, new AbortController().signal),
+    ).toMatchObject({ state: "rejected", code });
+    expect(adapter.calls).toHaveLength(0);
+  }
+
+  const unapproved = new FakeAdapter(primary, [{ text: good }]);
+  const route = await gateway(unapproved, [primary, upstream]).execute(
+    request(taskId, owner.id),
+    wordingSpec,
+    new AbortController().signal,
+  );
+  expect(route).toMatchObject({ state: "rejected", code: "RF_RECIPIENT_NOT_APPROVED" });
+  expect(unapproved.calls).toHaveLength(0);
+
+  const queued = await startedTask(owner, "resume-version:queued", false);
+  expect(
+    await gateway().execute(
+      request(queued, owner.id, "resume-version:queued"),
+      wordingSpec,
+      new AbortController().signal,
+    ),
+  ).toMatchObject({ code: "RF_CONFLICT" });
+});
+
+it("stops publication when consent is revoked during the provider call", async () => {
+  const taskId = await startedTask(owner, "resume-version:revoke");
+  const adapter = new FakeAdapter(primary, () => ({ text: good }));
+  const slow = {
+    id: primary,
+    complete: async (call: Parameters<FakeAdapter["complete"]>[0], signal: AbortSignal) => {
+      expect(
+        (await owner.client.rpc("identity_revoke_consent", { p_purpose: "resume" })).error,
+      ).toBeNull();
+      return adapter.complete(call, signal);
+    },
+  };
+  const result = await gateway(slow as unknown as FakeAdapter).execute(
+    request(taskId, owner.id, "resume-version:revoke"),
+    wordingSpec,
+    new AbortController().signal,
+  );
+  expect(result).toMatchObject({ state: "stale", code: "RF_STALE", output: null });
+});
+
+it("records content-free results and attempts once and exports provider usage telemetry", async () => {
+  const taskId = await startedTask(other, "resume-version:record");
+  const adapter = new FakeAdapter(primary, [
+    { text: "not json", usage: { inputTokens: 40, outputTokens: 3 } },
+    { text: good, usage: { inputTokens: 55, outputTokens: 12 } },
+  ]);
+  const result = await gateway(adapter).execute(
+    request(taskId, other.id, "resume-version:record"),
+    wordingSpec,
+    new AbortController().signal,
+  );
+  expect(result.state).toBe("succeeded");
+  const recorder = new SupabaseGatewayRecorder(stack.privileged);
+  await recorder.record(result, new AbortController().signal);
+  await recorder.record(result, new AbortController().signal);
+  await expect(
+    recorder.record({ ...result, state: "stale" }, new AbortController().signal),
+  ).rejects.toMatchObject({ code: "RF_CONFLICT" });
+
+  const stored = await stack.sql.query("select * from public.gateway_results where task_id=$1", [
+    taskId,
+  ]);
+  expect(stored.rows[0]).toMatchObject({
+    state: "succeeded",
+    provider: primary,
+    input_tokens: "95",
+    output_tokens: "15",
+  });
+  const attempts = await stack.sql.query(
+    "select kind,outcome from public.gateway_attempts where task_id=$1 order by sequence",
+    [taskId],
+  );
+  expect(attempts.rows).toEqual([
+    { kind: "call", outcome: "invalid-json" },
+    { kind: "repair", outcome: "ok" },
+  ]);
+  const everything = JSON.stringify([stored.rows, attempts.rows]);
+  expect(everything).not.toContain("retrieval prototype");
+
+  const snapshot = telemetrySnapshotSchema.parse(
+    (await stack.privileged.rpc("telemetry_snapshot")).data,
+  );
+  expect(snapshot.gateway).toEqual(
+    expect.arrayContaining([
+      expect.objectContaining({
+        provider: primary,
+        calls: 2,
+        failures: 1,
+        inputTokens: 95,
+        outputTokens: 15,
+      }),
+    ]),
+  );
+
+  // Owner deletion cascades task-bound records.
+  await stack.sql.query("delete from public.identity_tasks where id=$1", [taskId]);
+  expect(
+    (await stack.sql.query("select 1 from public.gateway_attempts where task_id=$1", [taskId]))
+      .rowCount,
+  ).toBe(0);
+});
+
+it("revokes recipients with an audited reason so later requests are no longer admitted", async () => {
+  const change = { purpose: "resume", recipient: primary, reason: "Route retired" };
+  expect(
+    (
+      await stack.request("identity/admin/ai-recipients", admin, "DELETE", {
+        ...change,
+        reason: " ",
+      })
+    ).status,
+  ).toBe(400);
+  expect(
+    (await stack.request("identity/admin/ai-recipients", admin, "DELETE", change)).status,
+  ).toBe(200);
+  expect(
+    (await stack.request("identity/admin/ai-recipients", admin, "DELETE", change)).status,
+  ).toBe(404);
+  const taskId = await startedTask(other, "resume-version:after-revoke");
+  const adapter = new FakeAdapter(primary, [{ text: good }]);
+  expect(
+    await gateway(adapter).execute(
+      request(taskId, other.id, "resume-version:after-revoke"),
+      wordingSpec,
+      new AbortController().signal,
+    ),
+  ).toMatchObject({ code: "RF_RECIPIENT_NOT_APPROVED" });
+  expect(adapter.calls).toHaveLength(0);
+});

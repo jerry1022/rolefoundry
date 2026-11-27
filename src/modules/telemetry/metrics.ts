@@ -87,6 +87,21 @@ export function renderMetrics(input: TelemetrySnapshot) {
         item[field] === null ? [] : [{ labels: `catalog="${item.catalog}"`, value: item[field]! }],
       ),
     );
+  for (const [field, name, help] of [
+    ["calls", "calls_24h", "Recorded gateway provider attempts in the last 24 hours."],
+    ["failures", "failures_24h", "Gateway provider attempts that did not return valid output."],
+    ["fallbacks", "fallbacks_24h", "Policy-approved fallback attempts in the last 24 hours."],
+    ["inputTokens", "input_tokens_24h", "Provider-reported input tokens in the last 24 hours."],
+    ["outputTokens", "output_tokens_24h", "Provider-reported output tokens in the last 24 hours."],
+  ] as const)
+    gauge(
+      `rolefoundry_ai_${name}`,
+      help,
+      (snapshot.gateway ?? []).map((item) => ({
+        labels: `provider="${item.provider}"`,
+        value: item[field],
+      })),
+    );
   gauge(
     "rolefoundry_provider_integration_enabled",
     "AI provider integration is not enabled in this implementation.",

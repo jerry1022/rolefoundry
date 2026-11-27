@@ -1,4 +1,4 @@
-import type { GatewayPurpose, GatewayRequest, GatewayUsage } from "./model";
+import type { GatewayPurpose, GatewayRequest, GatewayResult, GatewayUsage } from "./model";
 
 export interface ChatMessage {
   role: "system" | "user";
@@ -46,6 +46,11 @@ export interface GatewayAuthority {
   ): Promise<{ admitted: true } | { admitted: false; code: string }>;
   /** Rechecked immediately before publication: owner, input version and task lease. */
   stillCurrent(request: GatewayRequest, signal: AbortSignal): Promise<boolean>;
+}
+
+/** Durable, content-free record of each execution (attempts, usage, outcome) for audit and spend. */
+export interface GatewayRecorder {
+  record(result: GatewayResult<unknown>, signal: AbortSignal): Promise<void>;
 }
 
 export interface GatewayClock {
