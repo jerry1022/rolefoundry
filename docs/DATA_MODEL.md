@@ -120,3 +120,7 @@ Completion clears contact hashes/captured invitation IDs, nulls operational prof
 ### Consolidated identity administration
 
 The existing invitation/quota tables remain authoritative. New administrator-only functions return bounded minimized pages; no contact hash or user relationship is exposed by the invitation directory. Unused-invitation revocation sets its expiry under the row lock used for activation and records a coded identity audit event; used records conflict. No new account-offboarding authority or table editor is introduced. Quota read DTOs preserve bigint IDs as decimal strings. Shared UI/client ports and the independent directory service/store are specified in [administrator setup](ADMIN_WORKSPACE_SETUP.md).
+
+### Invalidation delivery receipts
+
+`invalidation_deliveries` references exactly one profile event or dictionary version and a fixed consumer. Unique event/consumer pairs, eligibility timestamps, retained attempts, fenced leases, completion and one safe error code support atomic bounded dispatch/retry. Profile references cascade on owner/event removal; no private content is copied. RLS and revoked raw grants protect every role. Only the three service-only claim/apply/retry RPCs expose opaque leases; consumer/task helpers remain private. Producer triggers and migration catch-up populate receipts. See [version comparisons, transaction/locking policy and retention](INVALIDATION_SETUP.md).

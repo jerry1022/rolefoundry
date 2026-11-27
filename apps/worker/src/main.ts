@@ -18,6 +18,8 @@ import {
 } from "../../../src/modules/account-data/adapters/supabase";
 import { SupabaseAccountArchiveStorage } from "../../../src/modules/account-data/adapters/storage";
 import { ZipAccountArchive } from "../../../src/modules/account-data/adapters/archive";
+import { InvalidationDispatcher } from "../../../src/modules/invalidation/dispatcher";
+import { SupabaseInvalidationStore } from "../../../src/modules/invalidation/adapters/supabase";
 import { createClient } from "@supabase/supabase-js";
 import { z } from "zod";
 import { WorkerPresence } from "../../../src/modules/tasks/presence";
@@ -111,6 +113,7 @@ const deletionJanitor = new LateDeletionJanitor(
   new SupabaseDeletionFiles(client),
 );
 const controller = new AbortController();
+const invalidationDispatcher = new InvalidationDispatcher(new SupabaseInvalidationStore(client));
 for (const signal of ["SIGINT", "SIGTERM"] as const) process.on(signal, () => controller.abort());
 const feedRegistry = deploymentFeedRegistry(),
   feedStore = new SupabaseFeedExecutionStore(client),
@@ -188,6 +191,16 @@ const presenceTimer = setInterval(() => void presence.report("active"), 10000);
 try {
   while (!controller.signal.aborted) {
     try {
+      try {
+        const result = await invalidationDispatcher.tick(controller.signal);
+        if (result.completed || result.canceled)
+          console.log(JSON.stringify({ event: "invalidation.dispatched", ...result }));
+      } catch {
+        if (!controller.signal.aborted)
+          console.error(
+            JSON.stringify({ event: "invalidation.unavailable", code: "RF_UNAVAILABLE" }),
+          );
+      }
       if (Date.now() >= nextFeedScheduleAt) {
         nextFeedScheduleAt = Date.now() + 60000;
         try {

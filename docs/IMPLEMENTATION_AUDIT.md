@@ -73,7 +73,7 @@ The integration suite runs against actual local GoTrue, PostgREST, PostgreSQL an
 ## 12 — Background worker and tasks
 
 - Design: [12-worker-tasks.md](design/12-worker-tasks.md).
-- Status: Durable pgmq engine, queue adapter and actual assessment, matching, learning, resume and ingestion handlers plus resumable resume/account-artifact janitors and private account export/erasure execution implemented/verified. [Administrator queue/lease/retry diagnostics and independent worker presence](OPERATIONS_SETUP.md) are implemented. Remaining provider handlers, invalidation dispatch and hosted telemetry integration are still pending; do not count the entire module complete.
+- Status: Durable pgmq engine, queue adapter and actual assessment, matching, learning, resume and ingestion handlers plus resumable resume/account-artifact janitors and private account export/erasure execution implemented/verified. [Administrator queue/lease/retry diagnostics and independent worker presence](OPERATIONS_SETUP.md) are implemented. [Durable profile/dictionary invalidation dispatch](INVALIDATION_SETUP.md) now cancels obsolete queued work through matching/learning/resume contracts with fenced, retryable receipts. Remaining provider handlers/reservations/concurrency and hosted telemetry integration are still pending; do not count the entire module complete.
 - Required acceptance scope: Simulate duplicate delivery, lease expiry, crash before/after commit, provider timeout, poison payload, stale input, owner deletion and graceful shutdown. Verify that queue age, lease age, retries and terminal failures are observable.
 
 ## 13 — Administration and operations
