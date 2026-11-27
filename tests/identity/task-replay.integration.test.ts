@@ -814,7 +814,8 @@ it("supports explicit mobile recovery, lost-response retry and inspection of the
   } finally {
     await browser.close();
   }
-});
+  // A full mobile browser journey against a cold production server; match career-journey.
+}, 60000);
 it("replays a committed private PDF and refuses a source whose stored object disappeared", async () => {
   const pdf = new PDFDocument(),
     chunks: Buffer[] = [];
