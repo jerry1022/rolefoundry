@@ -107,6 +107,8 @@ export const policySchema = z.object({
   purpose: featureSchema,
   version: z.string(),
   description: z.string(),
+  /** Reviewed AI recipients for this exact policy version; empty means nothing is sent. */
+  recipients: z.array(z.string()).max(16).default([]),
 });
 export const consentSchema = z.object({
   id: z.uuid(),

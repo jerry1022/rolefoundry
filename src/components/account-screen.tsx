@@ -317,6 +317,15 @@ export function AccountScreen() {
                         </span>
                         <h3>{t(purposeTitles[policy.purpose])}</h3>
                         <p>{policy.description}</p>
+                        <p className="consent-recipients">
+                          {policy.recipients.length
+                            ? t("Approved recipients: {recipients}", {
+                                recipients: policy.recipients.join(", "),
+                              })
+                            : t(
+                                "No AI recipient is approved for this version, so nothing is sent.",
+                              )}
+                        </p>
                         <small>{t("Policy version {version}", { version: policy.version })}</small>
                         <button
                           className={`button ${granted ? "secondary" : "primary"}`}

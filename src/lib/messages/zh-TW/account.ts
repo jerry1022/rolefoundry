@@ -163,4 +163,7 @@ export const account = {
   "{feature}: {limit} per week": "{feature}：每週 {limit} 次",
   "From {effectiveFrom} · policy {id}": "自 {effectiveFrom} 起 · 政策 {id}",
   "Load older quota policies": "載入較早的額度政策",
+  "Approved recipients: {recipients}": "已核准的接收方：{recipients}",
+  "No AI recipient is approved for this version, so nothing is sent.":
+    "此版本尚未核准任何 AI 接收方，因此不會傳送任何資料。",
 } satisfies Messages;

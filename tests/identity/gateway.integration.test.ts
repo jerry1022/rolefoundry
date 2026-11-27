@@ -410,3 +410,42 @@ it("admits semantic ranking only under its own registered matching consent", asy
     });
   }
 });
+
+it("shows approved recipients for exactly the current consent version", async () => {
+  const policies = async () =>
+    (await owner.client.rpc("identity_policies")).data as {
+      purpose: string;
+      version: string;
+      description: string;
+      recipients: string[];
+    }[];
+  const before = await policies();
+  expect(
+    before.every((policy) => policy.description.includes("approved for this policy version")),
+  ).toBe(true);
+  const recipient = `fake-shown-${suffix}`;
+  const change = { purpose: "resume", recipient, reason: "Reviewed synthetic route" };
+  expect((await stack.request("identity/admin/ai-recipients", admin, "POST", change)).status).toBe(
+    201,
+  );
+  try {
+    expect((await policies()).find((policy) => policy.purpose === "resume")!.recipients).toContain(
+      recipient,
+    );
+    expect(
+      (await policies()).find((policy) => policy.purpose === "assessment")!.recipients,
+    ).not.toContain(recipient);
+    // An approval for another version is not shown or usable for the current one.
+    await stack.sql.query(
+      "update public.ai_recipient_approvals set policy_version='old-version' where recipient=$1",
+      [recipient],
+    );
+    expect(
+      (await policies()).find((policy) => policy.purpose === "resume")!.recipients,
+    ).not.toContain(recipient);
+  } finally {
+    await stack.sql.query("delete from public.ai_recipient_approvals where recipient=$1", [
+      recipient,
+    ]);
+  }
+});
