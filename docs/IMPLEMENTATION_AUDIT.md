@@ -85,7 +85,7 @@ The integration suite runs against actual local GoTrue, PostgREST, PostgreSQL an
 ## Cross-module completion gates
 
 - [ ] All thirteen designs implemented and independently reviewed against their responsibility, data, flow, failure and acceptance sections.
-- [ ] End-to-end identity → private evidence → published job → assessment → matching → reviewed learning → confirmed resume → tracking journey uses persistent services.
+- [x] End-to-end identity → private evidence → published job → assessment → matching → reviewed learning → confirmed resume → tracking journey uses persistent services. The [local deterministic journey](PERSISTENT_JOURNEY.md) verifies one account's real services, actual handlers/PDF, fresh mobile reads, foreign-reference denial and deletion propagation. Its owned-fixture task leasing does not establish independent worker acquisition or provider/hosted acceptance; those remain separate gates below.
 - [ ] Worker/gateway integration exercises real durable dispatch, retries, authorization/version guards and deletion.
 - [ ] Provider adapters and document processing meet their schema/reference/fact-preservation limits.
 - [ ] Administration, source permissions, account export/deletion, telemetry and recovery runbooks are executable and tested.
