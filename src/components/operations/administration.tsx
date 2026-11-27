@@ -11,14 +11,18 @@ import type {
   OperationsQuery,
 } from "@/modules/operations/model";
 import { operationsAlerts } from "@/modules/operations/model";
+import { TaskReplayControl } from "./replay-control";
+import type { TaskReplayClient } from "@/modules/operations/replay";
 import { taskKinds } from "@/modules/tasks/model";
 import { ApplicationError } from "@/modules/platform/errors";
 export function OperationsAdministration({
   client,
   isAdmin,
+  replayClient,
 }: {
   client: OperationsClient;
   isAdmin: () => Promise<boolean>;
+  replayClient?: TaskReplayClient;
 }) {
   const [access, setAccess] = useState<"checking" | "allowed" | "denied">("checking"),
     [open, setOpen] = useState(false),
@@ -370,6 +374,15 @@ export function OperationsAdministration({
                 <dt>Safe failure code</dt>
                 <dd>{task.errorCode || "none"}</dd>
               </dl>
+              {replayClient && (
+                <TaskReplayControl
+                  key={task.id}
+                  taskId={task.id}
+                  client={replayClient}
+                  onUnavailable={failed}
+                  onInspect={(id) => void perform(() => select(id))}
+                />
+              )}
               <h4>Task event history</h4>
               {events?.data.length === 0 && <p>No retained events.</p>}
               <ul>

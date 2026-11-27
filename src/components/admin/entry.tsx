@@ -6,12 +6,14 @@ import { PageHeading } from "../ui/page-heading";
 import { createBrowserTransport } from "@/modules/platform/browser-http";
 import { createImportAdminClient } from "@/modules/ingestion/adapters/http-client";
 import { createFeedAdminClient } from "@/modules/ingestion/adapters/feed-client";
+import { createTaskReplayClient } from "@/modules/operations/adapters/replay-client";
 import { createOperationsClient } from "@/modules/operations/adapters/http-client";
 import { ImportAdministration } from "../ingestion/administration";
 import { OperationsAdministration } from "../operations/administration";
 const client = createImportAdminClient(),
   feedClient = createFeedAdminClient(),
   operations = createOperationsClient(),
+  replay = createTaskReplayClient(),
   deletion = createDeletionAdminClient(),
   request = createBrowserTransport();
 async function isAdmin() {
@@ -31,7 +33,7 @@ export function AdminWorkspace() {
         title="Review sources and observe background work."
         description="Verified administrator sessions manage authorized imports and inspect operational metadata. Publication always follows the domain review workflow."
       />
-      <OperationsAdministration client={operations} isAdmin={isAdmin} />
+      <OperationsAdministration client={operations} replayClient={replay} isAdmin={isAdmin} />
       <DeletionAdministration client={deletion} isAdmin={isAdmin} />
       <ImportAdministration client={client} feedClient={feedClient} isAdmin={isAdmin} />
     </>

@@ -106,7 +106,7 @@ All endpoints are read-only, require a current administrator session at both HTT
 | GET `/api/v1/admin/operations/tasks/{id}/events` | Optional opaque `cursor`; `{data: event[], nextCursor}`; fixed 20, descending bigint sequence |
 | GET `/api/v1/admin/operations/workers` | `{data: {observedAt,data: worker[],truncated}}`; latest 100, active/draining/stopped/stale observations |
 
-Unknown/duplicate query parameters, malformed identifiers/cursors, or cursor reuse across filters/tasks return 400. Cursors do not convey authority; every page rechecks the current role. Inputs, owner identities, source/result references, lease tokens, messages and untrusted classification strings are excluded. No replay endpoint is implemented.
+Unknown/duplicate query parameters, malformed identifiers/cursors, or cursor reuse across filters/tasks return 400. Cursors do not convey authority; every page rechecks the current role. Inputs, owner identities, source/result references, lease tokens, messages and untrusted classification strings are excluded. The separate [task recovery endpoints](TASK_REPLAY_SETUP.md#api-and-failure-behavior) require explicit administrator intent and repeat domain checks; diagnostic reads never replay work.
 
 ## Private account archives
 
@@ -137,3 +137,7 @@ Status contains request ID, status (`queued`, `cleaning-files`, `removing-accoun
 ### Recovery-only ledger RPC
 
 `recovery_apply_deletion_ledger(p_run text,p_ledger jsonb)` is not an application/browser endpoint. Its service-only ACL and exact disposable database/run/comment check reject live databases and browser roles. The version-1 input, atomic conflict rules, minimized result/digests, missing-receipt-hash behavior and rehearsal commands are specified in [the recovery protocol](OPERATIONS_RECOVERY.md#apply-newer-deletion-intent-before-reconnecting-users). Live and restored erasure share a service-only audit minimization helper; neither operation restores sign-in access.
+
+### Administrator task recovery
+
+GET `/api/v1/admin/operations/tasks/{taskId}/replay` returns minimized eligibility and an existing child task ID. POST to the same path accepts only `{requestId: UUID,reason}` with the four coded recovery reasons, same-origin JSON and a 512-byte bound, returning `202 {data: {previousTaskId,taskId}}`. Current administrator authorization is repeated in the service and database; failed eligibility/conflicting request identity is 409. The mutation atomically creates a new task and rebinds the original accepted domain input without resetting the previous attempt. See [per-kind checks, idempotency, privacy and limits](TASK_REPLAY_SETUP.md).

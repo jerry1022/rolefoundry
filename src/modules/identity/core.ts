@@ -53,6 +53,7 @@ export async function resolveActor(client: SupabaseClient): Promise<Actor> {
 const adminActions = new Set([
   "account:delete-recovery",
   "operations:read",
+  "operations:replay",
   "admin:invitations",
   "admin:quotas",
   "admin:refunds",
