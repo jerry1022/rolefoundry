@@ -115,4 +115,5 @@ export const admin = {
   "Load more courses": "載入更多課程",
   "Practice prompt (Traditional Chinese)": "練習題目（繁體中文）",
   "Completion criteria (Traditional Chinese)": "完成標準（繁體中文）",
+  "Skill extraction calibration": "技能擷取校準",
 } satisfies Messages;

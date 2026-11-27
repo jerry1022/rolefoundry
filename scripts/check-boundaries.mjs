@@ -65,7 +65,7 @@ for (const file of [
       file,
     ) ||
     /^src\/modules\/invalidation\/(model|ports|dispatcher)\.ts$/.test(file) ||
-    /src\/modules\/((?:profile|jobs|skills|assessment|tasks|matching|learning|resume|applications|ingestion|operations|account-data|account-deletion)\/(model|ports|service|specializations|catalog|worker|rules|handler|report-state|planner|plan-state|document-state|cleanup|record-state|input|csv|normalizer|review-service|feed-service|feed-handler|presence|replay|short-answer|short-answer-examples))\.ts$/.test(
+    /src\/modules\/((?:profile|jobs|skills|assessment|tasks|matching|learning|resume|applications|ingestion|operations|account-data|account-deletion)\/(model|ports|service|specializations|catalog|worker|rules|handler|report-state|planner|plan-state|document-state|cleanup|record-state|input|csv|normalizer|review-service|feed-service|feed-handler|presence|replay|short-answer|short-answer-examples|skill-extraction|skill-extraction-examples))\.ts$/.test(
       file,
     );
   const component =

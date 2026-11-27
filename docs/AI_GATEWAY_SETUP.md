@@ -76,9 +76,10 @@ The policy rejects unknown fields and purposes, a fallback on the same adapter, 
 npm run gateway:eval                       # offline deterministic baseline, no network
 ROLEFOUNDRY_AI_EVAL_CONFIRM=synthetic-only ROLEFOUNDRY_AI_POLICY='…' OPENAI_API_KEY=… npm run gateway:eval -- --live
 npm run gateway:calibrate                  # short-answer agreement against reviewed examples; exit 1 below the gate
+npm run gateway:skills                     # skill-extraction precision/recall against reviewed facts; exit 1 below the gate
 ```
 
-The report contains counts, per-case state/code, zh-TW script match, p50/max latency and token usage. It never prints suggestions or input. Live mode sends only the fixed synthetic set and requires the confirmation variable. Compare candidate providers on the same set before choosing one, Short-answer grading has its own [calibration harness and enablement gate](ASSESSMENT_SETUP.md#short-answer-calibration-not-enabled); add reviewed skill-extraction cases before enabling that purpose. Passing the offline baseline does not evaluate any provider.
+The report contains counts, per-case state/code, zh-TW script match, p50/max latency and token usage. It never prints suggestions or input. Live mode sends only the fixed synthetic set and requires the confirmation variable. Compare candidate providers on the same set before choosing one, Short-answer grading has its own [calibration harness and enablement gate](ASSESSMENT_SETUP.md#short-answer-calibration-not-enabled); skill extraction has its own [precision/recall gate](RESUME_SETUP.md#skill-extraction-calibration-not-enabled). Passing the offline baseline does not evaluate any provider.
 
 ## Verify
 

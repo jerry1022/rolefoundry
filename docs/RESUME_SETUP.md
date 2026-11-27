@@ -62,6 +62,21 @@ A revision request may include `"wording": true`. The deterministic `resume-orde
 
 The worker reads `ROLEFOUNDRY_AI_POLICY` (a `resume.wording` route) and provider keys. Without a route, requests are accepted and the proposal reports `RF_GATEWAY_DISABLED`.
 
+## Skill-extraction calibration (not enabled)
+
+Model-assisted skill extraction exists as a grounded core plus a calibration harness. It is not connected to the resume studio, and owners would still confirm every suggested link.
+
+- The `resume.skill-extraction` gateway purpose (`skill-extraction-v1`) receives the reviewed skill list and confirmed facts as data. For each fact it may assign listed skills, and each skill must quote a span of **that** fact (compared after NFKC, whitespace and case normalization). Unlisted skills, invented quotes, repeated facts or skills, and skill IDs used as facts all fail validation.
+- `src/modules/resume/skill-extraction-examples.ts` holds 36 synthetic, reviewer-labelled facts across six English and Traditional Chinese résumés. It includes hard negatives: job titles alone, tool lists without described work, keyword stuffing and an embedded instruction to tag every skill.
+- The report gives micro precision, recall and F1 over fact-skill pairs. A failed batch counts all of its reviewed pairs as missed. The enablement gate requires at least 30 facts, precision of at least 0.9, recall of at least 0.7 and no ungraded batches. Precision is weighted above recall because a wrong suggested skill is worse than a missing one.
+
+```bash
+npm run gateway:skills                     # offline keyword baseline; must fail the gate
+ROLEFOUNDRY_AI_EVAL_CONFIRM=synthetic-only ROLEFOUNDRY_AI_POLICY='…' OPENAI_API_KEY=… npm run gateway:skills -- --live
+```
+
+The offline keyword baseline reaches precision 0.56 and recall 0.17. Tool lists and keyword stuffing produce false positives, and described work without the skill's name is missed, which is exactly what calibration must measure. Requests map to the existing `resume` consent and allowance (migration `20261114370000`).
+
 ## Models and planning rules
 
 `content.facts` contains `{id, text, kind, state, skillIds, sourceBlockId}`; `content.sections` contains `{id, heading, factIds}`. Every fact belongs to exactly one nonempty section. `sourceBlockId` is a block from this source's extraction or null for an owner-added statement. Kinds are `experience`, `project`, `education`, `credential`, `skill-claim`, `contact`, `other`. States are `completed`, `in-progress`, `learning`, `unspecified`. Completion is always owner-reported.
