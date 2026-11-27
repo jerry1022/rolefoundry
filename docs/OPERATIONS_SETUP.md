@@ -48,10 +48,12 @@ Responses contain task IDs/kinds/state, attempts/timestamps, safe allowlisted er
 
 See [the executable isolated database/queue recovery rehearsal](OPERATIONS_RECOVERY.md). Diagnostics add no mutation control: replay must be a separately audited **domain** request that revalidates current owner/input/source permissions and preserves the original attempt. Never reset a task row or resend a queue message as an operational shortcut.
 
-Module 13 remains partial: consolidated skills/question/invitation/quota administration, authorized domain replay, restore deletion replay, external telemetry/alerts, and hosted/clean-cluster/Storage-object restore are outstanding. Source administration remains available through its [existing domain workflow](INGESTION_SETUP.md).
+Module 13 remains partial: consolidated skills/question/invitation/quota administration, authorized domain replay, authoritative off-host ledger delivery/hosted cutover, external telemetry/alerts, and hosted/clean-cluster/Storage-object restore are outstanding. Source administration remains available through its [existing domain workflow](INGESTION_SETUP.md).
 
 ## Browser evidence
 
 The local acceptance suite captures the actual private administrator workspace with synthetic task metadata: [desktop queue/lease observations](assets/operations-admin-desktop.png) and [mobile task detail](assets/operations-admin-mobile.png). These are application screenshots, not live job/provider or production availability evidence.
 
 Private `account.export` jobs and their resumable artifact janitor are now implemented; see [account data setup](ACCOUNT_DATA_SETUP.md). [Accepted account erasure](ACCOUNT_DELETION_SETUP.md) now has an executable handler and a separate administrator recovery panel. It uses persistent retry policy; other tasks remain bounded. At least three erasure retry events/24 hours produce a diagnostic notice.
+
+The [local recovery overlay](OPERATIONS_RECOVERY.md) now applies newer deletion intent to an ownership-checked disposable database and verifies actual isolated Auth/REST/Storage erasure of one controlled identity/PDF. This does not reconnect general workers or establish hosted backup delivery.

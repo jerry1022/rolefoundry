@@ -18,6 +18,7 @@ jobs:
       - run: npm ci
       - run: npm run typecheck
       - run: npm test
+      - run: npm run recovery:test
       - run: npm run resume:test
       - run: npm run docs:check
       - run: npm run architecture:check
@@ -50,6 +51,10 @@ jobs:
         run: npm run recovery:local
       - name: Verify failed recovery cleans its owned artifacts
         run: npm run recovery:local -- --verify-failure-cleanup
+      - name: Verify post-backup deletion against isolated services
+        run: npm run recovery:local -- --verify-deletion-replay
+      - name: Verify isolated recovery service failure cleanup
+        run: npm run recovery:local -- --verify-deletion-replay-failure
       - name: Stop local identity services
         if: always()
         run: npm run identity:stop
