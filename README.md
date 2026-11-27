@@ -171,6 +171,7 @@ npm run typecheck
 npm test
 npm run architecture:check
 npm run i18n:check
+npm run theme:check
 npm run build
 npx playwright install chromium
 npm run test:e2e

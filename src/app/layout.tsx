@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Shell } from "@/components/shell";
 import "./globals.css";
+import "./theme-dark.css";
+import { themeBootScript } from "@/lib/theme";
 export const metadata: Metadata = {
   title: { default: "RoleFoundry — Your next chapter in AI", template: "%s | RoleFoundry" },
   description:
@@ -10,7 +12,10 @@ export const metadata: Metadata = {
 };
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: themeBootScript }} />
+      </head>
       <body>
         <Shell>{children}</Shell>
       </body>

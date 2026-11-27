@@ -39,6 +39,10 @@ export const shell = {
   "Sample roles. Real learning possibilities.": "範例職缺，真實的學習可能。",
   "Skip to content": "跳至主要內容",
   Language: "語言",
+  "Color theme": "色彩主題",
+  "Match system theme": "跟隨系統",
+  "Light theme": "淺色主題",
+  "Dark theme": "深色主題",
   "View all": "查看全部",
   "Close details": "關閉詳細資訊",
 } satisfies Messages;

@@ -265,3 +265,25 @@ test("Traditional Chinese persists across reloads, formats salaries and fits mob
   await expect(page.locator("html")).toHaveAttribute("lang", "en");
   await expect(page.locator("h1")).toHaveText("Keep your possibilities moving.");
 });
+
+test("dark theme applies before paint, persists and follows the system setting", async ({
+  page,
+}) => {
+  await page.emulateMedia({ colorScheme: "dark" });
+  await page.goto("/");
+  // System preference by default.
+  await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
+  const theme = page.getByRole("group", { name: "Color theme" });
+  await theme.getByRole("button", { name: "Light theme" }).click();
+  await expect(page.locator("html")).toHaveAttribute("data-theme", "light");
+  await page.reload();
+  // The stored choice is applied by the boot script on reload, overriding the OS setting.
+  await expect(page.locator("html")).toHaveAttribute("data-theme", "light");
+  await theme.getByRole("button", { name: "Dark theme" }).click();
+  const background = await page.evaluate(() => getComputedStyle(document.body).backgroundColor);
+  expect(background).not.toBe("rgb(243, 245, 239)");
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/jobs/");
+  await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+});

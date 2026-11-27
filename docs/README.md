@@ -16,6 +16,8 @@ RoleFoundry is an open-source AI career workspace. This documentation separates 
 
 - [Skill dictionary](SKILL_DICTIONARY_SETUP.md): bilingual concepts, aliases, immutable versions and reviewed merges.
 
+- [Theming](THEMING.md): light/dark/system themes and the generated dark stylesheet.
+
 - [Localization](LOCALIZATION.md): English/Traditional Chinese UI, `Intl` formatting and the translation workflow.
 
 - [AI Gateway core](AI_GATEWAY_SETUP.md): routing policy, bounded retry/fallback/repair, reference checks and bilingual evaluation.
