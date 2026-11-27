@@ -1,7 +1,10 @@
 import { readFileSync } from "node:fs";
-import { describe, expect, it } from "vitest";
-import { translate } from "../../src/lib/i18n";
+import { beforeAll, describe, expect, it } from "vitest";
+import { loadMessages, translate } from "../../src/lib/i18n";
 import { fixedMatchingText, matchingText } from "../../src/components/matching/matching-text";
+
+// The zh-TW catalogue is loaded on demand, as in the browser.
+beforeAll(() => loadMessages("zh-TW"));
 
 const zh = (source: string, vars?: Record<string, string | number>) =>
   translate("zh-TW", source, vars);

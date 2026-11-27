@@ -5,10 +5,11 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from "react";
-import { zhTW } from "./messages/zh-TW/index";
+import type { Messages } from "./messages/zh-TW/types";
 
 export const locales = ["en", "zh-TW"] as const;
 export type Locale = (typeof locales)[number];
@@ -21,9 +22,27 @@ type Vars = Record<string, string | number>;
  */
 export const msg = (source: string) => source;
 
-/** English source strings are the keys; a missing translation falls back to English. */
+/**
+ * Loaded catalogues. English is the source text, so only zh-TW is fetched, on demand: English
+ * visitors never download it, and the provider switches locale only after it has loaded.
+ */
+const catalogues: Partial<Record<Locale, Messages>> = {};
+let pending: Promise<Messages> | null = null;
+
+/** Loads (once) the messages for a locale; resolves immediately for English. */
+export async function loadMessages(locale: Locale) {
+  if (locale === "en" || catalogues[locale]) return;
+  pending ??= import("./messages/zh-TW/index").then((module) => module.zhTW);
+  try {
+    catalogues[locale] = await pending;
+  } finally {
+    pending = null;
+  }
+}
+
+/** English source strings are the keys; a missing (or not yet loaded) translation falls back. */
 export function translate(locale: Locale, source: string, vars?: Vars) {
-  const template = locale === "zh-TW" ? (zhTW[source] ?? source) : source;
+  const template = locale === "zh-TW" ? (catalogues["zh-TW"]?.[source] ?? source) : source;
   return vars
     ? template.replace(/\{(\w+)\}/g, (match: string, name: string) =>
         name in vars ? String(vars[name]) : match,
@@ -66,25 +85,40 @@ const I18nContext = createContext<Context | null>(null);
 export function LocaleProvider({ children }: { children: ReactNode }) {
   // Static export renders English first; the stored preference is applied after hydration.
   const [locale, setState] = useState<Locale>("en");
+  // The most recent request wins if a slow catalogue load finishes after a newer choice.
+  const requested = useRef<Locale>("en");
+  const apply = useCallback(async (next: Locale) => {
+    requested.current = next;
+    try {
+      await loadMessages(next);
+    } catch {
+      // The catalogue could not load (offline); stay in the current language.
+      return;
+    }
+    if (requested.current === next) setState(next);
+  }, []);
   useEffect(() => {
     try {
       const stored = localStorage.getItem(KEY);
-      if (stored === "en" || stored === "zh-TW") setState(stored);
+      if (stored === "en" || stored === "zh-TW") void apply(stored);
     } catch {
       // Storage may be unavailable; English remains usable.
     }
-  }, []);
+  }, [apply]);
   useEffect(() => {
     document.documentElement.lang = locale;
   }, [locale]);
-  const setLocale = useCallback((next: Locale) => {
-    setState(next);
-    try {
-      localStorage.setItem(KEY, next);
-    } catch {
-      // Preference lasts for this session only.
-    }
-  }, []);
+  const setLocale = useCallback(
+    (next: Locale) => {
+      void apply(next);
+      try {
+        localStorage.setItem(KEY, next);
+      } catch {
+        // Preference lasts for this session only.
+      }
+    },
+    [apply],
+  );
   const value = useMemo<Context>(
     () => ({
       locale,

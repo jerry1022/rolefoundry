@@ -37,3 +37,7 @@ Still English, by design:
 - Enum codes shown verbatim (for example task, report and review states), ISO dates (`YYYY-MM-DD`), explicitly UTC timestamps, and typed confirmation phrases such as `DELETE`.
 
 English output is byte-identical to the pre-localization UI, so English plural quirks such as "1 years" were kept. Fixing them is an English copy change, separate from localization.
+
+## Loading
+
+English source strings are the keys, so English needs no catalogue. The zh-TW catalogue (about 52 KB gzip) is a separate chunk loaded on demand by `loadMessages`. The locale provider switches to zh-TW only after it has loaded, a stale load cannot override a newer choice, and a failed load keeps the current language. English visitors never download it. Code that calls `translate("zh-TW", …)` outside the provider, such as unit tests, must `await loadMessages("zh-TW")` first.
