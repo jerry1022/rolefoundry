@@ -90,10 +90,26 @@ docker run --rm --env-file /private/path/worker.env rolefoundry-worker
 
 The worker image installs runtime dependencies, uses a non-root user and is independent of the web image. Node's `react-server` condition resolves the server-only marker outside Next. Vercel hosts web/API only; deploy the long-running worker separately. Apply additive migrations through a reviewed deployment process before enabling the server configuration. Do not apply schema changes to hosted databases from an unreviewed PR.
 
+## Short-answer calibration (not enabled)
+
+Structured short-answer grading exists as a core plus a calibration harness. No learner answer is ever sent: no API, worker path or screen calls it until a provider route passes the enablement gate on reviewed examples and the feature has its own review.
+
+- `src/modules/assessment/short-answer.ts` builds a minimized gateway request with each rubric criterion as a `criterion` segment and the answer as an `answer` data segment. The score is deterministic: met criteria multiplied by their reviewed weights.
+- The `assessment.short-answer` gateway purpose (`short-answer-v1` template) returns one verdict per criterion. A met verdict must quote a span that appears in the answer (compared after NFKC, whitespace and case normalization, and at least 3 characters long); an unmet verdict carries no quote. Output that skips, repeats or invents a criterion fails validation, so the model cannot credit reasoning the learner did not write.
+- `src/modules/assessment/short-answer-examples.ts` holds 32 synthetic, reviewer-labelled English and Traditional Chinese answers across four rubrics. It includes keyword stuffing, swapped definitions, implicit answers and an embedded instruction to mark every criterion met. Every label for a met criterion records the reviewed evidence span.
+- The calibration report gives criterion agreement, Cohen's kappa for met versus not met, mean absolute score error and ungraded cases. Ungraded cases count as disagreement. The enablement gate requires at least 30 examples, agreement of at least 0.85, kappa of at least 0.7 and mean score error of at most 0.15.
+
+```bash
+npm run gateway:calibrate                  # offline floor: every criterion unmet, must fail the gate
+ROLEFOUNDRY_AI_EVAL_CONFIRM=synthetic-only ROLEFOUNDRY_AI_POLICY='…' OPENAI_API_KEY=… npm run gateway:calibrate -- --live
+```
+
+The command exits with 1 when the gate fails. The offline floor reaches 0.58 agreement and kappa 0, which shows that agreement alone is inflated by the many unmet labels and that kappa is the binding check. Requests map to the existing `assessment` consent and weekly allowance (migration `20261114290000`). Passing the gate on this synthetic set is necessary but not sufficient: a public release still needs reviewed rubrics for real questions, a larger human-labelled set from consenting pilot learners and the owner-visible appeal path in the design.
+
 ## Verification and remaining gates
 
 `npm run identity:test` runs actual local Auth/PostgREST/PostgreSQL, a production Next server, a real Node worker and Chromium. Assessment coverage includes all tracks/repeat avoidance, stale/partial/invalid drafts, concurrent idempotent submit, RLS/confidentiality, immutable question versions, scenario provenance, real grading, retries, expired/stale leases, crash-after-commit, owner deactivation/deletion, stale input, poison messages, safe metrics, mobile autosave/resume/polling and administrator author/review/retire. Unit tests exercise injected service authorization, scoring and worker cancellation/timeouts.
 
-These tests do not establish expert content calibration, accessibility certification, load capacity, hosted credentials/recovery or short-answer/model agreement. An operator must populate and review suitable questions before releasing the preview. AI short answers remain gated on module 11, explicit provider consent/budget reservation and a separately reviewed evaluation set.
+These tests do not establish expert content calibration, accessibility certification, load capacity, hosted credentials/recovery or short-answer/model agreement. An operator must populate and review suitable questions before releasing the preview. AI short answers remain disabled: the [calibration harness](#short-answer-calibration-not-enabled) exists, but live calibration on an approved provider, real reviewed rubrics and a learner-facing flow remain gates.
 
 Queue references: [Supabase pgmq guide](https://supabase.com/docs/guides/queues/pgmq), [Queues API](https://supabase.com/docs/guides/queues/api).

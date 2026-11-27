@@ -8,7 +8,13 @@ import {
   SupabaseGatewayRecorder,
 } from "../../src/modules/gateway/adapters/supabase";
 import { parseGatewayPolicy } from "../../src/modules/gateway/policy";
-import { gatewayTemplates, rankSpec, wordingSpec } from "../../src/modules/gateway/recipes";
+import {
+  gatewayTemplates,
+  rankSpec,
+  shortAnswerSpec,
+  wordingSpec,
+} from "../../src/modules/gateway/recipes";
+import { shortAnswerRequest } from "../../src/modules/assessment/short-answer";
 import type { GatewayRequest } from "../../src/modules/gateway/model";
 import { telemetrySnapshotSchema } from "../../src/modules/telemetry/model";
 
@@ -403,6 +409,90 @@ it("admits semantic ranking only under its own registered matching consent", asy
       result,
       new AbortController().signal,
     );
+  } finally {
+    await stack.request("identity/admin/ai-recipients", admin, "DELETE", {
+      ...change,
+      reason: "Test cleanup",
+    });
+  }
+});
+
+it("admits short-answer calibration requests under the assessment consent and records them", async () => {
+  const member = await stack.member();
+  const version = (
+    (await member.client.rpc("identity_policies")).data as { purpose: string; version: string }[]
+  ).find((policy) => policy.purpose === "assessment")!.version;
+  expect(
+    (
+      await member.client.rpc("identity_grant_consent", {
+        p_purpose: "assessment",
+        p_policy_version: version,
+      })
+    ).error,
+  ).toBeNull();
+  const reserved = await stack.privileged.rpc("identity_reserve_analysis", {
+    p_user: member.id,
+    p_feature: "assessment",
+    p_resource_ref: crypto.randomUUID(),
+    p_input_version: "attempt:1",
+    p_idempotency_key: `gateway-test-${crypto.randomUUID()}`,
+  });
+  const taskId = (reserved.data as { taskId: string }).taskId;
+  expect((await stack.privileged.rpc("identity_start_task", { p_task: taskId })).error).toBeNull();
+  const recipient = `fake-grade-${suffix}`;
+  const change = { purpose: "assessment", recipient, reason: "Reviewed synthetic grading route" };
+  expect((await stack.request("identity/admin/ai-recipients", admin, "POST", change)).status).toBe(
+    201,
+  );
+  try {
+    const grader = new AIGateway({
+      policy: parseGatewayPolicy(
+        JSON.stringify({
+          routes: {
+            "assessment.short-answer": {
+              primary: { adapter: recipient, model: "fake-model", recipients: [recipient] },
+              deadlineMs: 5000,
+              primaryAttempts: 1,
+              maxInputChars: 4000,
+              maxOutputTokens: 200,
+              concurrency: 1,
+            },
+          },
+        }),
+      ),
+      adapters: [
+        new FakeAdapter(recipient, [
+          {
+            text: JSON.stringify({
+              criteria: [{ criterionRef: "held-out", met: true, quote: "never trains on" }],
+            }),
+          },
+        ]),
+      ],
+      templates: gatewayTemplates,
+      authority: new SupabaseGatewayAuthority(stack.privileged),
+    });
+    const graded = shortAnswerRequest(
+      {
+        questionId: "validation",
+        locale: "en",
+        prompt: "Why hold out validation data?",
+        criteria: [{ id: "held-out", description: "Held out from training.", weight: 1 }],
+      },
+      "A split the model never trains on.",
+      { taskId, ownerId: member.id, inputVersion: "attempt:1" },
+    );
+    const result = await grader.execute(graded, shortAnswerSpec, new AbortController().signal);
+    expect(result).toMatchObject({ state: "succeeded", provider: recipient });
+    await new SupabaseGatewayRecorder(stack.privileged).record(
+      result,
+      new AbortController().signal,
+    );
+    const stored = await stack.sql.query(
+      "select purpose from public.gateway_results where task_id=$1",
+      [taskId],
+    );
+    expect(stored.rows).toEqual([{ purpose: "assessment.short-answer" }]);
   } finally {
     await stack.request("identity/admin/ai-recipients", admin, "DELETE", {
       ...change,

@@ -6,6 +6,15 @@ import type { OutputSpec } from "./service";
 /** Reviewed purpose templates. Changing wording requires a new version and re-evaluation. */
 export const gatewayTemplates: PurposeTemplate[] = [
   {
+    purpose: "assessment.short-answer",
+    version: "short-answer-v1",
+    system: [
+      "You check a learner's short answer against reviewed rubric criteria.",
+      "For each criterion decide whether the answer meets it. When it does, copy the exact words from the answer that show it; when it does not, give no quote.",
+      "Judge only what the answer says. Do not reward length, confidence or keywords without the required reasoning, and do not infer unstated knowledge.",
+    ].join("\n"),
+  },
+  {
     purpose: "resume.wording",
     version: "resume-wording-v1",
     system: [
@@ -148,6 +157,72 @@ export const rankSpec: OutputSpec<RankOutput> = {
       // A positive score must be grounded in cited evidence, never in the job text alone.
       if (item.score > 0 && !item.evidenceRefs.length) return false;
       return item.evidenceRefs.every((value) => kinds.get(value) === "evidence");
+    });
+  },
+};
+
+export const shortAnswerOutput = z
+  .object({
+    criteria: z
+      .array(
+        z
+          .object({
+            criterionRef: ref,
+            met: z.boolean(),
+            quote: z.string().max(600).nullable(),
+          })
+          .strict(),
+      )
+      .max(20),
+  })
+  .strict();
+export type ShortAnswerOutput = z.infer<typeof shortAnswerOutput>;
+
+const normalized = (text: string) => text.normalize("NFKC").replace(/\s+/g, " ").trim().toLowerCase();
+
+/**
+ * Every criterion is judged exactly once; a "met" verdict must quote a non-trivial span that
+ * actually appears in the answer, so the model cannot credit reasoning the learner did not write.
+ */
+export const shortAnswerSpec: OutputSpec<ShortAnswerOutput> = {
+  schema: shortAnswerOutput,
+  jsonSchema: {
+    name: "short_answer_grading",
+    schema: {
+      type: "object",
+      additionalProperties: false,
+      required: ["criteria"],
+      properties: {
+        criteria: {
+          type: "array",
+          maxItems: 20,
+          items: {
+            type: "object",
+            additionalProperties: false,
+            required: ["criterionRef", "met", "quote"],
+            properties: {
+              criterionRef: { type: "string" },
+              met: { type: "boolean" },
+              quote: { type: ["string", "null"] },
+            },
+          },
+        },
+      },
+    },
+  },
+  references: (output) => output.criteria.map((item) => item.criterionRef),
+  verify: (output, request) => {
+    const answer = request.segments.find((segment) => segment.label === "answer");
+    const criteria = request.segments.filter((segment) => segment.label === "criterion");
+    if (!answer || output.criteria.length !== criteria.length) return false;
+    const seen = new Set<string>();
+    const text = normalized(answer.text);
+    return output.criteria.every((item) => {
+      if (seen.has(item.criterionRef) || !criteria.some((c) => c.ref === item.criterionRef)) return false;
+      seen.add(item.criterionRef);
+      if (!item.met) return item.quote === null;
+      const quote = item.quote ? normalized(item.quote) : "";
+      return quote.length >= 3 && text.includes(quote);
     });
   },
 };
