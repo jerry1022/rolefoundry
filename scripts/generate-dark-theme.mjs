@@ -20,7 +20,7 @@ const tokens = `${ROOT} {
   --ink: #e8f1ec;
   --ink-2: #c9d8cf;
   --muted: #9cb0a5;
-  --muted-2: #7f9489;
+  --muted-2: #8fa398;
   --line: #24352e;
   --line-strong: #31473e;
   --mint: #16302a;
@@ -95,12 +95,32 @@ const brandHue = 2.6;
 const tint = (chroma) => Math.max(chroma, 0.012);
 const hue = (chroma, h) => (chroma < 0.01 ? brandHue : h);
 
+// WCAG contrast: generated text must reach 4.6:1 on the lightest dark surface (--surface-2).
+const darkSurface = [23, 37, 31];
+const channel = (v) => {
+  const c = v / 255;
+  return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
+};
+const luminance = ([r, g, b]) => 0.2126 * channel(r) + 0.7152 * channel(g) + 0.0722 * channel(b);
+const contrast = (a, b) => {
+  const [x, y] = [luminance(a), luminance(b)].sort((p, q) => q - p);
+  return (x + 0.05) / (y + 0.05);
+};
+/** Raises OKLCH lightness (keeping hue) until the text color is readable on dark surfaces. */
+function readable([L, C, H]) {
+  let next = [L, C, H];
+  for (let i = 0; i < 40 && contrast(oklchToRgb(next), darkSurface) < 4.6; i++)
+    next = [Math.min(0.98, next[0] + 0.015), next[1], next[2]];
+  return next;
+}
+
 /** Lightness/chroma remapping per role; very light text is assumed to sit on dark already. */
 function darken(rgb, alpha, role) {
   const [L, C, H] = rgbToOklch(rgb);
   let next;
   if (role === "shadow") return { rgb: [0, 0, 0], alpha: Math.min(1, alpha * 1.8) };
-  if (role === "text") next = L > 0.86 ? [L, C, H] : [Math.min(0.94, 0.98 - L * 0.62), C * 0.9, H];
+  if (role === "text")
+    next = L > 0.86 ? [L, C, H] : readable([Math.min(0.94, 0.98 - L * 0.62), C * 0.9, H]);
   else if (role === "border") next = [0.31 + (1 - L) * 0.5, tint(C * 0.6), hue(C, H)];
   else next = L < 0.35 ? [L, C, H] : [0.21 + (1 - L) * 0.75, tint(C * 0.65), hue(C, H)];
   return { rgb: oklchToRgb(next), alpha };

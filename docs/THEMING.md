@@ -14,3 +14,7 @@ The workspace ships the **Aurora Forest** light theme and a generated dark theme
 `npm run theme:check` runs in CI and fails if the generated file is stale. After changing `globals.css`, run `npm run theme:generate` and review dark screenshots. When a component looks wrong, prefer tokens (`var(--surface)`, `var(--ink)`) in `globals.css`, then add a `keep` entry or a hand rule in the generator only if needed.
 
 Browser tests cover the system default, persisted choice across reloads, the boot script and mobile layout.
+
+## Contrast
+
+Text must reach at least 4.6:1. The dark generator lightens every derived text color (keeping its OKLCH hue) until it meets that ratio against `--surface-2`, so new rules inherit readable dark text. In the light theme, use the text tokens (`--ink`, `--ink-2`, `--muted`, `--muted-2`, `--emerald`), which meet the ratio on near-white surfaces. The Playwright and integration suites run axe-core (WCAG 2.1 AA) in both themes and fail on any violation.

@@ -287,3 +287,59 @@ test("dark theme applies before paint, persists and follows the system setting",
   await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
 });
+
+test("demo routes meet WCAG 2.1 AA in light and dark themes and both languages", async ({
+  browser,
+}) => {
+  test.setTimeout(180000);
+  const { default: AxeBuilder } = await import("@axe-core/playwright");
+  const routes = [
+    "/",
+    "/jobs/",
+    "/skills/",
+    "/assessments/",
+    "/matches/",
+    "/learning/",
+    "/resume/",
+    "/applications/",
+    "/architecture/",
+    "/account/",
+    "/dictionary/",
+    "/admin/",
+  ];
+  const cases = [
+    ...routes.map((route) => ({ route, theme: "light", locale: "en" })),
+    ...routes.map((route) => ({ route, theme: "dark", locale: "en" })),
+    ...["/", "/jobs/", "/learning/"].flatMap((route) => [
+      { route, theme: "light", locale: "zh-TW" },
+      { route, theme: "dark", locale: "zh-TW" },
+    ]),
+  ];
+  const failures: string[] = [];
+  for (const { route, theme, locale } of cases) {
+    const context = await browser.newContext({ reducedMotion: "reduce" });
+    await context.addInitScript(
+      ([t, l]) => {
+        localStorage.setItem("rolefoundry.theme.v1", t);
+        localStorage.setItem("rolefoundry.locale.v1", l);
+      },
+      [theme, locale],
+    );
+    const page = await context.newPage();
+    await page.goto(route);
+    await expect(page.locator("h1")).toBeVisible();
+    await expect(page.locator("html")).toHaveAttribute("data-theme", theme);
+    const result = await new AxeBuilder({ page })
+      .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"])
+      .analyze();
+    for (const violation of result.violations)
+      failures.push(
+        `${route} [${theme}/${locale}] ${violation.id}: ${violation.nodes
+          .map((node) => node.target.join(" "))
+          .slice(0, 3)
+          .join(", ")}`,
+      );
+    await context.close();
+  }
+  expect(failures).toEqual([]);
+});
