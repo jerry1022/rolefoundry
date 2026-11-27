@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { createBrowserTransport } from "../../platform/browser-http";
 import { catalogPageSchema, publishedJobSchema, bookmarkPageSchema } from "../model";
-import type { CatalogClient, BookmarkClient } from "../ports";
+import type { CatalogClient, BookmarkClient, CatalogTranslationClient } from "../ports";
 function params(input: Record<string, unknown>) {
   return new URLSearchParams(
     Object.entries(input)
@@ -31,5 +31,20 @@ export function createBookmarkClient(fetcher: typeof fetch = fetch): BookmarkCli
       result.parse(
         (await request(`bookmarks/${encodeURIComponent(id)}`, { method: "DELETE", body: {} })).data,
       ),
+  };
+}
+/** Administrator client for reviewed job translations. */
+export function createCatalogTranslationClient(
+  fetcher: typeof fetch = fetch,
+): CatalogTranslationClient {
+  const request = createBrowserTransport(fetcher);
+  const path = (id: string) => `admin/catalog/jobs/${encodeURIComponent(id)}/translations`;
+  return {
+    async translate(id, input) {
+      await request(path(id), { method: "POST", body: input });
+    },
+    async removeTranslation(id, input) {
+      await request(`${path(id)}/remove`, { method: "POST", body: input });
+    },
   };
 }

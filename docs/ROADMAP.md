@@ -39,7 +39,7 @@ See [module-by-module delivery status](MODULE_DEVELOPMENT.md); module 10 is the 
 - [ ] External editorial calibration of skill mappings and assessment rubrics.
 - [ ] Curated catalog of 30–50 courses with source review dates. The demo now lists 30 official DeepLearning.AI courses whose titles, levels, formats and URLs were checked against the official catalog (dated per course); RoleFoundry's skill mappings, summaries and exercises still need human editorial review, and the database catalog still needs reviewed publication.
 - [ ] Larger foundational question bank with expert calibration.
-- [ ] Traditional Chinese UI and locale-aware formatting. The [shell, demo, connected and administration screens are bilingual](LOCALIZATION.md) with `Intl` formatting and CI key checks; skill names now follow the locale on connected screens from the reviewed dictionary translations; other authored content (job, course and question text) remains English pending reviewed per-locale fields.
+- [ ] Traditional Chinese UI and locale-aware formatting. The [shell, demo, connected and administration screens are bilingual](LOCALIZATION.md) with `Intl` formatting and CI key checks; skill names now follow the locale on connected screens from the reviewed dictionary translations; administrators can add [reviewed job translations](CATALOG_SETUP.md#reviewed-translations) bound to a published version; course and question text remain English pending reviewed per-locale fields.
 
 ## v0.4 — Production analysis
 

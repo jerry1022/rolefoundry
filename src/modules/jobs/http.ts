@@ -85,6 +85,17 @@ export async function catalogHttp(
         request.method === "POST"
       )
         return send(await admin.transition(actor, action[1], await body()));
+      if (action.length >= 3 && action[0] === "jobs" && action[2] === "translations") {
+        // POST jobs/:id/translations saves; POST jobs/:id/translations/remove deletes.
+        if (action.length === 3 && request.method === "POST") {
+          await admin.translate(actor, action[1], await body());
+          return send({ translated: true });
+        }
+        if (action.length === 4 && action[3] === "remove" && request.method === "POST") {
+          await admin.removeTranslation(actor, action[1], await body());
+          return send({ removed: true });
+        }
+      }
       if (
         action.length === 3 &&
         action[0] === "jobs" &&

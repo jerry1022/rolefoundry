@@ -169,4 +169,23 @@ export class SupabaseCatalogAdminRepository implements CatalogAdminRepository {
   async observe(id: string, event: Parameters<CatalogAdminRepository["observe"]>[1]) {
     await rpc(this.client, "catalog_observe_source", { p_id: id, p_event: event });
   }
+  async translate(id: string, input: Parameters<CatalogAdminRepository["translate"]>[1]) {
+    const { versionId, locale, ...text } = input;
+    await rpc(this.client, "catalog_put_translation", {
+      p_job: id,
+      p_version: versionId,
+      p_locale: locale,
+      p_data: text,
+    });
+  }
+  async removeTranslation(
+    id: string,
+    input: Parameters<CatalogAdminRepository["removeTranslation"]>[1],
+  ) {
+    await rpc(this.client, "catalog_remove_translation", {
+      p_job: id,
+      p_version: input.versionId,
+      p_locale: input.locale,
+    });
+  }
 }

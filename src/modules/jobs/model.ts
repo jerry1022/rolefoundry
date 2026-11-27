@@ -145,8 +145,60 @@ export const publishedJobSchema = jobDraftSchema.omit({ canonicalKey: true }).ex
       skillLabelsZhTw: z.record(z.string(), z.string()).optional(),
     }),
   ),
+  /** Reviewed translations of this exact version, keyed by locale. */
+  translations: z
+    .object({
+      "zh-TW": z
+        .object({
+          title: z.string(),
+          summary: z.string(),
+          responsibilities: z.array(z.string()),
+          reviewedAt: z.string(),
+        })
+        .optional(),
+    })
+    .optional(),
 });
 export type PublishedJob = z.infer<typeof publishedJobSchema>;
+
+/** Locales with reviewed job translations; English is the published source text. */
+export const jobTranslationLocales = ["zh-TW"] as const;
+export type JobTranslationLocale = (typeof jobTranslationLocales)[number];
+/** Administrator input: reviewed text for one exact job version. */
+export const jobTranslationInputSchema = z
+  .object({
+    versionId: z.uuid(),
+    locale: z.enum(jobTranslationLocales),
+    title: catalogText(200).trim().min(1),
+    summary: catalogText(3000).trim().min(1),
+    responsibilities: z.array(catalogText(1000).trim().min(1)).max(15),
+    reviewNote: catalogText(1000).trim().min(1),
+  })
+  .strict();
+export type JobTranslationInput = z.infer<typeof jobTranslationInputSchema>;
+export const jobTranslationRemovalSchema = jobTranslationInputSchema
+  .pick({ versionId: true, locale: true })
+  .strict();
+
+/**
+ * Text to show for the viewer's locale. A reviewed translation replaces only the fields it
+ * covers; the result says which language it is so the UI can set `lang`.
+ */
+export function localizedJobText(
+  job: Pick<PublishedJob, "title" | "summary" | "responsibilities" | "translations">,
+  locale: string,
+) {
+  const translation = locale === "zh-TW" ? job.translations?.["zh-TW"] : undefined;
+  if (!translation || translation.responsibilities.length !== job.responsibilities.length)
+    return {
+      title: job.title,
+      summary: job.summary,
+      responsibilities: job.responsibilities,
+      lang: "en" as const,
+      reviewedAt: null,
+    };
+  return { ...translation, lang: "zh-Hant" as const };
+}
 export const catalogPageSchema = z.object({
   data: z.array(publishedJobSchema),
   nextCursor: z.string().nullable(),

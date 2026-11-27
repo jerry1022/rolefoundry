@@ -1,11 +1,12 @@
 "use client";
 import { useEffect, useRef } from "react";
 import Link from "next/link";
-import type { PublishedJob } from "@/modules/jobs/model";
+import { localizedJobText, type PublishedJob } from "@/modules/jobs/model";
 import { labelsForLocale, skillLabel } from "@/modules/skills/model";
 import { useI18n } from "@/lib/i18n";
 export function JobDetails({ job, onClose }: { job: PublishedJob; onClose: () => void }) {
-  const { t, locale } = useI18n();
+  const { t, fmt, locale } = useI18n();
+  const text = localizedJobText(job, locale);
   const dialog = useRef<HTMLDialogElement>(null);
   useEffect(() => {
     const element = dialog.current;
@@ -25,8 +26,17 @@ export function JobDetails({ job, onClose }: { job: PublishedJob; onClose: () =>
           {t("Close")}
         </button>
       </div>
-      <h2 id="catalog-job-title">{job.title}</h2>
-      <p>{job.summary}</p>
+      <h2 id="catalog-job-title" lang={text.lang}>
+        {text.title}
+      </h2>
+      <p lang={text.lang}>{text.summary}</p>
+      {text.reviewedAt && (
+        <p className="muted job-translation-note">
+          {t("Reviewed translation of the published listing · {date}", {
+            date: fmt.date(text.reviewedAt),
+          })}
+        </p>
+      )}
       <Link className="button primary" href={`/matches/?job=${job.id}`}>
         {t("Compare with my evidence")}
       </Link>
@@ -40,9 +50,9 @@ export function JobDetails({ job, onClose }: { job: PublishedJob; onClose: () =>
         {t("Prepare a tracking record")}
       </Link>
       <h3>{t("Responsibilities")}</h3>
-      <ul>
-        {job.responsibilities.map((text, index) => (
-          <li key={index}>{text}</li>
+      <ul lang={text.lang}>
+        {text.responsibilities.map((item, index) => (
+          <li key={index}>{item}</li>
         ))}
       </ul>
       <h3>{t("Requirements")}</h3>

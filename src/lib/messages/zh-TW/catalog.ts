@@ -55,4 +55,5 @@ export const catalog = {
   "A project to explore": "可嘗試的專案",
   "A starting framework from the career playbook. Actual job requirements and learning time vary; course completion alone does not verify ability.":
     "這是取自職涯手冊的入門架構。實際職缺要求與學習時間因人而異；僅完成課程並不能證明能力。",
+  "Reviewed translation of the published listing · {date}": "已發布職缺的審查翻譯 · {date}",
 } satisfies Messages;

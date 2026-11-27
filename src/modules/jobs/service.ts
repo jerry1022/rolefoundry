@@ -6,7 +6,14 @@ import type {
   CatalogAuthorization,
   CatalogAdminRepository,
 } from "./ports";
-import { querySchema, jobDraftSchema, sourcePolicySchema, sourceLinkSchema } from "./model";
+import {
+  querySchema,
+  jobDraftSchema,
+  sourcePolicySchema,
+  sourceLinkSchema,
+  jobTranslationInputSchema,
+  jobTranslationRemovalSchema,
+} from "./model";
 import { ApplicationError } from "../platform/errors";
 function parse<T>(schema: z.ZodType<T>, input: unknown): T {
   const result = schema.safeParse(input);
@@ -83,6 +90,18 @@ export class CatalogAdminService {
       input,
     );
     return this.repository.revise(parse(z.uuid(), id), value.expectedRevision, value.job);
+  }
+  /** Stores reviewed text for the job's current version; the database rejects stale versions. */
+  async translate(actor: Actor, id: string, input: unknown) {
+    await this.allow(actor);
+    return this.repository.translate(parse(z.uuid(), id), parse(jobTranslationInputSchema, input));
+  }
+  async removeTranslation(actor: Actor, id: string, input: unknown) {
+    await this.allow(actor);
+    return this.repository.removeTranslation(
+      parse(z.uuid(), id),
+      parse(jobTranslationRemovalSchema, input),
+    );
   }
   async link(actor: Actor, id: string, input: unknown) {
     await this.allow(actor);

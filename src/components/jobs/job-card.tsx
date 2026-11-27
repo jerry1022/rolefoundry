@@ -1,5 +1,5 @@
 "use client";
-import type { jobLevels, PublishedJob } from "@/modules/jobs/model";
+import { localizedJobText, type jobLevels, type PublishedJob } from "@/modules/jobs/model";
 import { msg, useI18n } from "@/lib/i18n";
 
 /** Display labels for job levels; the English values remain the filter and API codes. */
@@ -24,7 +24,8 @@ export function JobCard({
   onOpen: () => void;
   onSave: () => Promise<void>;
 }) {
-  const { t, fmt } = useI18n();
+  const { t, fmt, locale } = useI18n();
+  const text = localizedJobText(job, locale);
   const { salary } = job;
   const lower = salary?.min == null ? t("Unknown lower bound") : fmt.number(salary.min);
   const upper = salary?.max == null ? t("Unknown upper bound") : fmt.number(salary.max);
@@ -34,8 +35,8 @@ export function JobCard({
         <div>
           <small>{job.company}</small>
           <h3>
-            <button className="catalog-title" onClick={onOpen}>
-              {job.title}
+            <button className="catalog-title" onClick={onOpen} lang={text.lang}>
+              {text.title}
             </button>
           </h3>
         </div>
@@ -44,8 +45,8 @@ export function JobCard({
           disabled={busy}
           aria-label={
             saved
-              ? t("Unsave {title}", { title: job.title })
-              : t("Save {title}", { title: job.title })
+              ? t("Unsave {title}", { title: text.title })
+              : t("Save {title}", { title: text.title })
           }
           onClick={() => void onSave()}
         >
@@ -67,7 +68,7 @@ export function JobCard({
           <span className="pill">{t("Freshness uncertain")}</span>
         )}
       </div>
-      <p>{job.summary}</p>
+      <p lang={text.lang}>{text.summary}</p>
       <p className="muted">
         {salary
           ? `${salary.currency} ${lower} – ${upper} / ${t(intervalLabels[salary.interval])}`
