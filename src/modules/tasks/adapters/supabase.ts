@@ -44,12 +44,17 @@ export class SupabaseTaskQueue implements TaskQueue {
   async acknowledge(lease: Parameters<TaskQueue["acknowledge"]>[0]) {
     await rpc(this.client, "task_ack", { p_task: lease.taskId, p_message: lease.messageId });
   }
-  async fail(lease: Parameters<TaskQueue["fail"]>[0], category: Parameters<TaskQueue["fail"]>[1]) {
+  async fail(
+    lease: Parameters<TaskQueue["fail"]>[0],
+    category: Parameters<TaskQueue["fail"]>[1],
+    retryAfterSeconds?: number,
+  ) {
     return z.object({ status: z.string() }).parse(
-      await rpc(this.client, "task_fail", {
+      await rpc(this.client, retryAfterSeconds === undefined ? "task_fail" : "task_fail_after", {
         p_task: lease.taskId,
         p_token: lease.token,
         p_category: category,
+        ...(retryAfterSeconds === undefined ? {} : { p_retry_after: retryAfterSeconds }),
       }),
     );
   }

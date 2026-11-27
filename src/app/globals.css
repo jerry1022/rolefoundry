@@ -3480,3 +3480,42 @@ tr:last-child td {
 .application-detail + section {
   margin-top: 24px;
 }
+
+/* Import previews scroll within their panel; source identifiers never widen the page. */
+.ingestion-workspace fieldset,
+.ingestion-workspace .panel,
+.ingestion-workspace details,
+.ingestion-workspace label {
+  min-width: 0;
+}
+.ingestion-workspace .button {
+  white-space: normal;
+  max-width: 100%;
+  height: auto;
+}
+.ingestion-workspace input,
+.ingestion-workspace select,
+.ingestion-workspace textarea {
+  max-width: 100%;
+  min-width: 0;
+}
+.ingestion-workspace fieldset > label {
+  display: block;
+  margin-block: 12px;
+}
+.ingestion-workspace .table-scroll {
+  max-width: 100%;
+}
+.ingestion-workspace table {
+  white-space: normal;
+  table-layout: fixed;
+}
+.ingestion-workspace td,
+.ingestion-workspace th {
+  vertical-align: top;
+  overflow-wrap: anywhere;
+}
+.ingestion-workspace p,
+.ingestion-workspace details {
+  margin-block: 12px;
+}

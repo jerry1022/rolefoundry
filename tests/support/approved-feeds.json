@@ -1,0 +1,16 @@
+[
+  {
+    "id": "fixture-jobs-json",
+    "kind": "jobs",
+    "format": "json",
+    "url": "https://feed.test.invalid/jobs.json",
+    "allowedHosts": ["feed.test.invalid", "redirect.test.invalid"]
+  },
+  {
+    "id": "fixture-courses-csv",
+    "kind": "courses",
+    "format": "csv",
+    "url": "https://feed.test.invalid/courses.csv",
+    "allowedHosts": ["feed.test.invalid"]
+  }
+]

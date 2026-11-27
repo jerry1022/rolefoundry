@@ -11,7 +11,11 @@ export interface TaskQueue {
   ): Promise<TaskLease[]>;
   heartbeat(lease: TaskLease): Promise<boolean>;
   acknowledge(lease: TaskLease): Promise<void>;
-  fail(lease: TaskLease, category: FailureCategory): Promise<{ status: string }>;
+  fail(
+    lease: TaskLease,
+    category: FailureCategory,
+    retryAfterSeconds?: number,
+  ): Promise<{ status: string }>;
   release(lease: TaskLease): Promise<boolean>;
 }
 export interface TaskHandler {
