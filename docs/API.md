@@ -1,6 +1,6 @@
 # Production API contract
 
-**Design only.** The current static/browser-local scaffold has no production REST handlers. TypeScript ports are in `src/lib/services.ts`. This contract defines the future adapter boundary without claiming that placeholder endpoints are operational.
+**Mixed implementation status.** The identity endpoints under `/api/v1/identity` are implemented for configured server deployments; see [their exact API and setup](IDENTITY_SETUP.md). The resource contracts below describe the remaining production modules and are not deployed handlers. The public static demo excludes all dynamic identity handlers.
 
 ## Conventions
 

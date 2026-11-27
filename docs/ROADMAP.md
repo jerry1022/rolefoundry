@@ -16,11 +16,12 @@
 
 ## v0.2 — Durable, private foundation
 
-- [ ] Supabase schema/migrations, invitations and email sign-in.
-- [ ] Owner RLS, consent and quota reservations.
+- [x] Module 01 Supabase identity migration, invitations and email OTP sign-in.
+- [x] Identity owner RLS, consent, quota reservations, worker guards and audited refunds.
 - [ ] Explicit migration of user-approved demo state.
 - [ ] Private storage, delete/export account workflows and recovery tests.
-- [ ] Task table, pgmq adapter, real worker leases and telemetry.
+- [x] Identity task ledger and transactional outbox.
+- [ ] Module 12 pgmq adapter, real worker leases and telemetry.
 
 ## v0.3 — Real catalogs and reviewed evidence
 

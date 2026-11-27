@@ -27,11 +27,9 @@ export class FixtureCourseRepository implements CourseRepository {
   }
 }
 
-// Production ports: contracts only. No authentication, network or AI implementations.
-export interface Actor {
-  userId: string;
-  role: "member" | "admin";
-}
+// Domain ports. Identity has a Supabase implementation; other production ports remain contracts.
+import type { Actor } from "../modules/identity/core";
+export type { Actor } from "../modules/identity/core";
 export interface IdentityService {
   authorize(actor: Actor, action: string, resourceOwnerId?: string): Promise<void>;
 }
