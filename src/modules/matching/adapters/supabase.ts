@@ -4,7 +4,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { safeDatabaseError } from "../../platform/database-errors";
 import { TaskFailure } from "../../tasks/model";
 import { matchTaskSchema, matchRunSchema, matchHistorySchema, matchSnapshotSchema } from "../model";
-import type { MatchingRepository, MatchingExecutionStore } from "../ports";
+import type { MatchingRepository, MatchingExecutionStore, SemanticRankingStore } from "../ports";
 async function rpc(client: SupabaseClient, name: string, args: Record<string, unknown>) {
   const { data, error } = await client.rpc(name, args);
   if (error) throw safeDatabaseError(error);
@@ -52,7 +52,9 @@ export class SupabaseMatchingRepository implements MatchingRepository {
     return matchHistorySchema.parse({ data: raw.data, nextCursor: encode(raw.lastSequence) });
   }
 }
-export class SupabaseMatchingExecutionStore implements MatchingExecutionStore {
+export class SupabaseMatchingExecutionStore
+  implements MatchingExecutionStore, SemanticRankingStore
+{
   constructor(private readonly client: SupabaseClient) {}
   private async execute(name: string, args: Record<string, unknown>, signal: AbortSignal) {
     const { data, error } = await this.client.rpc(name, args).abortSignal(signal);
@@ -90,4 +92,34 @@ export class SupabaseMatchingExecutionStore implements MatchingExecutionStore {
       signal,
     );
   }
+  async semanticLink(
+    lease: Parameters<SemanticRankingStore["semanticLink"]>[0],
+    signal: AbortSignal,
+  ) {
+    const data = await this.execute(
+      "matching_semantic_task",
+      { p_task: lease.taskId, p_token: lease.token },
+      signal,
+    );
+    if (data === null) return null;
+    const parsed = semanticLinkSchema.safeParse(data);
+    if (!parsed.success) throw new TaskFailure("validation");
+    return parsed.data;
+  }
+  async publishRanked(
+    lease: Parameters<SemanticRankingStore["publishRanked"]>[0],
+    results: Parameters<SemanticRankingStore["publishRanked"]>[1],
+    ranking: Parameters<SemanticRankingStore["publishRanked"]>[2],
+    signal: AbortSignal,
+  ) {
+    const data = await this.execute(
+      "matching_publish_ranked",
+      { p_task: lease.taskId, p_token: lease.token, p_results: results, p_ranking: ranking },
+      signal,
+    );
+    return z.object({ resultRef: z.uuid() }).parse(data).resultRef;
+  }
 }
+const semanticLinkSchema = z
+  .object({ identityTaskId: z.uuid(), ownerId: z.uuid(), inputVersion: z.string().min(1).max(200) })
+  .strict();

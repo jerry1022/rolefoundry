@@ -27,7 +27,7 @@ All paths are under `/api/v1`. Mutations require a same-origin request and verif
 
 | Method/path | Input | Result |
 | --- | --- | --- |
-| POST `/matches` | `{jobId: uuid or null, constraints}` and `Idempotency-Key` header | `202 {data: {runId, taskId, status}}` |
+| POST `/matches` | `{jobId: uuid or null, constraints, semantic?: boolean}` and `Idempotency-Key` header | `202 {data: {runId, taskId, status, semantic: {state, code}}}` |
 | GET `/matches?cursor=...` | Optional opaque history cursor | `{data, nextCursor}`, 20 owner reports, newest first |
 | GET `/matches/{id}?cursor=...` | Owner run ID; optional result cursor | `{data: report}` with 20 ranked results and `nextCursor` |
 | GET `/tasks/{id}` | Owner task ID | Safe execution state/error/result reference |
@@ -55,11 +55,22 @@ Reports include source profile/catalog/dictionary versions, saved constraints, c
 
 ## Rules and evidence interpretation
 
-The consuming module owns narrow input models and the pure `rankMatches` function. Its order is: fewer explicit conflicts, more confirmed conditions, mandatory skill coverage, preferred coverage, stable job IDs. There is no semantic/model score in this recipe. The required semantic ranking integration remains pending with module 11. Adding it or optional narrative requires a separately versioned recipe and reviewed evaluation; narrative cannot override structured facts.
+The consuming module owns narrow input models and the pure `rankMatches` function. Its order is: fewer explicit conflicts, more confirmed conditions, mandatory skill coverage, preferred coverage, stable job IDs. Optional [semantic ordering](#optional-semantic-ordering) may replace only the final job-ID tiebreak; narrative generation is not implemented, and nothing may override structured facts.
 
 Each canonical skill counts once. A skill appearing in mandatory requirements is not counted again as preferred. A self-report above the learning-only level and an unreviewed portfolio/resume claim may supply explicitly labelled support; none becomes verified mastery. Trusted assessment observations retain their question/rubric version. A correct scenario is scoped support; an incorrect one becomes a practice gap and does not count as positive support. A later positive claim does not erase an earlier practice observation. Learning-only claims do not cover a requirement. An unmapped textual requirement remains an information gap.
 
 Experience below a stated minimum produces a longer-term-experience gap. Other explicit conflicts receive a condition-conflict suggestion. Missing supporting evidence suggests strengthening evidence, never inability. Even an explore suggestion retains unknown conditions and source limitations. No protected/sensitive attribute is used as a ranking feature. Education and authorization checks are explicit owner responses to actual source text, not inferred personal attributes.
+
+## Optional semantic ordering
+
+A report request may include `"semantic": true`. Strengths, gaps, conditions and per-result `recipe: "rules-v1"` never change. `semantic-rank-v1` scores only results that the rules cannot distinguish (equal conflicts, confirmations and mandatory/preferred coverage) and replaces the job-ID tiebreak inside those tiers. A score can never move a role across a structural tier.
+
+- **Consent and allowance:** the server reserves an identity analysis (`matching` consent, default five per UTC week) **before** creating the run, keyed by the request's `Idempotency-Key`, so the worker cannot start without it. Missing consent or allowance returns `semantic: {state: "unavailable", code}` and the rules report is still created. If run creation fails, the reservation is released.
+- **Worker:** `MatchingHandler` with a `SemanticStage` looks up the reservation under the current lease, then calls `SemanticRanker`. With no deployment ranking route, or no ties, it releases the reservation (allowance returned). Otherwise it starts the identity task (consumes the allowance) and calls the [AI gateway](AI_GATEWAY_SETUP.md). The request contains at most 24 tied jobs and 36 positive evidence items (practice gaps and learning goals are excluded), clipped and minimized. The worker records the content-free attempt, publishes, and only then completes the identity task.
+- **Fallbacks** keep the rules order and record why: `RF_GATEWAY_DISABLED`, `RF_SEMANTIC_NOT_NEEDED`, `RF_CONSENT_REQUIRED`, or any gateway code. Provider failures mark the identity task `infrastructure` (refundable through the existing administrator refund), and invalid output marks it `validation`. A consent revocation during the call returns a stale result, and nothing is published from it.
+- **Report:** `matching_publish_ranked` stores `ranking {recipe, state, code}` and the identity task with the publication in one transaction. A redelivery after commit keeps the original ranking. Reports show whether AI ordering applied, and a result limitation states that strengths and gaps remain rule-based.
+
+The worker reads `ROLEFOUNDRY_AI_POLICY` (a `matching.semantic-rank` route) and provider keys. An invalid policy fails worker startup. Without a route, requests are accepted and reported as `RF_GATEWAY_DISABLED`.
 
 ## Persistence, replacement and recovery
 

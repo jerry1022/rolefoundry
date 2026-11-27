@@ -121,4 +121,4 @@ Apply `20261114180000_course_link_checks.sql`. Set `ROLEFOUNDRY_COURSE_LINK_SOUR
 
 ## AI Gateway
 
-`ROLEFOUNDRY_AI_POLICY` is empty by default, which disables every model purpose. Provider keys (`OPENAI_API_KEY`, `LUNAROUTE_API_KEY` with an explicit `ROLEFOUNDRY_LUNAROUTE_BASE_URL`) are server/worker-only and never shared between providers. No domain worker calls the gateway yet. See [policy format, failure semantics and evaluation](AI_GATEWAY_SETUP.md).
+`ROLEFOUNDRY_AI_POLICY` is empty by default, which disables every model purpose. Provider keys (`OPENAI_API_KEY`, `LUNAROUTE_API_KEY` with an explicit `ROLEFOUNDRY_LUNAROUTE_BASE_URL`) are server/worker-only and never shared between providers. Set the same policy and keys on the worker to enable opt-in matching tie ordering (`matching.semantic-rank`); an invalid policy fails worker startup. See [policy format, failure semantics and evaluation](AI_GATEWAY_SETUP.md).

@@ -8,10 +8,25 @@ import type {
   MatchHistory,
   RefreshMatchInput,
 } from "./model";
+import type { RankingRecord, SemanticLink } from "./semantic";
 export interface MatchingRepository {
   refresh(input: RefreshMatchInput, idempotencyKey: string): Promise<MatchTask>;
   find(id: string, cursor?: string): Promise<MatchRun>;
   list(cursor?: string): Promise<MatchHistory>;
+}
+/** Identity-owned consent/quota reservation for an opt-in analysis. */
+export interface AnalysisReservations {
+  reserveAnalysis(
+    actor: Actor,
+    input: {
+      feature: "matching";
+      resourceId: string;
+      inputVersion: string;
+      idempotencyKey: string;
+    },
+  ): Promise<{ taskId: string }>;
+  /** Returns an unstarted reservation when the run could not be created. */
+  releaseAnalysis(taskId: string): Promise<unknown>;
 }
 export interface MatchingAuthorization {
   authorize(actor: Actor, action: string, ownerId?: string): Promise<void>;
@@ -19,5 +34,15 @@ export interface MatchingAuthorization {
 export interface MatchingExecutionStore {
   load(lease: TaskLease, signal: AbortSignal): Promise<MatchSnapshot>;
   publish(lease: TaskLease, results: MatchResult[], signal: AbortSignal): Promise<void>;
+}
+/** Optional semantic stage: the run's identity reservation and ranked, atomic publication. */
+export interface SemanticRankingStore {
+  semanticLink(lease: TaskLease, signal: AbortSignal): Promise<SemanticLink | null>;
+  publishRanked(
+    lease: TaskLease,
+    results: MatchResult[],
+    ranking: RankingRecord,
+    signal: AbortSignal,
+  ): Promise<string>;
 }
 export interface MatchingClient extends MatchingRepository {}

@@ -31,6 +31,7 @@ import { declareTaskResources } from "../../../src/modules/tasks/resources";
 import { SupabaseTaskQueue } from "../../../src/modules/tasks/adapters/supabase";
 import { SupabaseAssessmentGrader } from "../../../src/modules/assessment/adapters/supabase";
 import { MatchingHandler } from "../../../src/modules/matching/handler";
+import { semanticStageFromEnvironment } from "../../../src/modules/matching/adapters/semantic";
 import { SupabaseMatchingExecutionStore } from "../../../src/modules/matching/adapters/supabase";
 import { LearningHandler } from "../../../src/modules/learning/handler";
 import { SupabaseLearningExecutionStore } from "../../../src/modules/learning/adapters/supabase";
@@ -119,6 +120,7 @@ const deletionJanitor = new LateDeletionJanitor(
   new SupabaseLateDeletionStore(client),
   new SupabaseDeletionFiles(client),
 );
+const matchingStore = new SupabaseMatchingExecutionStore(client);
 const controller = new AbortController();
 const invalidationDispatcher = new InvalidationDispatcher(new SupabaseInvalidationStore(client));
 for (const signal of ["SIGINT", "SIGTERM"] as const) process.on(signal, () => controller.abort());
@@ -161,7 +163,10 @@ const handlers = {
     resumeProcessor,
   ),
   "assessment.grade": new SupabaseAssessmentGrader(client),
-  "matches.refresh": new MatchingHandler(new SupabaseMatchingExecutionStore(client)),
+  "matches.refresh": new MatchingHandler(
+    matchingStore,
+    semanticStageFromEnvironment(client, matchingStore),
+  ),
   "learning.plan": new LearningHandler(
     new SupabaseLearningExecutionStore(client),
     new RuleLearningGapAnalyzer(),

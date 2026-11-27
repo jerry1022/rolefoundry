@@ -90,6 +90,15 @@ function conditions(job: MatchJobInput, snapshot: MatchSnapshot): ConditionCheck
   ];
 }
 /** Deterministic, source-grounded ranking. No inferred qualifications or model-generated facts. */
+const ratio = (value: { covered: number; total: number }) =>
+  value.total ? value.covered / value.total : 0;
+
+/** Limitation text that rules-v1 attaches when no semantic ordering was applied. */
+export const rulesOnlyLimitation =
+  "This recipe uses rules only; semantic/model ranking and narrative generation are unavailable.";
+export const semanticOrderLimitation =
+  "Order within equal rule results used semantic-rank-v1; strengths, gaps and conditions remain rule-based.";
+
 export function rankMatches(snapshot: MatchSnapshot): MatchResult[] {
   const evidence = [...new Map(snapshot.evidence.map((item) => [item.versionId, item])).values()];
   const results = snapshot.jobs.map((job) => {
@@ -195,20 +204,45 @@ export function rankMatches(snapshot: MatchSnapshot): MatchResult[] {
       limitations: [
         "Coverage counts linked observations, self-reports and unreviewed references; it does not establish independent mastery or hiring probability.",
         "An unknown condition is not a conflict. Confirm it with the source before deciding.",
-        "This recipe uses rules only; semantic/model ranking and narrative generation are unavailable.",
+        rulesOnlyLimitation,
       ],
     } satisfies MatchResult;
   });
-  const ratio = (value: { covered: number; total: number }) =>
-    value.total ? value.covered / value.total : 0;
   return results.sort(
     (left, right) =>
-      left.conditions.filter((item) => item.status === "conflict").length -
-        right.conditions.filter((item) => item.status === "conflict").length ||
-      right.conditions.filter((item) => item.status === "confirmed").length -
-        left.conditions.filter((item) => item.status === "confirmed").length ||
-      ratio(right.coverage.mandatory) - ratio(left.coverage.mandatory) ||
-      ratio(right.coverage.preferred) - ratio(left.coverage.preferred) ||
+      structuralOrder(left, right) ||
+      (left.jobId < right.jobId ? -1 : left.jobId > right.jobId ? 1 : 0),
+  );
+}
+
+/**
+ * Structured facts first: fewer conflicts, more confirmed conditions, then mandatory and
+ * preferred coverage. Returns 0 only for results that the rules cannot distinguish.
+ */
+export function structuralOrder(left: MatchResult, right: MatchResult) {
+  const count = (result: MatchResult, status: "conflict" | "confirmed") =>
+    result.conditions.filter((item) => item.status === status).length;
+  return (
+    count(left, "conflict") - count(right, "conflict") ||
+    count(right, "confirmed") - count(left, "confirmed") ||
+    ratio(right.coverage.mandatory) - ratio(left.coverage.mandatory) ||
+    ratio(right.coverage.preferred) - ratio(left.coverage.preferred)
+  );
+}
+
+/**
+ * `semantic-rank-v1` may only replace the final job-ID tiebreak: a semantic score never moves a
+ * result across a structural tier. Jobs without a score keep the rules order after scored ties.
+ */
+export function applySemanticTiebreak(
+  ranked: readonly MatchResult[],
+  scores: ReadonlyMap<string, number>,
+) {
+  const score = (result: MatchResult) => scores.get(result.jobId) ?? -1;
+  return [...ranked].sort(
+    (left, right) =>
+      structuralOrder(left, right) ||
+      score(right) - score(left) ||
       (left.jobId < right.jobId ? -1 : left.jobId > right.jobId ? 1 : 0),
   );
 }

@@ -26,6 +26,26 @@ const statusLabels: Record<MatchRun["status"], string> = {
   failed: msg("failed"),
   invalidated: msg("invalidated"),
 };
+/** Why AI ordering could not be reserved; the rules-based report is created regardless. */
+const semanticUnavailable: Record<string, string> = {
+  RF_CONSENT_REQUIRED: msg(
+    "AI-assisted ordering needs your semantic ranking permission in Account & privacy. This report uses rules only.",
+  ),
+  RF_QUOTA_EXCEEDED: msg("Your weekly AI allowance is used up. This report uses rules only."),
+  default: msg("AI-assisted ordering is unavailable right now. This report uses rules only."),
+};
+/** Why a requested AI ordering was not applied to a finished report. */
+const semanticFallback: Record<string, string> = {
+  RF_SEMANTIC_NOT_NEEDED: msg(
+    "AI ordering was not needed: the rules already ordered every role. Your allowance was returned.",
+  ),
+  RF_GATEWAY_DISABLED: msg(
+    "AI ordering is not enabled on this deployment. Rules order shown; your allowance was returned.",
+  ),
+  RF_CONSENT_REQUIRED: msg("Permission was withdrawn before AI ordering ran. Rules order shown."),
+  default: msg("AI ordering could not complete, so the rules order is shown."),
+};
+
 export function MatchingScreen({
   client,
   catalog,
@@ -47,7 +67,9 @@ export function MatchingScreen({
     [error, setError] = useState(""),
     [login, setLogin] = useState(false),
     [busy, setBusy] = useState(false),
-    [polling, setPolling] = useState(true);
+    [polling, setPolling] = useState(true),
+    [semantic, setSemantic] = useState(false),
+    [semanticNotice, setSemanticNotice] = useState("");
   const pending = useRef<{ payload: string; key: string } | null>(null);
   const selectionVersion = useRef(0),
     openVersion = useRef(0);
@@ -188,7 +210,12 @@ export function MatchingScreen({
   async function refresh(constraints: MatchConstraints) {
     setBusy(true);
     setError("");
-    const input: RefreshMatchInput = { jobId: target?.id || null, constraints };
+    setSemanticNotice("");
+    const input: RefreshMatchInput = {
+      jobId: target?.id || null,
+      constraints,
+      ...(semantic ? { semantic: true } : {}),
+    };
     const payload = JSON.stringify(input);
     if (pending.current?.payload !== payload)
       pending.current = { payload, key: crypto.randomUUID() };
@@ -196,6 +223,10 @@ export function MatchingScreen({
       const result = await client.refresh(input, pending.current.key);
       locateRun(result.runId);
       pending.current = null;
+      if (result.semantic?.state === "unavailable")
+        setSemanticNotice(
+          semanticUnavailable[result.semantic.code ?? ""] ?? semanticUnavailable.default,
+        );
       await open(result.runId);
       setHistory(await client.list());
     } catch (error) {
@@ -292,11 +323,33 @@ export function MatchingScreen({
               </button>
             )}
           </section>
+          <label className="matching-ai-option">
+            <input
+              type="checkbox"
+              checked={semantic}
+              disabled={busy}
+              onChange={(event) => setSemantic(event.target.checked)}
+            />
+            <span>
+              <strong>{t("Use AI-assisted ordering for equal results")}</strong>
+              <small>
+                {t(
+                  "Needs your semantic ranking permission and uses one weekly allowance. It only orders roles the rules rate equally; strengths, gaps and conditions stay rule-based.",
+                )}
+              </small>
+            </span>
+          </label>
+          {semanticNotice && (
+            <p className="notice warning" role="status">
+              {t(semanticNotice)}
+            </p>
+          )}
           <MatchingConditionsForm
             key={target?.versionId || "direction"}
             target={target}
             workplaces={preferences.workplaces}
             busy={busy}
+            aiOrdering={semantic}
             onSubmit={(constraints) => void refresh(constraints)}
           />
         </>
@@ -321,6 +374,13 @@ export function MatchingScreen({
               {t("Check report status")}
             </button>
           </div>
+          {active.ranking && active.ranking.state !== "not-requested" && (
+            <p className="muted matching-ranking" role="status">
+              {active.ranking.state === "applied"
+                ? t("Equal rule results were ordered with AI assistance (semantic-rank-v1).")
+                : t(semanticFallback[active.ranking.code ?? ""] ?? semanticFallback.default)}
+            </p>
+          )}
           {active.stale && active.status !== "invalidated" && (
             <p className="notice" role="status">
               {t(
