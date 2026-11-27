@@ -12,6 +12,7 @@ import {
 } from "./model";
 import { purposeRoute, routeRecipients, type GatewayPolicy, type GatewayRoute } from "./policy";
 import type {
+  ProviderBudgets,
   ProviderSlots,
   AdapterResponse,
   ChatMessage,
@@ -166,8 +167,10 @@ export interface AIGatewayOptions {
   templates: readonly PurposeTemplate[];
   authority: GatewayAuthority;
   clock?: GatewayClock;
-  /** Shared provider slots across worker instances; required when the policy sets limits. */
+  /** Shared provider slots across worker instances; required when a limit sets concurrency. */
   slots?: ProviderSlots;
+  /** Shared token budgets; required when a limit sets dailyTokens. */
+  budgets?: ProviderBudgets;
 }
 
 export class AIGateway {
@@ -178,13 +181,18 @@ export class AIGateway {
   private readonly authority: GatewayAuthority;
   private readonly clock: GatewayClock;
   private readonly slots: ProviderSlots | null;
-  constructor({ policy, adapters, templates, authority, clock, slots }: AIGatewayOptions) {
+  private readonly budgets: ProviderBudgets | null;
+  constructor({ policy, adapters, templates, authority, clock, slots, budgets }: AIGatewayOptions) {
     this.policy = policy;
     this.authority = authority;
     this.clock = clock ?? systemClock;
     this.slots = slots ?? null;
-    if (Object.keys(policy.providerLimits ?? {}).length && !this.slots)
+    this.budgets = budgets ?? null;
+    const limits = Object.values(policy.providerLimits ?? {});
+    if (limits.some((limit) => limit.concurrency) && !this.slots)
       throw new Error("AI gateway provider limits require a shared slot store.");
+    if (limits.some((limit) => limit.dailyTokens) && !this.budgets)
+      throw new Error("AI gateway token budgets require a shared budget store.");
     this.adapters = new Map(adapters.map((adapter) => [adapter.id, adapter]));
     this.templates = new Map(templates.map((template) => [template.purpose, template]));
     for (const route of Object.values(policy.routes)) {
@@ -327,11 +335,13 @@ export class AIGateway {
     };
     let acquired = false;
     let slot: string | null = null;
+    let reservation: { id: string } | null = null;
     const begin = this.clock.now();
     try {
       await gate.acquire(route.concurrency, signal);
       acquired = true;
       slot = await this.sharedSlot(adapter.id, route, signal);
+      reservation = await this.reserveBudget(adapter.id, messages, route, signal);
       const response = await adapter.complete(
         {
           model: plan.target.model,
@@ -344,6 +354,16 @@ export class AIGateway {
       signal.throwIfAborted();
       record.reportedModel = response.reportedModel;
       record.usage = response.usage;
+      if (reservation) {
+        // Settle with reported usage; without it the conservative estimate stands.
+        if (response.usage)
+          await this.settleBudget(
+            adapter.id,
+            reservation.id,
+            response.usage.inputTokens + response.usage.outputTokens,
+          );
+        reservation = null;
+      }
       return { plan, response };
     } catch (error) {
       const failure = classify(error, signal);
@@ -367,13 +387,36 @@ export class AIGateway {
    */
   private async sharedSlot(provider: string, route: GatewayRoute, signal: AbortSignal) {
     const limit = this.policy.providerLimits?.[provider];
-    if (!limit || !this.slots) return null;
+    if (!limit?.concurrency || !this.slots) return null;
     const leaseSeconds = Math.ceil(route.deadlineMs / 1000) + 5;
     for (let wait = 100; ; wait = Math.min(wait * 2, 1000)) {
       const token = await this.slots.acquire(provider, limit.concurrency, leaseSeconds, signal);
       if (token) return token;
       await this.clock.sleep(wait, signal);
     }
+  }
+
+  /**
+   * Reserves an estimated token cost against the provider's rolling cap before calling it. An
+   * exhausted budget is a `quota` failure, which is never retried or failed over.
+   */
+  private async reserveBudget(
+    provider: string,
+    messages: ChatMessage[],
+    route: GatewayRoute,
+    signal: AbortSignal,
+  ) {
+    const cap = this.policy.providerLimits?.[provider]?.dailyTokens;
+    if (!cap || !this.budgets) return null;
+    const characters = messages.reduce((total, message) => total + message.content.length, 0);
+    const estimate = Math.min(1_000_000, Math.ceil(characters / 4) + route.maxOutputTokens);
+    const id = await this.budgets.reserve(provider, estimate, cap, signal);
+    if (!id) throw new ProviderFailure("quota");
+    return { id };
+  }
+
+  private async settleBudget(provider: string, id: string, tokens: number) {
+    await this.budgets!.settle(provider, id, Math.min(10_000_000, tokens)).catch(() => undefined);
   }
 
   private check<T>(

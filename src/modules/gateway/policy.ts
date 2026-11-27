@@ -51,7 +51,19 @@ export const gatewayPolicySchema = z
     routes: z.partialRecord(z.enum(gatewayPurposes), route),
     /** Optional provider-wide concurrency across all worker instances and purposes. */
     providerLimits: z
-      .record(adapterId, z.object({ concurrency: z.number().int().min(1).max(64) }).strict())
+      .record(
+        adapterId,
+        z
+          .object({
+            concurrency: z.number().int().min(1).max(64).optional(),
+            /** Rolling 24-hour token cap (estimated before the call, settled after). */
+            dailyTokens: z.number().int().min(1).max(1_000_000_000).optional(),
+          })
+          .strict()
+          .refine((limit) => limit.concurrency || limit.dailyTokens, {
+            message: "A provider limit needs concurrency or dailyTokens.",
+          }),
+      )
       .optional(),
   })
   .strict();

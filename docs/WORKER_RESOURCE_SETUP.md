@@ -2,7 +2,7 @@
 
 The independent process has separate handler-execution limits for document processing, approved remote retrieval and general work, alongside its existing total concurrency limit. The queue adapter passes currently available slots to PostgreSQL; the worker core repeats admission checks so a replacement queue cannot bypass its handler limits.
 
-These are limits for one worker instance. Multiple instances each have their own slots. Provider-wide concurrency across instances is enforced by the [AI gateway's leased provider slots](AI_GATEWAY_SETUP.md); shared cost reservations remain gateway work; deterministic matching/learning/revision tasks are not described as provider calls.
+These are limits for one worker instance. Multiple instances each have their own slots. Provider-wide concurrency across instances is enforced by the [AI gateway's leased provider slots](AI_GATEWAY_SETUP.md); shared spend is bounded by the gateway's rolling provider token budgets; deterministic matching/learning/revision tasks are not described as provider calls.
 
 ## Configure
 

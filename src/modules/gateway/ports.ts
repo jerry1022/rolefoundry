@@ -64,6 +64,17 @@ export interface ProviderSlots {
   release(provider: string, token: string): Promise<void>;
 }
 
+/** Rolling provider token budget shared by every worker instance. */
+export interface ProviderBudgets {
+  reserve(
+    provider: string,
+    tokens: number,
+    dailyCap: number,
+    signal: AbortSignal,
+  ): Promise<string | null>;
+  settle(provider: string, reservation: string, actualTokens: number): Promise<void>;
+}
+
 export interface GatewayClock {
   now(): number;
   sleep(ms: number, signal: AbortSignal): Promise<void>;
