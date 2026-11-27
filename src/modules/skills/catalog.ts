@@ -1,3 +1,4 @@
+import { z } from "zod";
 // Stable seed identifiers shared by demo and production modules.
 export const tracks = [
   "Engineering & data",
@@ -27,3 +28,5 @@ export const skillLabels: Record<Skill, string> = {
   automation: "Automation",
   content: "Content design",
 };
+
+export const skillSchema = z.enum(Object.keys(skillLabels) as [Skill, ...Skill[]]);

@@ -5,7 +5,11 @@ export function requireSameOrigin(request: Request, origin: string) {
   if (!["GET", "HEAD"].includes(request.method) && request.headers.get("origin") !== origin)
     throw new ApplicationError("RF_ORIGIN", 403, "The request origin is not permitted.");
 }
-export async function readJsonBody<T>(request: Request, schema: z.ZodType<T>): Promise<T> {
+export async function readJsonBody<T>(
+  request: Request,
+  schema: z.ZodType<T>,
+  maxBytes = 8192,
+): Promise<T> {
   const invalid = () => new ApplicationError("RF_INVALID_INPUT", 400, "The request is invalid.");
   if (request.headers.get("content-type")?.split(";")[0].trim() !== "application/json")
     throw invalid();
@@ -18,7 +22,7 @@ export async function readJsonBody<T>(request: Request, schema: z.ZodType<T>): P
       const part = await reader.read();
       if (part.done) break;
       size += part.value.byteLength;
-      if (size > 8192) {
+      if (size > maxBytes) {
         await reader.cancel();
         throw new ApplicationError("RF_TOO_LARGE", 413, "The request is too large.");
       }

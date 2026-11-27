@@ -4,6 +4,8 @@ const config: NextConfig = {
   // Pages/layouts use .tsx; dynamic Route Handlers use .ts and stay out of the Pages demo.
   pageExtensions: exporting ? ["tsx"] : ["tsx", "ts"],
   env: {
+    NEXT_PUBLIC_CATALOG_ENABLED:
+      !exporting && process.env.ROLEFOUNDRY_CATALOG_ENABLED === "true" ? "true" : "false",
     NEXT_PUBLIC_IDENTITY_ENABLED:
       !exporting && process.env.ROLEFOUNDRY_IDENTITY_ENABLED === "true" ? "true" : "false",
   },

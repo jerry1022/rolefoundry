@@ -1520,6 +1520,7 @@ export function ArchitectureScreen() {
             <li>Local resume editing, text export and an application board.</li>
             <li>Optional invitation-only Auth, consent, RLS and atomic quota reservations.</li>
             <li>Private preferences and evidence history through replaceable service ports.</li>
+            <li>Published catalog, source permissions/freshness and private bookmarks.</li>
             <li>Typed repository, provider and worker contracts.</li>
           </ul>
         </section>
@@ -1527,7 +1528,7 @@ export function ArchitectureScreen() {
           <h2>What comes next</h2>
           <ul className="detail-list">
             <li>Private document storage and account-backed career workflows.</li>
-            <li>Authorized catalogs and source lifecycle management.</li>
+            <li>Authorized live source adapters and import review workflows.</li>
             <li>Persistent queues and isolated document processing.</li>
             <li>Model adapters and output validation using versioned consent.</li>
             <li>Production telemetry, backups and deployment controls.</li>

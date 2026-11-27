@@ -32,10 +32,12 @@ export function CareerPathBrowser({
   selected,
   counts,
   onSelect,
+  countLabel = "sample",
 }: {
   selected: CareerPathId | "all";
   counts: Record<CareerPathId, number>;
   onSelect: (path: CareerPathId | "all") => void;
+  countLabel?: "sample" | "published";
 }) {
   const current = careerPaths.find((path) => path.id === selected);
   return (
@@ -72,7 +74,7 @@ export function CareerPathBrowser({
               </span>
               <strong>{path.title}</strong>
               <small>
-                {counts[path.id]} sample {counts[path.id] === 1 ? "role" : "roles"}
+                {counts[path.id]} {countLabel} {counts[path.id] === 1 ? "role" : "roles"}
               </small>
             </button>
           );

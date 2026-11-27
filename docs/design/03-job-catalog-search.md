@@ -4,7 +4,13 @@
 
 Publish discoverable, source-traceable AI-related roles. Keep source records distinct from canonical jobs so duplicate postings can share a single opening without losing provenance. Support browsing without a profile.
 
-## Current scaffold
+## Implementation status
+
+Implemented: anonymous published catalog APIs and SSR, ten specialization guides and bilingual aliases, structured AND filters, revision-bound keyset pagination, mandatory/preferred requirements, explicit unknowns, source authorization/freshness, reviewed lifecycle, immutable content versions and private idempotent bookmarks with retired snapshots. See [setup/API](../CATALOG_SETUP.md). No live source is populated automatically.
+
+Ports isolate public catalog, private bookmarks and administrator operations from their Supabase/browser adapters. Dynamic APIs are excluded from the static demo. Full skill aliases, personalized ranking, real ingestion and application-history integration remain assigned to 04/06/09/10; embeddings are not connected yet, so lexical search is the working fallback.
+
+## Static demo
 
 Eight fictional openings demonstrate four career tracks, workplace filters, AND keyword search, local bookmarks, detail dialogs and skill-overlap sorting. Employers, salaries and posting labels are explicitly illustrative. `FixtureJobRepository` returns cloned records to prevent accidental fixture mutation.
 
