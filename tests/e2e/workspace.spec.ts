@@ -200,6 +200,9 @@ test("mobile routes fit the viewport and navigation works", async ({ page }) => 
 });
 
 test("public demo labels identity as unavailable and fails closed", async ({ page, request }) => {
+  // About twenty API routes compile on first request in the dev server; a cold CI runner needs
+  // more than the default 30s (it exceeded it on #60 and #61).
+  test.setTimeout(90000);
   await page.goto("/account/");
   await expect(page.locator("h1")).toBeVisible();
   await expect(page.getByLabel("Email address")).toHaveCount(0);
