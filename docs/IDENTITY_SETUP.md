@@ -118,3 +118,7 @@ Pages and layouts use `.tsx`; dynamic Route Handlers use `route.ts`. The GitHub 
 - [Supabase server-side session verification](https://supabase.com/docs/guides/auth/server-side/creating-a-client)
 - [Before User Created hook](https://supabase.com/docs/guides/auth/auth-hooks/before-user-created-hook)
 - [Email OTP](https://supabase.com/docs/guides/auth/auth-email-passwordless)
+
+## Private data portability
+
+The configured account screen now provides [sealed private account exports](ACCOUNT_DATA_SETUP.md), durable ZIP creation, owner download/removal and cleanup. It uses existing identity/worker settings plus the account export migration; no provider secret or analysis consent is required. Full self-service account deletion remains pending.

@@ -10,7 +10,9 @@ The public static-demo inspector displays fixture counts, source provenance and 
 
 The private `/admin/` workspace now composes domain source administration with [administrator-only task/worker diagnostics](../OPERATIONS_SETUP.md). Independent service and database role checks guard every read. Fixed-size, stable task/event pages expose only minimized operational metadata; reads are audited. The independent worker reports active/draining/stopped presence and the UI distinguishes stale reports. Queue/lease observations and threshold notices are implemented; no replay or external alert delivery is implied.
 
-The [local database recovery rehearsal](../OPERATIONS_RECOVERY.md) is now executable. It restores a consistent project database/queue snapshot into an owned disposable database, compares content and authorization metadata, probes the restored queue and verifies cleanup on both success and an intentional failure. This is a partial operational delivery; hosted/clean-cluster and Storage-object recovery, account export/deletion, task replay and consolidated administration remain pending.
+The [local database recovery rehearsal](../OPERATIONS_RECOVERY.md) is now executable. It restores a consistent project database/queue snapshot into an owned disposable database, compares content and authorization metadata, probes the restored queue and verifies cleanup on both success and an intentional failure. This is a partial operational delivery; hosted/clean-cluster and Storage-object recovery, full account deletion, task replay and consolidated administration remain pending.
+
+The [private account export workflow](../ACCOUNT_DATA_SETUP.md) now seals retained records and committed resume files, builds an integrity-checked ZIP through the task worker, authorizes owner-only download/removal, invalidates copies on privacy deletion and reclaims artifacts after expiry or owner removal. Full self-service account deletion remains pending.
 
 ## Production interface
 

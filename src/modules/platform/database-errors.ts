@@ -1,5 +1,9 @@
 import { ApplicationError } from "./errors";
 const failures = {
+  RF_ACCOUNT_EXPORT_LIMIT: [
+    409,
+    "The export exceeds its daily, file or data size limit. No data was truncated.",
+  ],
   RF_INGESTION_LIMIT: [409, "This import exceeds the batch, row or source history limit."],
   RF_APPLICATION_LIMIT: [409, "The tracker has reached its record, event or follow-up limit."],
   RF_RESUME_LIMIT: [409, "This resume operation exceeds the document, history or content limit."],

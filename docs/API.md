@@ -107,3 +107,16 @@ All endpoints are read-only, require a current administrator session at both HTT
 | GET `/api/v1/admin/operations/workers` | `{data: {observedAt,data: worker[],truncated}}`; latest 100, active/draining/stopped/stale observations |
 
 Unknown/duplicate query parameters, malformed identifiers/cursors, or cursor reuse across filters/tasks return 400. Cursors do not convey authority; every page rechecks the current role. Inputs, owner identities, source/result references, lease tokens, messages and untrusted classification strings are excluded. No replay endpoint is implemented.
+
+## Private account archives
+
+All endpoints derive the current owner from the verified session and repeat database authorization. An administrator cannot download another account's archive. See [format, bounds and cleanup](ACCOUNT_DATA_SETUP.md).
+
+| Method and path | Contract |
+| --- | --- |
+| POST `/api/v1/account/exports` | Empty JSON body, same-origin and `Idempotency-Key` (8–120 alphanumeric/underscore/hyphen characters); `202 {data: export}`; one pending and three requests/24 hours |
+| GET `/api/v1/account/exports` | Optional opaque `cursor`; `{data: export[],nextCursor}`; fixed 20, descending `(created_at,id)` |
+| GET `/api/v1/account/exports/{id}/download` | Owner-only integrity-checked ZIP stream, attachment filename and `no-store`; checks access before/after Storage read; missing/expired/invalidated/foreign resource is 404 |
+| DELETE `/api/v1/account/exports/{id}` | Empty JSON, same-origin; `{data: export}` with `invalidated` state; idempotently cancels publication/denies downloads and schedules physical artifact cleanup |
+
+Export metadata contains ID, task ID, status (`queued`, `running`, `ready`, `failed`, `expired`, `invalidated`), request/expiry timestamps and optional byte count. It excludes the sealed payload and private object keys. Unknown/duplicate parameters, malformed IDs/cursors and owner/body spoofing are rejected. Internal snapshot/worker/cleanup functions and raw application tables are service-only. No account-deletion endpoint is implemented yet.

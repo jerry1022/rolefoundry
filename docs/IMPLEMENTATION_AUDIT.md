@@ -73,13 +73,13 @@ The integration suite runs against actual local GoTrue, PostgREST, PostgreSQL an
 ## 12 — Background worker and tasks
 
 - Design: [12-worker-tasks.md](design/12-worker-tasks.md).
-- Status: Durable pgmq engine, queue adapter and actual assessment, matching, learning, resume and ingestion handlers plus a resumable Storage janitor implemented/verified with modules 05–10. [Administrator queue/lease/retry diagnostics and independent worker presence](OPERATIONS_SETUP.md) are implemented. Remaining domain/provider handlers, invalidation dispatch and hosted telemetry integration are still pending; do not count the entire module complete.
+- Status: Durable pgmq engine, queue adapter and actual assessment, matching, learning, resume and ingestion handlers plus resumable resume/account-artifact janitors and private account export execution implemented/verified. [Administrator queue/lease/retry diagnostics and independent worker presence](OPERATIONS_SETUP.md) are implemented. Remaining domain/provider handlers, invalidation dispatch and hosted telemetry integration are still pending; do not count the entire module complete.
 - Required acceptance scope: Simulate duplicate delivery, lease expiry, crash before/after commit, provider timeout, poison payload, stale input, owner deletion and graceful shutdown. Verify that queue age, lease age, retries and terminal failures are observable.
 
 ## 13 — Administration and operations
 
 - Design: [13-admin-operations.md](design/13-admin-operations.md).
-- Status: Partial: [audited administrator task/event/worker diagnostics](OPERATIONS_SETUP.md) plus [local isolated database/queue recovery and failure-cleanup rehearsal](OPERATIONS_RECOVERY.md) implemented and verified. Consolidated domain administration, replay, full account export/deletion, external telemetry/alerts and hosted/Storage-object recovery remain pending.
+- Status: Partial: [private account export/archive removal and artifact cleanup](ACCOUNT_DATA_SETUP.md), [audited administrator task/event/worker diagnostics](OPERATIONS_SETUP.md) plus [local isolated database/queue recovery and failure-cleanup rehearsal](OPERATIONS_RECOVERY.md) implemented and verified. Consolidated domain administration, replay, full account deletion, external telemetry/alerts and hosted/Storage-object recovery remain pending.
 - Required acceptance scope: Verify non-admin rejection, audit coverage, publication rollback, missing-secret startup behavior, failed-task replay, deletion during execution and database/storage restoration. Confirm that deploys do not migrate production data automatically from an unreviewed pull request.
 
 ## Cross-module completion gates

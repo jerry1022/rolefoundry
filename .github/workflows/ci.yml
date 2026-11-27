@@ -72,3 +72,6 @@ jobs:
 
       - name: Verify isolated resume runtime in Linux
         run: node scripts/check-resume-worker-image.mjs rolefoundry-worker:ci
+
+      - name: Verify private account archive runtime in Linux
+        run: node scripts/check-account-worker-image.mjs rolefoundry-worker:ci
