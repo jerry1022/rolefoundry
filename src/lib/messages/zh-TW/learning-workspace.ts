@@ -248,4 +248,5 @@ export const learningWorkspace = {
   "Scheduled; not before {time}": "已排程；{time} 之前不會檢查",
   "Clear manual pause for {host}": "解除 {host} 的手動暫停",
   "Next host limits": "下一頁主機限制",
+  "Reviewed translation of RoleFoundry's editorial notes.": "RoleFoundry 編輯說明的審查翻譯。",
 } satisfies Messages;

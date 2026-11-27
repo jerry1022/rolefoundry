@@ -1,5 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { planLearning } from "../../src/modules/learning/planner";
+import { localizedCourseText } from "../../src/modules/learning/model";
+import { LearningAdministrationService } from "../../src/modules/learning/service";
 import {
   learningOutputSchema,
   courseDraftSchema,
@@ -328,5 +330,64 @@ describe("private learning contracts", () => {
         .practiceSubmissions,
     ).toEqual([]);
     expect(acceptLearningRead({ ...complete, stale: true }, complete).stale).toBe(true);
+  });
+});
+
+describe("reviewed course translations", () => {
+  const course = {
+    summary: "Learn retrieval basics.",
+    practice: {
+      prompt: "Build a retriever",
+      completionCriteria: "Keep the test result",
+      minutes: 15,
+    },
+    translations: {
+      "zh-TW": {
+        summary: "學習檢索基礎。",
+        practicePrompt: "建立一個檢索器",
+        completionCriteria: "保留測試結果",
+        reviewedAt: "2026-11-24T00:00:00Z",
+      },
+    },
+  };
+  it("shows reviewed editorial text to zh-TW viewers and the source to everyone else", () => {
+    expect(localizedCourseText(course, "zh-TW")).toMatchObject({
+      summary: "學習檢索基礎。",
+      practicePrompt: "建立一個檢索器",
+      lang: "zh-Hant",
+    });
+    expect(localizedCourseText(course, "en")).toMatchObject({
+      summary: "Learn retrieval basics.",
+      completionCriteria: "Keep the test result",
+      lang: "en",
+      reviewedAt: null,
+    });
+    expect(localizedCourseText({ ...course, translations: {} }, "zh-TW").lang).toBe("en");
+  });
+  it("validates translations before the repository sees them", async () => {
+    const calls: unknown[] = [];
+    const repository = {
+      translate: async (...args: unknown[]) => void calls.push(args),
+    } as unknown as ConstructorParameters<typeof LearningAdministrationService>[0];
+    const service = new LearningAdministrationService(repository, { authorize: async () => {} });
+    const actor = { userId: crypto.randomUUID(), role: "admin" as const };
+    const input = {
+      versionId: crypto.randomUUID(),
+      locale: "zh-TW",
+      summary: "學習檢索基礎。",
+      practicePrompt: "建立一個檢索器",
+      completionCriteria: "保留測試結果",
+      reviewNote: "Bilingual editor review",
+    };
+    await service.translate(actor, crypto.randomUUID(), input);
+    for (const bad of [
+      { ...input, title: "x" },
+      { ...input, locale: "en" },
+      { ...input, reviewNote: "" },
+    ])
+      await expect(service.translate(actor, crypto.randomUUID(), bad)).rejects.toMatchObject({
+        status: 400,
+      });
+    expect(calls).toHaveLength(1);
   });
 });

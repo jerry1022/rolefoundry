@@ -4,6 +4,7 @@ import { querySchema, type PublishedJob } from "@/modules/jobs/model";
 import type { CatalogClient, CatalogTranslationClient } from "@/modules/jobs/ports";
 import { msg, useI18n } from "@/lib/i18n";
 import { ApplicationError } from "@/modules/platform/errors";
+import { TranslationField } from "../ui/translation-field";
 
 type Draft = { title: string; summary: string; responsibilities: string[]; reviewNote: string };
 const emptyDraft = (job: PublishedJob): Draft => {
@@ -157,56 +158,37 @@ export function JobTranslationAdministration({
               })}
             </p>
           )}
-          <div className="job-translation-pair">
-            <p className="source">{job.title}</p>
-            <label>
-              <span>{t("Title (Traditional Chinese)")}</span>
-              <input
-                className="text-input"
-                lang="zh-Hant"
-                maxLength={200}
-                value={draft.title}
-                onChange={(event) => setDraft({ ...draft, title: event.target.value })}
-              />
-            </label>
-          </div>
-          <div className="job-translation-pair">
-            <p className="source">{job.summary}</p>
-            <label>
-              <span>{t("Summary (Traditional Chinese)")}</span>
-              <textarea
-                className="text-input"
-                lang="zh-Hant"
-                rows={4}
-                maxLength={3000}
-                value={draft.summary}
-                onChange={(event) => setDraft({ ...draft, summary: event.target.value })}
-              />
-            </label>
-          </div>
+          <TranslationField
+            source={job.title}
+            label={t("Title (Traditional Chinese)")}
+            maxLength={200}
+            value={draft.title}
+            onChange={(title) => setDraft({ ...draft, title })}
+          />
+          <TranslationField
+            source={job.summary}
+            label={t("Summary (Traditional Chinese)")}
+            maxLength={3000}
+            multiline
+            value={draft.summary}
+            onChange={(summary) => setDraft({ ...draft, summary })}
+          />
           {job.responsibilities.map((line, index) => (
-            <div className="job-translation-pair" key={index}>
-              <p className="source">{line}</p>
-              <label>
-                <span>
-                  {t("Responsibility {number} (Traditional Chinese)", { number: index + 1 })}
-                </span>
-                <input
-                  className="text-input"
-                  lang="zh-Hant"
-                  maxLength={1000}
-                  value={draft.responsibilities[index]}
-                  onChange={(event) =>
-                    setDraft({
-                      ...draft,
-                      responsibilities: draft.responsibilities.map((value, position) =>
-                        position === index ? event.target.value : value,
-                      ),
-                    })
-                  }
-                />
-              </label>
-            </div>
+            <TranslationField
+              key={index}
+              source={line}
+              label={t("Responsibility {number} (Traditional Chinese)", { number: index + 1 })}
+              maxLength={1000}
+              value={draft.responsibilities[index]}
+              onChange={(value) =>
+                setDraft({
+                  ...draft,
+                  responsibilities: draft.responsibilities.map((item, position) =>
+                    position === index ? value : item,
+                  ),
+                })
+              }
+            />
           ))}
           <label className="profile-field">
             <span>{t("Review note")}</span>

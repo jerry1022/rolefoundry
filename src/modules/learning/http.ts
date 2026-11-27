@@ -94,6 +94,17 @@ export async function learningHttp(
       }
       if (action.length === 1 && request.method === "PATCH")
         return send(await admin.revise(actor, action[0], await body()));
+      if (action.length >= 2 && action[1] === "translations" && request.method === "POST") {
+        // POST courses/:id/translations saves; POST courses/:id/translations/remove deletes.
+        if (action.length === 2) {
+          await admin.translate(actor, action[0], await body());
+          return send({ translated: true });
+        }
+        if (action.length === 3 && action[2] === "remove") {
+          await admin.removeTranslation(actor, action[0], await body());
+          return send({ removed: true });
+        }
+      }
       if (action.length === 2 && action[1] === "transition" && request.method === "POST") {
         await admin.transition(actor, action[0], await body());
         return send({ updated: true });

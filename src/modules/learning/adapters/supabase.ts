@@ -212,6 +212,26 @@ export class SupabaseLearningAdministration implements LearningAdministration {
       p_reason: input.reason,
     });
   }
+  async translate(id: string, input: Parameters<LearningAdministration["translate"]>[1]) {
+    const { versionId, locale, ...text } = input;
+    await rpc(this.client, "learning_course_translate", {
+      p_course: id,
+      p_version: versionId,
+      p_locale: locale,
+      p_data: text,
+    });
+  }
+  async removeTranslation(
+    id: string,
+    input: Parameters<LearningAdministration["removeTranslation"]>[1],
+  ) {
+    await rpc(this.client, "learning_course_untranslate", {
+      p_course: id,
+      p_version: input.versionId,
+      p_locale: input.locale,
+      p_reason: input.reason,
+    });
+  }
 }
 export class SupabaseLearningExecutionStore implements LearningExecutionStore {
   constructor(private readonly client: SupabaseClient) {}

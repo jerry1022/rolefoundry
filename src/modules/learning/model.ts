@@ -96,8 +96,64 @@ export const courseSchema = courseDraftSchema.omit({ key: true, sourceId: true }
     rightsSummary: z.string(),
     isDemo: z.boolean(),
   }),
+  /** Reviewed translations of the published version's editorial text, keyed by locale. */
+  translations: z
+    .object({
+      "zh-TW": z
+        .object({
+          summary: z.string(),
+          practicePrompt: z.string(),
+          completionCriteria: z.string(),
+          reviewedAt: z.string(),
+        })
+        .optional(),
+    })
+    .optional(),
 });
 export type LearningCourse = z.infer<typeof courseSchema>;
+
+/** Administrator input: reviewed zh-TW editorial text for one published course version. */
+export const courseTranslationInputSchema = z
+  .object({
+    versionId: z.uuid(),
+    locale: z.literal("zh-TW"),
+    summary: text(2000),
+    practicePrompt: text(1000),
+    completionCriteria: text(1000),
+    reviewNote: text(1000),
+  })
+  .strict();
+export type CourseTranslationInput = z.infer<typeof courseTranslationInputSchema>;
+export const courseTranslationRemovalSchema = z
+  .object({ versionId: z.uuid(), locale: z.literal("zh-TW"), reason: text(1000) })
+  .strict();
+export type CourseTranslationRemoval = z.infer<typeof courseTranslationRemovalSchema>;
+
+/**
+ * Editorial text for the viewer's locale. Official titles are never translated because they
+ * name the linked provider page.
+ */
+export function localizedCourseText(
+  course: Pick<LearningCourse, "summary" | "practice" | "translations">,
+  locale: string,
+) {
+  const translation = locale === "zh-TW" ? course.translations?.["zh-TW"] : undefined;
+  return translation
+    ? {
+        summary: translation.summary,
+        practicePrompt: translation.practicePrompt,
+        completionCriteria: translation.completionCriteria,
+        lang: "zh-Hant" as const,
+        reviewedAt: translation.reviewedAt,
+      }
+    : {
+        summary: course.summary,
+        practicePrompt: course.practice.prompt,
+        completionCriteria: course.practice.completionCriteria,
+        lang: "en" as const,
+        reviewedAt: null,
+      };
+}
 export const coursePageSchema = z.object({
   data: z.array(courseSchema),
   nextCursor: z.string().nullable(),

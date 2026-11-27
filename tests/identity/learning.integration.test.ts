@@ -386,6 +386,63 @@ describe("module 07 reviewed courses and private learning plans", () => {
       ).status,
     ).toBe(400);
   });
+  it("publishes reviewed editorial translations for the published version only", async () => {
+    const record = await course();
+    const read = async () =>
+      courseSchema.parse((await (await stack.request(`courses/${record.id}`)).json()).data);
+    const first = await read();
+    expect(first.translations).toEqual({});
+    const body = (versionId: string) => ({
+      versionId,
+      locale: "zh-TW",
+      summary: "為隔離測試撰寫的虛構課程資訊",
+      practicePrompt: "做一個小範例並測試",
+      completionCriteria: "保留範例、限制與測試結果",
+      reviewNote: "Synthetic fixture reviewed against the editorial source",
+    });
+    const put = (input: unknown, user = admin) =>
+      stack.request(`admin/courses/${record.id}/translations`, user, "POST", input);
+    expect((await put(body(first.versionId), await stack.member())).status).toBe(403);
+    expect((await put({ ...body(first.versionId), title: "翻譯標題" })).status).toBe(400);
+    expect((await put(body(crypto.randomUUID()))).status).toBe(409);
+    expect((await put(body(first.versionId))).status).toBe(200);
+    const translated = await read();
+    expect(translated.title).toBe(first.title);
+    expect(translated.translations?.["zh-TW"]).toMatchObject({
+      summary: "為隔離測試撰寫的虛構課程資訊",
+      practicePrompt: "做一個小範例並測試",
+    });
+    const audit = await stack.sql.query(
+      "select reason from public.course_audit where resource_id=$1 and action='course.translated'",
+      [record.id],
+    );
+    expect(audit.rows).toEqual([
+      { reason: "Synthetic fixture reviewed against the editorial source" },
+    ]);
+    // A newly published version hides the earlier review until it is translated again.
+    const revise = await stack.request(`admin/courses/${record.id}`, admin, "PATCH", {
+      expectedRevision: record.revision,
+      course: { ...record.draft, summary: "Revised fictional metadata" },
+    });
+    expect(revise.status).toBe(200);
+    record.revision++;
+    expect((await read()).translations?.["zh-TW"]).toBeDefined();
+    await transition(record, "review");
+    await transition(record, "publish");
+    const second = await read();
+    expect(second.versionId).not.toBe(first.versionId);
+    expect(second.translations).toEqual({});
+    expect((await put(body(second.versionId))).status).toBe(200);
+    const remove = (reason: string) =>
+      stack.request(`admin/courses/${record.id}/translations/remove`, admin, "POST", {
+        versionId: second.versionId,
+        locale: "zh-TW",
+        reason,
+      });
+    expect((await remove(" ")).status).toBe(400);
+    expect((await remove("Reviewer withdrew the translation")).status).toBe(200);
+    expect((await read()).translations).toEqual({});
+  });
   it("rejects cycles in the proposed published prerequisite graph", async () => {
     const a = await course(),
       b = await course({ prerequisiteCourseIds: [a.id] });

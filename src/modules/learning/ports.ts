@@ -12,6 +12,8 @@ import type {
   LearningOutput,
   LearningGapInput,
   CourseProgress,
+  CourseTranslationInput,
+  CourseTranslationRemoval,
   courseSourceSchema,
   courseDraftSchema,
   courseBankSchema,
@@ -67,6 +69,8 @@ export interface LearningAdministration {
       reason: string;
     },
   ): Promise<void>;
+  translate(id: string, input: CourseTranslationInput): Promise<void>;
+  removeTranslation(id: string, input: CourseTranslationRemoval): Promise<void>;
 }
 export interface LearningAuthorization {
   authorize(actor: Actor, action: string, ownerId?: string): Promise<void>;
