@@ -4,6 +4,7 @@ import { safeDatabaseError } from "../../platform/database-errors";
 import { recipientPageSchema, type RecipientChange, type RecipientStore } from "../admin";
 import type { GatewayRequest, GatewayResult } from "../model";
 import type { GatewayAuthority, GatewayRecorder, ProviderBudgets, ProviderSlots } from "../ports";
+import { usageReportSchema, type UsageReportStore, type UsageWindow } from "../usage";
 
 const bounded = (signal: AbortSignal) => AbortSignal.any([signal, AbortSignal.timeout(5000)]);
 
@@ -80,6 +81,17 @@ export class SupabaseRecipientStore implements RecipientStore {
       p_reason: change.reason,
     });
     if (error) throw safeDatabaseError(error);
+  }
+}
+
+/** Request-scoped administrator report; the RPC verifies the administrator itself. */
+export class SupabaseUsageReportStore implements UsageReportStore {
+  constructor(private readonly client: SupabaseClient) {}
+
+  async report(windowDays: UsageWindow) {
+    const { data, error } = await this.client.rpc("gateway_usage_report", { p_days: windowDays });
+    if (error) throw safeDatabaseError(error);
+    return usageReportSchema.parse(data);
   }
 }
 

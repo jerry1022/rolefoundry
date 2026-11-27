@@ -17,6 +17,7 @@ import {
 import { shortAnswerRequest } from "../../src/modules/assessment/short-answer";
 import type { GatewayRequest } from "../../src/modules/gateway/model";
 import { telemetrySnapshotSchema } from "../../src/modules/telemetry/model";
+import { usageReportSchema } from "../../src/modules/gateway/usage";
 
 vi.mock("server-only", () => ({}));
 
@@ -749,6 +750,27 @@ it("records estimated cost from configured pricing and reports provider spend", 
       (await stack.privileged.rpc("telemetry_snapshot")).data,
     );
     expect(snapshot.gateway?.find((item) => item.provider === recipient)?.costMicros).toBe(6000);
+    // The administrator report exposes the same content-free rows with estimated spend.
+    const response = await stack.request("identity/admin/ai-usage?days=1", admin);
+    expect(response.status).toBe(200);
+    const usage = usageReportSchema.parse((await response.json()).data);
+    expect(usage.providers.find((row) => row.provider === recipient)).toMatchObject({
+      model: "fake-model",
+      calls: 1,
+      failures: 0,
+      inputTokens: 1000,
+      outputTokens: 200,
+      costMicros: 6000,
+      unpricedCalls: 0,
+    });
+    expect(
+      usage.purposes.find((row) => row.purpose === "resume.wording")?.succeeded,
+    ).toBeGreaterThan(0);
+    expect(usage.daily.at(-1)?.costMicros).toBeGreaterThanOrEqual(6000);
+    expect(JSON.stringify(usage)).not.toContain("resume-version:cost");
+    expect((await stack.request("identity/admin/ai-usage?days=1", member)).status).toBe(403);
+    for (const query of ["days=2", "days=7&extra=1"])
+      expect((await stack.request(`identity/admin/ai-usage?${query}`, admin)).status).toBe(400);
   } finally {
     await stack.sql.query("delete from public.ai_recipient_approvals where recipient=$1", [
       recipient,

@@ -5,6 +5,7 @@ import {
   type RecipientChange,
   type RecipientPage,
 } from "../admin";
+import { usageReportSchema, type UsageReport, type UsageWindow } from "../usage";
 
 export interface RecipientClient {
   list(signal?: AbortSignal): Promise<RecipientPage>;
@@ -23,5 +24,19 @@ export function createRecipientClient(fetcher: typeof fetch = fetch): RecipientC
     async revoke(change) {
       await request(path, { method: "DELETE", body: recipientChangeSchema.parse(change) });
     },
+  };
+}
+
+export interface UsageClient {
+  report(windowDays: UsageWindow, signal?: AbortSignal): Promise<UsageReport>;
+}
+
+export function createUsageClient(fetcher: typeof fetch = fetch): UsageClient {
+  const request = createBrowserTransport(fetcher);
+  return {
+    report: async (windowDays, signal) =>
+      usageReportSchema.parse(
+        (await request(`identity/admin/ai-usage?days=${windowDays}`, { signal })).data,
+      ),
   };
 }
