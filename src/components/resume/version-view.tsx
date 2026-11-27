@@ -1,7 +1,7 @@
 "use client";
 import { useI18n } from "@/lib/i18n";
 import type { ResumeVersion } from "@/modules/resume/model";
-import type { SkillDictionary } from "@/modules/skills/model";
+import { localizedSkillName, type SkillDictionary } from "@/modules/skills/model";
 export function ResumeVersionView({
   version,
   dictionary,
@@ -9,9 +9,11 @@ export function ResumeVersionView({
   version: ResumeVersion;
   dictionary: SkillDictionary | null;
 }) {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const labels = new Map(
-    (dictionary?.skills || []).map((skill) => [skill.id, skill.nameEn] as const),
+    (dictionary?.skills || []).map(
+      (skill) => [skill.id, localizedSkillName(skill, locale)] as const,
+    ),
   );
   return (
     <section className="panel section-block">

@@ -85,6 +85,23 @@ export const mergeSkillSchema = z
 export function skillLabel(id: string, labels?: Record<string, string>) {
   return labels?.[id] || (skillLabels as Record<string, string>)[id] || id;
 }
+/** Reviewed display name for the viewer's locale; a missing translation falls back to English. */
+export function localizedSkillName(
+  skill: { nameEn: string; nameZhTw?: string | null },
+  locale: string,
+) {
+  return locale === "zh-TW" && skill.nameZhTw?.trim() ? skill.nameZhTw : skill.nameEn;
+}
+/**
+ * Label map for server-pinned labels: zh-TW viewers get the reviewed translation per skill and
+ * English for any skill the snapshot has not translated.
+ */
+export function labelsForLocale(
+  locale: string,
+  labels: { en?: Record<string, string>; zhTw?: Record<string, string> },
+) {
+  return locale === "zh-TW" ? { ...labels.en, ...labels.zhTw } : labels.en;
+}
 export const removeAliasSchema = z
   .object({ ...mutation, locale: localeSchema, alias: text(200).min(1) })
   .strict();

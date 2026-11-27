@@ -346,6 +346,8 @@ describe("module 04 real dictionary, historical mappings and consumer joins", ()
     expect(historical.dictionaryVersion).toBe(before.version);
     const published = (await (await stack.request(`jobs/${jobId}`)).json()).data;
     expect(published.requirements[0]).toMatchObject({ skills: [b], sourceSkills: [a, b].sort() });
+    // Learner-facing labels carry the reviewed zh-TW name next to English.
+    expect(published.requirements[0].skillLabelsZhTw).toEqual({ [b]: `測試概念 ${b}` });
     expect(published.sourceDictionaryVersion).toBe(before.version);
   });
   it("rolls back cyclic merges, retains redirect chains and migrates reviewed track priorities", async () => {
@@ -454,6 +456,8 @@ describe("module 04 real dictionary, historical mappings and consumer joins", ()
     const history = (await (await stack.request(`evidence/${evidence.id}`, user)).json()).data[0];
     expect(history.skills).toEqual([id]);
     expect(history.skillLabels[id]).toBe(original.nameEn);
+    // The zh-TW label is pinned to the recorded dictionary version, not the later rename.
+    expect(history.skillLabelsZhTw[id]).toBe(original.nameZhTw);
     expect((await get()).skills.find((skill) => skill.id === id)?.status).toBe("deprecated");
     const response = await stack.request("evidence", user, "POST", {
       expectedRevision: 1,

@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { msg, useI18n } from "@/lib/i18n";
 import { confirmedResumeSchema, resumeLimits } from "@/modules/resume/model";
 import type { ResumeDocument, ConfirmedResume, ResumeFact } from "@/modules/resume/model";
-import type { SkillDictionary } from "@/modules/skills/model";
+import { localizedSkillName, type SkillDictionary } from "@/modules/skills/model";
 const kindLabels: Record<ResumeFact["kind"], string> = {
   experience: msg("experience"),
   project: msg("project"),
@@ -48,7 +48,7 @@ export function ResumeFactEditor({
   /** A reviewed wording suggestion to place into the draft (nonce makes repeats apply). */
   incoming?: { factId: string; text: string; nonce: number } | null;
 }) {
-  const { t, fmt } = useI18n();
+  const { t, fmt, locale } = useI18n();
   const [draft, setDraft] = useState(() => initial(document)),
     [base, setBase] = useState(document.revision),
     [saving, setSaving] = useState(false),
@@ -59,7 +59,9 @@ export function ResumeFactEditor({
     },
     valid = confirmedResumeSchema.safeParse(clean);
   const labels = new Map(
-    (dictionary?.skills || []).map((skill) => [skill.id, skill.nameEn] as const),
+    (dictionary?.skills || []).map(
+      (skill) => [skill.id, localizedSkillName(skill, locale)] as const,
+    ),
   );
   // Apply an owner-chosen suggestion to the draft only; confirmation stays explicit.
   useEffect(() => {

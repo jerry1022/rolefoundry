@@ -1,6 +1,6 @@
 "use client";
 import { useId, useState } from "react";
-import type { SkillEntry } from "@/modules/skills/model";
+import { localizedSkillName, type SkillEntry } from "@/modules/skills/model";
 import {
   publicEvidenceSchema,
   type CapabilityEvidence,
@@ -21,7 +21,7 @@ export function EvidenceForm({
   onSave: (value: PublicEvidenceInput) => Promise<void>;
   onCancel: () => void;
 }) {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const formId = useId();
   const [source, setSource] = useState<"self-report" | "portfolio-reference">(
     (initial?.source as "self-report" | "portfolio-reference") || "self-report",
@@ -119,18 +119,20 @@ export function EvidenceForm({
           </div>
           <fieldset className="profile-options">
             <legend>{t("Related skills")}</legend>
-            {skillOptions.map(({ id: skill, nameEn, status }) => (
-              <label key={skill}>
+            {skillOptions.map((option) => (
+              <label key={option.id}>
                 <input
                   type="checkbox"
-                  checked={skills.includes(skill)}
+                  checked={skills.includes(option.id)}
                   onChange={(e) =>
                     setSkills(
-                      e.target.checked ? [...skills, skill] : skills.filter((s) => s !== skill),
+                      e.target.checked
+                        ? [...skills, option.id]
+                        : skills.filter((s) => s !== option.id),
                     )
                   }
                 />
-                {nameEn}
+                {localizedSkillName(option, locale)}
               </label>
             ))}
           </fieldset>

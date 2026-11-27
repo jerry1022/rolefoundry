@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
 import Link from "next/link";
-import { skillLabel } from "@/modules/skills/model";
+import { labelsForLocale, skillLabel } from "@/modules/skills/model";
 import type { CapabilityEvidence } from "@/modules/profile/model";
 import { msg, useI18n } from "@/lib/i18n";
 const sourceLabels = {
@@ -23,7 +23,11 @@ export function EvidenceCard({
   onDelete: () => Promise<void>;
   onHistory: () => Promise<CapabilityEvidence[]>;
 }) {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
+  const labels = labelsForLocale(locale, {
+    en: evidence.skillLabels,
+    zhTw: evidence.skillLabelsZhTw,
+  });
   const [confirm, setConfirm] = useState(false);
   const [history, setHistory] = useState<CapabilityEvidence[] | null>(null);
   const [error, setError] = useState("");
@@ -40,7 +44,7 @@ export function EvidenceCard({
       <div className="tags">
         {evidence.skills.map((skill) => (
           <span className="skill-tag" key={skill}>
-            {skillLabel(skill, evidence.skillLabels)}
+            {skillLabel(skill, labels)}
           </span>
         ))}
       </div>
