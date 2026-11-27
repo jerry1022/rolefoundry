@@ -60,6 +60,7 @@ Changes stay in your browser. Reset them from **Catalog studio**.
 | **Applications** | Manual stages, notes and persistent local state |
 | **Catalog studio** | Transparent fixture provenance and a confirmed local reset |
 | **Architecture** | An explorable overview of the planned service boundaries |
+| **Skill dictionary** | Optional bilingual concepts, exact aliases, immutable snapshots, reviewed relations/merges and runtime skill choices |
 | **Account & privacy** | Optional server-backed email OTP, invitations, consent, weekly allowance and admin controls; static demo stays local |
 
 ### Honest by default
@@ -83,7 +84,7 @@ Open `http://127.0.0.1:3200/account/`; receive your code in local Mailpit at por
 
 ### Continue module development
 
-Follow the [numbered delivery plan and dependency rules](docs/MODULE_DEVELOPMENT.md). Modules 01–03 implement identity, private profiles and the published job catalog. Module 04 (skill dictionary) is next; the [complete design audit](docs/IMPLEMENTATION_AUDIT.md) retains every remaining acceptance gate. Each step updates its design, README and executable acceptance tests. Open PRs remain separate review gates.
+Follow the [numbered delivery plan and dependency rules](docs/MODULE_DEVELOPMENT.md). Modules 01–04 implement identity, private profiles, the published job catalog and versioned bilingual skills. Module 05 (assessment) is next; the [complete design audit](docs/IMPLEMENTATION_AUDIT.md) retains every remaining acceptance gate. Each step updates its design, README and executable acceptance tests. Open PRs remain separate review gates.
 
 The local helper also enables the database catalog at `/jobs/`, initially empty. Follow [catalog setup](docs/CATALOG_SETUP.md) to review/publish permitted source records. With identity configured, sign in at `/account/` and visit `/skills/` for the private profile. Existing local data is imported only after preview and explicit approval. See [profile setup and API](docs/PROFILE_SETUP.md).
 
@@ -102,15 +103,15 @@ flowchart LR
 
 Today: **Next.js · React · TypeScript · Zod · Supabase Auth/PostgreSQL · CSS tokens · Lucide · Vitest · Playwright**.
 
-Production extensions: **private Storage · pgvector · pgmq consumer · independent worker · schema-validated AI adapters**. Identity reservations and profile invalidation outboxes are implemented; analysis execution is not. Core profile rules have no framework or database SDK dependency. The UI uses a replaceable client port, and request-scoped composition roots select adapters. [Architecture checks](scripts/check-boundaries.mjs) protect these boundaries. The architecture is a modular monolith, with explicit module ports rather than premature microservices.
+Production extensions: **private Storage · pgvector · pgmq consumer · independent worker · schema-validated AI adapters**. Identity reservations and profile invalidation outboxes are implemented; analysis execution is not. Core profile, catalog and dictionary rules have no framework or database SDK dependency. The UI uses a replaceable client port, and request-scoped composition roots select adapters. [Architecture checks](scripts/check-boundaries.mjs) protect these boundaries. The architecture is a modular monolith, with explicit module ports rather than premature microservices.
 
 ```text
-src/app/             Ten pages, identity API routes and application layout
+src/app/             Eleven pages, domain API routes and application layout
 src/components/      Shared shell and interactive screens
 src/lib/             Domain rules, schemas, fixtures and service ports
 src/modules/identity Verified identity services and worker authorization guards
 src/modules/profile  Domain schemas/ports/use cases, adapters and API composition
-src/modules/skills   Stable canonical IDs shared across modules
+src/modules/skills   Bilingual dictionary, snapshots, alias/merge ports and adapters
 src/modules/jobs     Published catalog, source policies and private bookmark ports/adapters
 src/modules/platform Safe application errors and bounded HTTP helpers
 supabase/            Identity/profile/catalog migrations, owner RLS and local OTP templates
@@ -130,6 +131,7 @@ tests/               Domain tests and browser journeys
 - [Implemented identity module and setup](docs/IDENTITY_SETUP.md)
 - [Implemented profile/evidence module](docs/PROFILE_SETUP.md)
 - [Published catalog, source governance and bookmarks](docs/CATALOG_SETUP.md)
+- [Versioned bilingual skill dictionary](docs/SKILL_DICTIONARY_SETUP.md)
 - [Complete design acceptance audit](docs/IMPLEMENTATION_AUDIT.md)
 - [Incremental development and replaceable service boundaries](docs/MODULE_DEVELOPMENT.md)
 - [Production API contract](docs/API.md) and [data model](docs/DATA_MODEL.md)
@@ -164,7 +166,7 @@ See [deployment details](docs/DEPLOYMENT.md). The future long-running worker is 
 
 ## Build the next chapter with us
 
-The next milestones are authorized job sources, reviewed bilingual skill mappings, deeper learning plans and fact-preserving resume analysis. Contributions to accessibility, source quality, assessment calibration and Traditional Chinese localization are especially welcome.
+The next milestones are authorized live source adapters, calibrated assessments, deeper learning plans and fact-preserving resume analysis. Contributions to accessibility, source quality, assessment calibration and Traditional Chinese localization are especially welcome.
 
 Read [CONTRIBUTING](CONTRIBUTING.md), open a focused issue, or pick a clearly scoped improvement from the [roadmap](docs/ROADMAP.md). Please do not contribute scraped personal data, copied course content or fabricated job listings presented as live openings.
 

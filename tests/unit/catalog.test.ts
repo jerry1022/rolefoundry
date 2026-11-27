@@ -105,7 +105,7 @@ describe("catalog contracts and replaceable adapters", () => {
         {
           job: {
             ...draft,
-            requirements: [{ text: "Unknown", priority: "mandatory", skills: ["unknown"] }],
+            requirements: [{ text: "Unknown", priority: "mandatory", skills: ["unknown!"] }],
           },
           source: { sourceId: crypto.randomUUID(), externalId: "1", url: "https://example.com/" },
         },

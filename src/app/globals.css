@@ -3078,3 +3078,53 @@ tr:last-child td {
     grid-template-columns: 1fr;
   }
 }
+
+.dictionary-skill-grid,
+.dictionary-admin-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 20px;
+}
+.dictionary-skill-grid h3 {
+  margin: 16px 0 8px;
+}
+.dictionary-skill-grid p {
+  line-height: 1.7;
+  margin: 12px 0;
+  overflow-wrap: anywhere;
+}
+.dictionary-skill-grid small {
+  overflow-wrap: anywhere;
+}
+.dictionary-skill-grid .button {
+  margin-top: 18px;
+}
+.dictionary-inline-form {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: 16px;
+  margin-top: 18px;
+}
+.dictionary-inline-form label {
+  flex: 1 1 200px;
+  min-width: 0;
+}
+.dictionary-removals {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 20px;
+}
+@media (max-width: 1100px) {
+  .dictionary-skill-grid,
+  .dictionary-admin-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 760px) {
+  .dictionary-skill-grid,
+  .dictionary-admin-grid {
+    grid-template-columns: 1fr;
+  }
+}
