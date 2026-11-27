@@ -16,6 +16,7 @@ import type { TaskReplayClient } from "@/modules/operations/replay";
 import { taskKinds } from "@/modules/tasks/model";
 import { ApplicationError } from "@/modules/platform/errors";
 import { msg, useI18n } from "@/lib/i18n";
+import { TableScroll } from "../ui/table-scroll";
 /**
  * UI labels for the domain's stable notice codes; the domain keeps its English message for
  * logs and APIs, and unknown codes fall back to it.
@@ -203,7 +204,7 @@ export function OperationsAdministration({
                   },
                 )}
               </p>
-              <div className="table-scroll">
+              <TableScroll label={t("Task metrics")}>
                 <table>
                   <thead>
                     <tr>
@@ -242,7 +243,7 @@ export function OperationsAdministration({
                     ))}
                   </tbody>
                 </table>
-              </div>
+              </TableScroll>
               <h4>{t("Diagnostic notices")}</h4>
               {operationsAlerts(summary).length ? (
                 <ul>

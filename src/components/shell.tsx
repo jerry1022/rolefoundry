@@ -19,12 +19,20 @@ import {
   Target,
   X,
 } from "lucide-react";
-import { useEffect, useRef, useState, useSyncExternalStore, type ReactNode } from "react";
+import {
+  useEffect,
+  useRef,
+  useState,
+  useSyncExternalStore,
+  ViewTransition,
+  type ReactNode,
+} from "react";
 import { WorkspaceProvider, useWorkspace } from "@/lib/workspace";
 import { courses } from "@/lib/fixtures";
 import { LocaleProvider, msg, useI18n } from "@/lib/i18n";
 import { LocaleSwitcher } from "./ui/locale-switcher";
 import { ThemeSwitcher } from "./ui/theme-switcher";
+import { PointerGlow } from "./ui/pointer-glow";
 
 const navigation = [
   { href: "/", label: msg("Overview"), icon: LayoutDashboard },
@@ -226,7 +234,11 @@ function ShellContent({ children }: { children: ReactNode }) {
           )}
           <fieldset className="workspace-controls" disabled={!ready}>
             <legend className="sr-only">{t("Career workspace")}</legend>
-            {children}
+            {/* Keyed by route so each navigation animates the page out and the next one in;
+                the shell around it stays still (see "Route transitions" in globals.css). */}
+            <ViewTransition key={path} enter="page-in" exit="page-out" default="none">
+              <div className="route-content">{children}</div>
+            </ViewTransition>
           </fieldset>
         </main>
         <footer className="footer">
@@ -244,6 +256,7 @@ export function Shell({ children }: { children: ReactNode }) {
     <LocaleProvider>
       <WorkspaceProvider>
         <SkipLink />
+        <PointerGlow />
         <ShellContent>{children}</ShellContent>
       </WorkspaceProvider>
     </LocaleProvider>

@@ -7,6 +7,7 @@ import { courseDraftSchema } from "@/modules/learning/model";
 import { msg, useI18n } from "@/lib/i18n";
 import { ApplicationError } from "@/modules/platform/errors";
 import { ImportDraftEditor } from "./draft-editor";
+import { TableScroll } from "../ui/table-scroll";
 function display(value: unknown, absent: string) {
   if (value === null || value === undefined) return absent;
   return typeof value === "string" ? value : JSON.stringify(value);
@@ -156,7 +157,7 @@ export function ImportReviewPanel({
       )}
       <details open>
         <summary>{t("Source changes ({count})", { count: row.changes.length })}</summary>
-        <div className="table-scroll">
+        <TableScroll label={t("Source changes")}>
           <table>
             <thead>
               <tr>
@@ -181,7 +182,7 @@ export function ImportReviewPanel({
               ))}
             </tbody>
           </table>
-        </div>
+        </TableScroll>
       </details>
       {!!row.issues.length && (
         <ul>

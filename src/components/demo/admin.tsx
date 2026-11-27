@@ -7,6 +7,7 @@ import { tracks, type Job } from "@/lib/domain";
 import { useWorkspace } from "@/lib/workspace";
 import { msg, useI18n } from "@/lib/i18n";
 import { SectionHeading, Modal } from "./shared";
+import { TableScroll } from "../ui/table-scroll";
 
 export function AdminScreen() {
   const { reset } = useWorkspace();
@@ -45,7 +46,7 @@ export function AdminScreen() {
           title={t("Catalog provenance")}
           subtitle={t("A source trail should be part of the product, not an afterthought.")}
         />
-        <div className="table-scroll">
+        <TableScroll label={t("Catalog provenance")}>
           <table>
             <thead>
               <tr>
@@ -90,7 +91,7 @@ export function AdminScreen() {
               </tr>
             </tbody>
           </table>
-        </div>
+        </TableScroll>
       </section>
       <section className="panel section-block">
         <SectionHeading title={t("Integration roadmap")} />

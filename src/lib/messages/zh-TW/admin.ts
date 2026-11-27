@@ -116,4 +116,5 @@ export const admin = {
   "Practice prompt (Traditional Chinese)": "練習題目（繁體中文）",
   "Completion criteria (Traditional Chinese)": "完成標準（繁體中文）",
   "Skill extraction calibration": "技能擷取校準",
+  "Approved AI recipients": "已核准的 AI 接收者",
 } satisfies Messages;

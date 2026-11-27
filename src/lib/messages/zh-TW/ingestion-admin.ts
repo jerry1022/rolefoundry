@@ -206,4 +206,5 @@ export const ingestionAdmin = {
   "Permitted job metadata fields": "授權的職缺中繼資料欄位",
   "This source contains fictional demonstration metadata": "這個來源包含虛構的示範中繼資料",
   "Register job source with uploads disabled": "登記職缺來源（上傳預設停用）",
+  "Source changes": "來源變更",
 } satisfies Messages;

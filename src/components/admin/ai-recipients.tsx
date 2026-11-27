@@ -4,6 +4,7 @@ import { recipientPurposes, type RecipientPage } from "@/modules/gateway/admin";
 import type { RecipientClient } from "@/modules/gateway/adapters/http-client";
 import { msg, useI18n } from "@/lib/i18n";
 import { ApplicationError } from "@/modules/platform/errors";
+import { TableScroll } from "../ui/table-scroll";
 
 type Purpose = (typeof recipientPurposes)[number];
 const failure = (error: unknown, fallback: string) =>
@@ -71,7 +72,7 @@ export function AiRecipientAdministration({ client }: { client: RecipientClient 
         </p>
       )}
       {page && (
-        <div className="table-scroll">
+        <TableScroll label={t("Approved AI recipients")}>
           <table>
             <thead>
               <tr>
@@ -119,7 +120,7 @@ export function AiRecipientAdministration({ client }: { client: RecipientClient 
               )}
             </tbody>
           </table>
-        </div>
+        </TableScroll>
       )}
       <form
         className="ai-recipient-form"
