@@ -1,0 +1,432 @@
+"use client";
+import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
+import { PageHeading } from "../ui/page-heading";
+import type { MatchingClient } from "@/modules/matching/ports";
+import type {
+  MatchConstraints,
+  MatchHistory,
+  MatchRun,
+  RefreshMatchInput,
+} from "@/modules/matching/model";
+import type { CatalogClient } from "@/modules/jobs/ports";
+import type { CatalogPage, PublishedJob } from "@/modules/jobs/model";
+import type { ProfileClient } from "@/modules/profile/ports";
+import type { CareerProfile } from "@/modules/profile/model";
+import type { SkillClient } from "@/modules/skills/ports";
+import { ApplicationError } from "@/modules/platform/errors";
+import { acceptMatchRead } from "@/modules/matching/report-state";
+import { MatchingConditionsForm } from "./conditions-form";
+import { MatchingResultCard } from "./result-card";
+export function MatchingScreen({
+  client,
+  catalog,
+  profile,
+  skills,
+}: {
+  client: MatchingClient;
+  catalog: CatalogClient;
+  profile: ProfileClient;
+  skills: SkillClient;
+}) {
+  const [history, setHistory] = useState<MatchHistory | null>(null),
+    [jobs, setJobs] = useState<CatalogPage | null>(null),
+    [target, setTarget] = useState<PublishedJob | null>(null),
+    [preferences, setPreferences] = useState<CareerProfile | null>(null),
+    [active, setActive] = useState<MatchRun | null>(null),
+    [labels, setLabels] = useState<Record<string, string>>({}),
+    [error, setError] = useState(""),
+    [login, setLogin] = useState(false),
+    [busy, setBusy] = useState(false),
+    [polling, setPolling] = useState(true);
+  const pending = useRef<{ payload: string; key: string } | null>(null);
+  const selectionVersion = useRef(0),
+    openVersion = useRef(0);
+  function failed(error: unknown) {
+    setError(
+      error instanceof ApplicationError ? error.message : "Matching is temporarily unavailable.",
+    );
+    setLogin((current) => current || (error instanceof ApplicationError && error.status === 401));
+  }
+  function locateRun(id: string) {
+    const url = new URL(window.location.href);
+    url.searchParams.set("run", id);
+    window.history.replaceState(null, "", `${url.pathname}${url.search}`);
+  }
+  async function open(id: string) {
+    const version = ++openVersion.current;
+    setError("");
+    try {
+      const next = await client.find(id);
+      if (version !== openVersion.current) return;
+      setActive((current) => acceptMatchRead(current, next));
+      setPolling(true);
+      locateRun(id);
+    } catch (error) {
+      if (version === openVersion.current) failed(error);
+    }
+  }
+  useEffect(() => {
+    let present = true;
+    void Promise.all([client.list(), profile.read(), catalog.list({ q: "", limit: 20 })])
+      .then(([history, preferences, jobs]) => {
+        if (present) {
+          setHistory(history);
+          setPreferences(preferences);
+          setJobs(jobs);
+        }
+      })
+      .catch((error) => {
+        if (present) failed(error);
+      });
+    const params = new URL(window.location.href).searchParams;
+    const run = params.get("run"),
+      job = params.get("job");
+    if (run)
+      void client
+        .find(run)
+        .then((value) => {
+          if (present && openVersion.current === 0)
+            setActive((current) => acceptMatchRead(current, value));
+        })
+        .catch((error) => {
+          if (present) failed(error);
+        });
+    if (job)
+      void catalog
+        .find(job)
+        .then((value) => {
+          if (present && selectionVersion.current === 0) setTarget(value);
+        })
+        .catch((error) => {
+          if (present) failed(error);
+        });
+    return () => {
+      present = false;
+    };
+  }, [client, catalog, profile]);
+  useEffect(() => {
+    if (!active) return;
+    let present = true;
+    void skills
+      .get(active.dictionaryVersion)
+      .then((dictionary) => {
+        if (present)
+          setLabels(Object.fromEntries(dictionary.skills.map((skill) => [skill.id, skill.nameEn])));
+      })
+      .catch(() => {
+        if (present) setLabels({});
+      });
+    return () => {
+      present = false;
+    };
+  }, [active?.dictionaryVersion, skills]);
+  useEffect(() => {
+    if (!active || !["queued", "running"].includes(active.status) || !polling) return;
+    let present = true,
+      count = 0,
+      timer: ReturnType<typeof setTimeout>;
+    const poll = async () => {
+      try {
+        const next = await client.find(active.id);
+        if (!present) return;
+        setActive((current) =>
+          current?.id === next.id ? acceptMatchRead(current, next) : current,
+        );
+        count++;
+        if (["queued", "running"].includes(next.status) && count < 60)
+          timer = setTimeout(() => void poll(), 1000);
+        else setPolling(false);
+      } catch (error) {
+        if (present) {
+          failed(error);
+          setPolling(false);
+        }
+      }
+    };
+    timer = setTimeout(() => void poll(), 1000);
+    return () => {
+      present = false;
+      clearTimeout(timer);
+    };
+  }, [active?.id, active?.status, polling, client]);
+  useEffect(() => {
+    if (!active) return;
+    const id = active.id;
+    const refresh = () =>
+      void client
+        .find(id)
+        .then((next) =>
+          setActive((current) => (current?.id === id ? acceptMatchRead(current, next) : current)),
+        )
+        .catch(failed);
+    window.addEventListener("focus", refresh);
+    return () => window.removeEventListener("focus", refresh);
+  }, [active?.id, client]);
+  useEffect(() => {
+    if (active)
+      setHistory((current) =>
+        current
+          ? {
+              ...current,
+              data: current.data.map((item) =>
+                item.id === active.id ? { ...item, status: active.status } : item,
+              ),
+            }
+          : current,
+      );
+  }, [active?.id, active?.status]);
+  async function refresh(constraints: MatchConstraints) {
+    setBusy(true);
+    setError("");
+    const input: RefreshMatchInput = { jobId: target?.id || null, constraints };
+    const payload = JSON.stringify(input);
+    if (pending.current?.payload !== payload)
+      pending.current = { payload, key: crypto.randomUUID() };
+    try {
+      const result = await client.refresh(input, pending.current.key);
+      locateRun(result.runId);
+      pending.current = null;
+      await open(result.runId);
+      setHistory(await client.list());
+    } catch (error) {
+      failed(error);
+    } finally {
+      setBusy(false);
+    }
+  }
+  return (
+    <>
+      <PageHeading
+        eyebrow="REQUIREMENTS · EVIDENCE · NEXT ACTIONS"
+        title="Find opportunities with a clear reason."
+        description="Compare published requirements with your own evidence. Unknown conditions stay unknown; coverage never means hiring probability."
+      />
+      {error && (
+        <div role="alert" className="notice">
+          <p>{error}</p>
+          {login ? (
+            <Link className="button secondary" href="/account/">
+              Sign in to use private matching
+            </Link>
+          ) : (
+            <button className="button secondary" onClick={() => window.location.reload()}>
+              Reload matching workspace
+            </button>
+          )}
+        </div>
+      )}
+      {!login && preferences && history && jobs && (
+        <>
+          <section className="panel">
+            <h2>Choose a direction or one target role</h2>
+            <p className="muted">
+              Direction-wide reports use {preferences.track}.{" "}
+              <Link href="/skills/">Change my direction</Link>.
+            </p>
+            <label>
+              Target role
+              <select
+                className="text-input"
+                aria-label="Matching target role"
+                disabled={busy}
+                value={target?.id || ""}
+                onChange={(event) => {
+                  const id = event.target.value;
+                  const version = ++selectionVersion.current;
+                  setError("");
+                  if (!id) {
+                    setTarget(null);
+                    return;
+                  }
+                  setBusy(true);
+                  void catalog
+                    .find(id)
+                    .then((job) => {
+                      if (version === selectionVersion.current) setTarget(job);
+                    })
+                    .catch(failed)
+                    .finally(() => {
+                      if (version === selectionVersion.current) setBusy(false);
+                    });
+                }}
+              >
+                <option value="">All published roles in my direction</option>
+                {target && !jobs.data.some((job) => job.id === target.id) && (
+                  <option value={target.id}>
+                    {target.title} · {target.company}
+                  </option>
+                )}
+                {jobs.data.map((job) => (
+                  <option key={job.id} value={job.id}>
+                    {job.title} · {job.company}
+                  </option>
+                ))}
+              </select>
+            </label>
+            {jobs.nextCursor && (
+              <button
+                className="button secondary"
+                disabled={busy}
+                onClick={() => {
+                  setBusy(true);
+                  void catalog
+                    .list({ ...jobs.appliedFilters, q: "", limit: 20, cursor: jobs.nextCursor! })
+                    .then((next) => setJobs({ ...next, data: [...jobs.data, ...next.data] }))
+                    .catch(failed)
+                    .finally(() => setBusy(false));
+                }}
+              >
+                Load more target roles
+              </button>
+            )}
+          </section>
+          <MatchingConditionsForm
+            key={target?.versionId || "direction"}
+            target={target}
+            workplaces={preferences.workplaces}
+            busy={busy}
+            onSubmit={(constraints) => void refresh(constraints)}
+          />
+        </>
+      )}
+      {active && (
+        <section className="section-block">
+          <div className="matching-report-heading">
+            <h2>
+              {active.status === "invalidated"
+                ? "Report content removed"
+                : active.status === "failed"
+                  ? "Matching could not finish"
+                  : ["queued", "running"].includes(active.status)
+                    ? "Matching is queued or running"
+                    : "Your matching report"}
+            </h2>
+            <button
+              className="button secondary"
+              disabled={busy}
+              onClick={() => void open(active.id)}
+            >
+              Check report status
+            </button>
+          </div>
+          {active.stale && active.status !== "invalidated" && (
+            <p className="notice" role="status">
+              This report is historical because its inputs changed. Create a fresh report before
+              using it to prioritize current opportunities.
+            </p>
+          )}
+          {active.status === "invalidated" && (
+            <p className="notice">
+              An input evidence record was deleted. Its copied report content has been removed.
+              Create a fresh report with current evidence.
+            </p>
+          )}
+          {active.status === "failed" && (
+            <p className="notice">
+              No partial report is published. Create a fresh report using current inputs; your
+              previous report history stays separate.
+            </p>
+          )}
+          {["queued", "running"].includes(active.status) && (
+            <p className="muted">
+              Your inputs are saved. You can leave and return while the independent worker computes
+              the report.
+            </p>
+          )}
+          {active.status === "succeeded" && (
+            <>
+              <p className="muted">
+                {active.candidateCount} source roles · Rule-based analysis ·{" "}
+                {active.createdAt.slice(0, 10)}. Conditions and evidence describe the saved inputs
+                for this report.
+              </p>
+              <p className="muted">
+                Saved relevant experience:{" "}
+                {active.constraints?.experienceYears === null || active.constraints === null
+                  ? "Not supplied"
+                  : `${active.constraints.experienceYears} years (self-reported)`}
+                .
+              </p>
+              {!active.data.length && (
+                <p className="panel">
+                  No published roles matched the selected direction. Try a specific target or review
+                  the catalog later.
+                </p>
+              )}
+              <div className="matching-results">
+                {active.data.map((result) => (
+                  <MatchingResultCard
+                    key={result.jobId}
+                    result={result}
+                    historical={active.stale}
+                    labels={labels}
+                  />
+                ))}
+              </div>
+              {active.nextCursor && (
+                <button
+                  className="button secondary"
+                  disabled={busy}
+                  onClick={() => {
+                    setBusy(true);
+                    void client
+                      .find(active.id, active.nextCursor!)
+                      .then((next) =>
+                        setActive((current) =>
+                          current?.id === next.id ? acceptMatchRead(current, next, true) : current,
+                        ),
+                      )
+                      .catch(failed)
+                      .finally(() => setBusy(false));
+                  }}
+                >
+                  Load more matching results
+                </button>
+              )}
+            </>
+          )}
+        </section>
+      )}
+      {history && (
+        <section className="section-block">
+          <h2>Your report history</h2>
+          {!history.data.length && <p className="muted">No private matching reports yet.</p>}
+          <div className="assessment-history">
+            {history.data.map((run) => (
+              <article className="panel" key={run.id}>
+                <h3>{run.targetJobId ? "Target role report" : "Direction report"}</h3>
+                <p>
+                  {run.status} · {run.createdAt.slice(0, 10)}
+                </p>
+                <button
+                  className="button secondary"
+                  disabled={busy}
+                  onClick={() => void open(run.id)}
+                >
+                  Open matching report
+                </button>
+              </article>
+            ))}
+          </div>
+          {history.nextCursor && (
+            <button
+              className="button secondary"
+              disabled={busy}
+              onClick={() => {
+                setBusy(true);
+                void client
+                  .list(history.nextCursor!)
+                  .then((next) => setHistory({ ...next, data: [...history.data, ...next.data] }))
+                  .catch(failed)
+                  .finally(() => setBusy(false));
+              }}
+            >
+              Load more report history
+            </button>
+          )}
+        </section>
+      )}
+    </>
+  );
+}

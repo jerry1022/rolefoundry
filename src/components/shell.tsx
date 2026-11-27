@@ -27,6 +27,7 @@ const navigation = [
   { href: "/jobs/", label: "Discover roles", icon: Compass },
   { href: "/skills/", label: "My skill profile", icon: Target },
   { href: "/assessments/", label: "Skill check", icon: Sparkles },
+  { href: "/matches/", label: "Matching & gaps", icon: Network },
   { href: "/learning/", label: "Learning path", icon: GraduationCap },
   { href: "/resume/", label: "Resume studio", icon: FileText },
   { href: "/applications/", label: "Applications", icon: BriefcaseBusiness },

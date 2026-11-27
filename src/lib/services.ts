@@ -4,10 +4,8 @@ import type {
   CourseRepository,
   Job,
   JobRepository,
-  Question,
   Stage,
   Task,
-  Track,
 } from "./domain";
 import { courses, jobs } from "./fixtures";
 
@@ -36,16 +34,10 @@ export type { ProfileRepository, InternalEvidenceWriter } from "../modules/profi
 export type { SkillDictionaryService as SkillCatalogService } from "../modules/skills/service";
 export type { SkillRepository, SkillAdminRepository } from "../modules/skills/ports";
 export type { JobCatalogService } from "../modules/jobs/service";
-export interface AssessmentService {
-  start(
-    actor: Actor,
-    track: Track,
-  ): Promise<{ attemptId: string; questions: Omit<Question, "correct" | "explanation">[] }>;
-  submit(actor: Actor, attemptId: string, answers: Record<string, number>): Promise<Task>;
-}
-export interface MatchingService {
-  refresh(actor: Actor, jobId?: Job["id"]): Promise<Task>;
-}
+export type { AssessmentService } from "../modules/assessment/service";
+export type { AssessmentRepository, AssessmentClient } from "../modules/assessment/ports";
+export type { MatchingService } from "../modules/matching/service";
+export type { MatchingRepository, MatchingClient } from "../modules/matching/ports";
 export interface LearningService {
   plan(actor: Actor, jobId: string, weeklyHours: number): Promise<Task>;
   markComplete(actor: Actor, courseId: Course["id"]): Promise<void>;

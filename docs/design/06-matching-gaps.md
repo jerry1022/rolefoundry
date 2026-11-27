@@ -8,6 +8,12 @@ Help a job seeker prioritize opportunities and choose the next useful action. Re
 
 `matchJob` computes covered and missing canonical skills against self-report. `searchJobs` sorts by overlap with stable ID tie-breaking. Percentages mean required fixture skill coverage only. The UI exposes this limitation explicitly.
 
+## Current private implementation
+
+Configured deployments now expose `/matches/` and private APIs backed by immutable inputs/results, general tasks and a real `matches.refresh` worker handler. Explicit conditions, mandatory/preferred coverage, original requirement text and evidence-version citations remain visible. Profile/catalog/dictionary changes mark old reports stale and block pending publication. Evidence deletion atomically purges copied inputs/results/gaps and prevents late restoration. See [setup, exact API, lock order and verification](../MATCHING_SETUP.md).
+
+The consuming module owns narrow source projections and the pure `rules-v1` engine. It counts canonical skills once, retains provenance, separates unknown conditions from conflicts and never infers education/work authorization. Self-reports and portfolio/resume references stay explicitly unverified. Incorrect scenarios suggest practice and do not count as positive support; learning-only claims do not cover requirements. Semantic/model ranking is unavailable in this first versioned recipe; adding it requires evaluation and a new recipe. Human relevance review remains a release gate.
+
 ## Target data and interface
 
 `match_runs` stores owner, profile/evidence version, catalog version and ranking recipe. `match_results` links jobs to condition checks, supporting evidence and gaps. `gap_items` distinguish missing evidence, short-term learning, longer-term experience and unknown information. `refresh(actor, jobId?)` enqueues a versioned computation.

@@ -1,6 +1,6 @@
 # RoleFoundry — High-Level Design
 
-**Version:** 0.6 private assessment and durable grading · **Status:** career scaffold, server identity, private profile, catalog, dictionary and fixed-choice assessments implemented; remaining production modules planned
+**Version:** 0.7 private matching and gap reports · **Status:** career scaffold, server identity, private profile, catalog, dictionary and fixed-choice assessments and matching implemented; remaining production modules planned
 
 ## 1. Purpose and scope
 
@@ -14,18 +14,18 @@ Job discovery must work before account creation or assessment. Completing a cour
 
 ## 2. Current executable system
 
-The repository contains a Next.js App Router application with eleven navigable pages, a shared shell, typed career fixtures and browser-local persistence. Module 01 adds real Supabase identity APIs, a database migration, consent and quota transactions, and worker guards. Module 02 adds private preferences, immutable evidence and reference-only invalidations through replaceable ports/adapters. Module 03 adds anonymous/SSR published job browsing, source governance and private bookmarks. Module 04 adds the bilingual versioned dictionary, reviewed aliases/relationships/merges and historical-safe canonical projections. Module 05 adds private assessment APIs/UI and reviewed immutable questions. An independent pgmq/Node worker grades fixed answers and publishes scenario evidence atomically. The other domain ports remain contracts; no external AI provider runs yet.
+The repository contains a Next.js App Router application with twelve navigable pages, a shared shell, typed career fixtures and browser-local persistence. Module 01 adds real Supabase identity APIs, a database migration, consent and quota transactions, and worker guards. Module 02 adds private preferences, immutable evidence and reference-only invalidations through replaceable ports/adapters. Module 03 adds anonymous/SSR published job browsing, source governance and private bookmarks. Module 04 adds the bilingual versioned dictionary, reviewed aliases/relationships/merges and historical-safe canonical projections. Module 05 adds private assessment APIs/UI and reviewed immutable questions. An independent pgmq/Node worker grades fixed answers and publishes scenario evidence atomically. Module 06 adds versioned private matching inputs/reports, explicit condition checks, evidence citations, atomic deletion purge and an actual worker handler. The remaining domain ports are contracts; no external AI provider runs yet.
 
 | Capability | Current state |
 | --- | --- |
 | Jobs | Optional persistent published catalog/SSR with source permissions/freshness and private bookmarks; static fixtures retained |
 | Profile | Optional private preferences/evidence/history with optimistic revisions; static demo stays local |
 | Assessment | Optional private immutable attempts, autosave, reviewed bank and actual durable fixed-choice grading; static demo retained |
-| Matching | Transparent self-reported skill overlap and missing-skill lists |
+| Matching | Private versioned reports with explicit conditions, cited evidence, freshness/deletion guards and durable rule-based ranking; local demo retained |
 | Learning | Six official course links, editorial mappings, prerequisite-aware ranking |
 | Resume | Local text editing, deterministic checklist, text export |
 | Applications | Local manual board, stages and notes |
-| Administration | Read-only fixture provenance inspector and confirmed local reset |
+| Administration | Server-authorized source/publication, dictionary and question-bank review; local provenance inspector/reset retained |
 | Identity/database | Configurable Supabase Auth/PostgreSQL, email OTP, invitations, roles, consent, quotas and audit |
 | Dictionary | Versioned bilingual concepts, exact aliases, independent DAGs, track mappings and reviewed merges |
 | Other career persistence/AI | Contracts and designs only; no live implementation |
@@ -87,7 +87,7 @@ See [module designs](design/README.md) for interfaces and failure semantics.
 | Validation | Zod | Validate requests, persisted records and AI outputs |
 | Storage | Browser-local demo; Supabase identity, profile and published catalog records | Extend PostgreSQL and private Storage to the other domains |
 | Search | Deterministic in-memory filters | SQL predicates, skill aliases and pgvector reranking |
-| Tasks | Supabase Queues/pgmq, lease-aware Node worker and assessment handler | Add provider/resume/catalog handlers and invalidation consumers |
+| Tasks | Supabase Queues/pgmq, lease-aware Node worker with assessment/matching handlers | Add provider/resume/catalog handlers and invalidation consumers |
 | AI | No provider connected | Gateway adapter selected through a fixed evaluation set |
 | Documents | Plain-text draft/export | Isolated PDF.js/Mammoth parsing and controlled PDF rendering |
 | Checks | TypeScript, Vitest, Playwright | Add database authorization, contract and integration tests |
@@ -115,7 +115,7 @@ Confirm source usage rights → normalize a batch → deduplicate by source ID a
 
 ## 7. API and task boundaries
 
-Production REST endpoints use `/api/v1`. Implemented identity endpoints use `/api/v1/identity`; profile/evidence, public catalog and private bookmark APIs are also implemented; dictionary APIs and versioned administration are also implemented; private assessment/task and bank administration APIs are also implemented; other domain APIs remain planned. Provider analysis reservations atomically create an identity task and durable outbox row. Task states are `queued`, `running`, `succeeded` and `failed`; the identity task resource is owner-scoped. The assessment path already uses general tasks and pgmq without provider allowance; module 12 still must connect provider reservations and invalidation outboxes to their consumers.
+Production REST endpoints use `/api/v1`. Implemented identity endpoints use `/api/v1/identity`; profile/evidence, public catalog and private bookmark APIs are also implemented; dictionary APIs and versioned administration are also implemented; private assessment/task and bank administration APIs are also implemented; versioned private matching/report APIs are also implemented; other domain APIs remain planned. Provider analysis reservations atomically create an identity task and durable outbox row. Task states are `queued`, `running`, `succeeded` and `failed`; the identity task resource is owner-scoped. The assessment path already uses general tasks and pgmq without provider allowance; module 12 still must connect provider reservations and invalidation outboxes to their consumers.
 
 Persist the business record and queued message in one database transaction. Worker results use an idempotency key derived from owner, task type and input version. Visibility leases can expire, so handlers must tolerate redelivery. A provider request can be repeated after a crash; do not describe queue delivery as end-to-end exactly-once AI execution.
 

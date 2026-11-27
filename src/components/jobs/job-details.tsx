@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useRef } from "react";
+import Link from "next/link";
 import type { PublishedJob } from "@/modules/jobs/model";
 import { skillLabel } from "@/modules/skills/model";
 export function JobDetails({ job, onClose }: { job: PublishedJob; onClose: () => void }) {
@@ -24,6 +25,9 @@ export function JobDetails({ job, onClose }: { job: PublishedJob; onClose: () =>
       </div>
       <h2 id="catalog-job-title">{job.title}</h2>
       <p>{job.summary}</p>
+      <Link className="button primary" href={`/matches/?job=${job.id}`}>
+        Compare with my evidence
+      </Link>
       <h3>Responsibilities</h3>
       <ul>
         {job.responsibilities.map((text, index) => (
