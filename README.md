@@ -53,7 +53,7 @@ Changes stay in your browser. Reset them from **Catalog studio**.
 | --- | --- |
 | **Overview** | Recommended sample roles, growth snapshot and a next learning step |
 | **Discover roles** | Ten specializations, career guides, keyword/track/workplace filters, bookmarks and role details |
-| **My skill profile** | Editable direction, self-report and separate scenario evidence |
+| **My skill profile** | Account-backed preferences, private claims/references and immutable history when configured; static demo remains local |
 | **Skill check** | Twelve authored scenarios across four career tracks |
 | **Learning path** | Six official course links, skill-gap ranking, prerequisites and practice prompts |
 | **Resume studio** | Local draft editor, fact-focused checklist and text export |
@@ -66,7 +66,7 @@ Changes stay in your browser. Reset them from **Catalog studio**.
 
 This is a **functional product scaffold**, not a live recruiting service. Employers, openings and salaries are fictional. Course summaries and skill mappings are independent editorial metadata; course availability and pricing belong to the provider. RoleFoundry is not affiliated with DeepLearning.AI.
 
-The public demo has no connected authentication or private backend. Configured server deployments now support [module 01 identity](docs/IDENTITY_SETUP.md) with Supabase Auth/PostgreSQL, invitations, consent and quotas. Career workspace persistence, live job feeds, AI analysis, document upload/PDF export and application submission remain future work. The resume checklist and skill overlap are deterministic. Completing a course does **not** verify a skill; overlap does **not** predict hiring. Use sample information in the public demo.
+The public demo has no connected authentication or private backend. Configured server deployments now support [module 01 identity](docs/IDENTITY_SETUP.md) with Supabase Auth/PostgreSQL, invitations, consent and quotas. [Module 02](docs/PROFILE_SETUP.md) adds private profile/evidence persistence with explicit demo import. Persistence for other career modules, live job feeds, AI analysis, document upload/PDF export and application submission remain future work. The resume checklist and skill overlap are deterministic. Completing a course does **not** verify a skill; overlap does **not** predict hiring. Use sample information in the public demo.
 
 ### Run the identity foundation locally
 
@@ -74,11 +74,18 @@ With Docker running:
 
 ```bash
 npm run identity:start
+npx supabase migration up
 npm run identity:invite -- developer@example.test
 npm run identity:dev
 ```
 
 Open `http://127.0.0.1:3200/account/`; receive your code in local Mailpit at port 54324. No cloud credentials are required. See the [identity setup guide](docs/IDENTITY_SETUP.md) for administrator bootstrap, hosted settings and `npm run identity:test`.
+
+### Continue module development
+
+Follow the [numbered delivery plan and dependency rules](docs/MODULE_DEVELOPMENT.md). Modules 01–02 implement identity and private profiles; module 03 (job catalog/search) is next. Each step updates its design, README and executable acceptance tests. Open PRs remain separate review gates.
+
+With identity configured, sign in at `/account/` and visit `/skills/` for the private profile. Existing local data is imported only after preview and explicit approval. See [profile setup and API](docs/PROFILE_SETUP.md).
 
 ## Architecture that can grow with the product
 
@@ -86,7 +93,8 @@ Open `http://127.0.0.1:3200/account/`; receive your code in local Mailpit at por
 flowchart LR
     UI[Next.js workspace] --> D[Typed domain modules]
     D --> F[Fixture repositories — today]
-    D --> DB[(Supabase identity — implemented)]
+    D --> Ports[Repository and authorization ports]
+    Ports --> DB[(Supabase identity and profile adapters)]
     D -.-> Q[pgmq + Node worker — planned]
     Q -.-> AI[AI Gateway — planned]
     DB -.-> S[Jobs ↔ skills ↔ evidence ↔ courses]
@@ -94,14 +102,17 @@ flowchart LR
 
 Today: **Next.js · React · TypeScript · Zod · Supabase Auth/PostgreSQL · CSS tokens · Lucide · Vitest · Playwright**.
 
-Production extensions: **private Storage · pgvector · pgmq consumer · independent worker · schema-validated AI adapters**. The identity ledger/outbox is implemented; analysis execution is not. The architecture is a modular monolith, with explicit module ports rather than premature microservices.
+Production extensions: **private Storage · pgvector · pgmq consumer · independent worker · schema-validated AI adapters**. Identity reservations and profile invalidation outboxes are implemented; analysis execution is not. Core profile rules have no framework or database SDK dependency. The UI uses a replaceable client port, and request-scoped composition roots select adapters. [Architecture checks](scripts/check-boundaries.mjs) protect these boundaries. The architecture is a modular monolith, with explicit module ports rather than premature microservices.
 
 ```text
 src/app/             Ten pages, identity API routes and application layout
 src/components/      Shared shell and interactive screens
 src/lib/             Domain rules, schemas, fixtures and service ports
 src/modules/identity Verified identity services and worker authorization guards
-supabase/            Identity migration, Auth hook and local OTP templates
+src/modules/profile  Domain schemas/ports/use cases, adapters and API composition
+src/modules/skills   Stable canonical IDs shared across modules
+src/modules/platform Safe application errors and bounded HTTP helpers
+supabase/            Identity/profile migrations, owner RLS and local OTP templates
 apps/worker/         Dry-run worker contract
 docs/                HLD, 13 module designs, API, data model and deployment
 tests/               Domain tests and browser journeys
@@ -116,6 +127,8 @@ tests/               Domain tests and browser journeys
 - [High-level design](docs/HLD.md)
 - [All 13 detailed module designs](docs/design/README.md)
 - [Implemented identity module and setup](docs/IDENTITY_SETUP.md)
+- [Implemented profile/evidence module](docs/PROFILE_SETUP.md)
+- [Incremental development and replaceable service boundaries](docs/MODULE_DEVELOPMENT.md)
 - [Production API contract](docs/API.md) and [data model](docs/DATA_MODEL.md)
 - [Career journey playbook](AI_CAREER_PLAN.md)
 - [Deployment guide](docs/DEPLOYMENT.md) and [roadmap](docs/ROADMAP.md)
@@ -127,6 +140,7 @@ All documentation is in English. The initial production market is Taiwan; Tradit
 ```bash
 npm run typecheck
 npm test
+npm run architecture:check
 npm run build
 npx playwright install chromium
 npm run test:e2e
@@ -147,7 +161,7 @@ See [deployment details](docs/DEPLOYMENT.md). The future long-running worker is 
 
 ## Build the next chapter with us
 
-The next milestones are durable private profiles, authorized job sources, reviewed bilingual skill mappings, deeper learning plans and fact-preserving resume analysis. Contributions to accessibility, source quality, assessment calibration and Traditional Chinese localization are especially welcome.
+The next milestones are authorized job sources, reviewed bilingual skill mappings, deeper learning plans and fact-preserving resume analysis. Contributions to accessibility, source quality, assessment calibration and Traditional Chinese localization are especially welcome.
 
 Read [CONTRIBUTING](CONTRIBUTING.md), open a focused issue, or pick a clearly scoped improvement from the [roadmap](docs/ROADMAP.md). Please do not contribute scraped personal data, copied course content or fabricated job listings presented as live openings.
 

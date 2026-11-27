@@ -12,18 +12,16 @@ const id = "8b681b84-170a-4fe0-91a8-134064df2cf0";
 function client(role: "member" | "admin" = "member") {
   return {
     auth: {
-      getUser: vi
-        .fn()
-        .mockResolvedValue({
-          data: {
-            user: {
-              id,
-              email_confirmed_at: "2026-11-14T00:00:00Z",
-              user_metadata: { role: "admin" },
-            },
+      getUser: vi.fn().mockResolvedValue({
+        data: {
+          user: {
+            id,
+            email_confirmed_at: "2026-11-14T00:00:00Z",
+            user_metadata: { role: "admin" },
           },
-          error: null,
-        }),
+        },
+        error: null,
+      }),
     },
     rpc: vi.fn().mockResolvedValue({ data: { userId: id, role }, error: null }),
   } as unknown as SupabaseClient;

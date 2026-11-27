@@ -1,6 +1,6 @@
 # Data model
 
-**Status:** module 01 has an executable Supabase migration for identity, consent, quota policy, reservation/task outbox and audit records. The remaining career-domain tables below are design only. See [identity setup](IDENTITY_SETUP.md); no hosted Supabase project is configured automatically.
+**Status:** module 01 has an executable Supabase migration for identity, consent, quota policy, reservation/task outbox and audit records. Module 02 adds executable profile/evidence/version/link/claim/portfolio/outbox tables and a minimal canonical skill registry; other career-domain tables below remain design only. See [profile setup](PROFILE_SETUP.md). See [identity setup](IDENTITY_SETUP.md); no hosted Supabase project is configured automatically.
 
 ## Ownership and groups
 
@@ -10,7 +10,7 @@
 | Preferences | career_preferences, skill_claims | Owner only |
 | Dictionary | skills, skill_aliases, skill_relations, track_skills | Published read; admin write |
 | Jobs | companies, jobs, job_sources, job_requirements, job_skill_links | Published read; reviewed admin write |
-| Evidence | evidence, evidence_skill_links, portfolio_references | Owner only; scored sources server-authored |
+| Evidence | evidence, evidence_versions, evidence_skill_links, portfolio_references | Owner only; scored sources server-authored |
 | Assessments | question_versions, rubric_versions, assessment_attempts, attempt_items, responses, assessment_results | Questions server-owned; attempts owner-scoped |
 | Learning | courses, course_versions, course_skill_links, course_prerequisites, learning_plans, learning_steps, learning_progress, practice_submissions | Published courses; owner plans/progress |
 | Resumes | resume_documents, resume_versions, revision_proposals, resume_exports | Owner only; private storage references |

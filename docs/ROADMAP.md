@@ -18,10 +18,16 @@
 
 - [x] Module 01 Supabase identity migration, invitations and email OTP sign-in.
 - [x] Identity owner RLS, consent, quota reservations, worker guards and audited refunds.
-- [ ] Explicit migration of user-approved demo state.
+- [x] Module 02 private preferences, immutable evidence, owner RLS and optimistic revisions.
+- [x] Explicit preview/approval import of demo preferences and self-reported skills only.
+- [x] Profile change/deletion outbox and revision contract for later derived data.
+- [x] Repository/client ports, request-scoped adapters and dependency checks.
+- [ ] Migration/persistence for other demo career modules.
 - [ ] Private storage, delete/export account workflows and recovery tests.
 - [x] Identity task ledger and transactional outbox.
 - [ ] Module 12 pgmq adapter, real worker leases and telemetry.
+
+See [module-by-module delivery status](MODULE_DEVELOPMENT.md); module 03 is the next implementation.
 
 ## v0.3 — Real catalogs and reviewed evidence
 

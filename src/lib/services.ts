@@ -2,7 +2,6 @@ import type {
   AIProvider,
   Course,
   CourseRepository,
-  Evidence,
   Job,
   JobRepository,
   Question,
@@ -27,16 +26,14 @@ export class FixtureCourseRepository implements CourseRepository {
   }
 }
 
-// Domain ports. Identity has a Supabase implementation; other production ports remain contracts.
+// Domain ports. Identity and profile have implementations; other production ports remain contracts.
 import type { Actor } from "../modules/identity/core";
 export type { Actor } from "../modules/identity/core";
 export interface IdentityService {
   authorize(actor: Actor, action: string, resourceOwnerId?: string): Promise<void>;
 }
-export interface ProfileService {
-  addEvidence(actor: Actor, evidence: Evidence): Promise<Evidence>;
-  setDirection(actor: Actor, track: Track): Promise<void>;
-}
+export type { ProfileService } from "../modules/profile/service";
+export type { ProfileRepository, InternalEvidenceWriter } from "../modules/profile/ports";
 export interface SkillCatalogService {
   resolveAlias(input: string): Promise<Skill | null>;
   list(): Promise<{ id: Skill; label: string }[]>;

@@ -1,6 +1,6 @@
 # Identity module setup
 
-Module 01 implements invitation-only email OTP sign-in, verified sessions, member/admin authorization, purpose/version-specific consent, weekly quota reservations and audited refunds. It does not connect AI providers or migrate the browser-local career workspace into a database.
+Module 01 implements invitation-only email OTP sign-in, verified sessions, member/admin authorization, purpose/version-specific consent, weekly quota reservations and audited refunds. It does not connect AI providers. [Module 02](PROFILE_SETUP.md) adds private preferences/evidence and an explicitly approved, limited demo importer; other career workspace data remains local.
 
 ## Local development
 
@@ -9,6 +9,7 @@ Requirements: Node.js 24, npm, Docker and free ports 54320–54324. Everything b
 ```bash
 npm ci
 npm run identity:start
+npx supabase migration up
 npm run identity:invite -- developer@example.test
 npm run identity:dev
 ```

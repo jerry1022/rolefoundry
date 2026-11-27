@@ -19,7 +19,8 @@
     "identity:stop": "node scripts/local-identity.mjs stop",
     "identity:invite": "node scripts/invite-local.mjs",
     "identity:dev": "node scripts/dev-identity.mjs",
-    "identity:test": "node scripts/test-identity.mjs"
+    "identity:test": "node scripts/test-identity.mjs",
+    "architecture:check": "node scripts/check-boundaries.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.7",

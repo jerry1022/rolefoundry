@@ -149,7 +149,7 @@ export function AccountScreen() {
           <div className="notice inline">
             <ShieldCheck size={18} />
             <span>
-              Sign-in protects your server account APIs. The other workspace pages still use
+              Sign-in protects your account and private skill profile. Other career pages still use
               browser-local demo data; signing in does not upload or merge that data.
             </span>
           </div>
