@@ -25,7 +25,10 @@ describe("planner sentences in Traditional Chinese", () => {
     ).toContain("45");
     expect(plannerText("Practice rag", zh)).toBe("練習 rag");
     expect(
-      plannerText("Create a small example demonstrating rag; describe its limits and one test.", zh),
+      plannerText(
+        "Create a small example demonstrating rag; describe its limits and one test.",
+        zh,
+      ),
     ).toContain("rag");
     expect(plannerText("Retrieval Augmented Generation (RAG)", zh)).toBe(
       "Retrieval Augmented Generation (RAG)",

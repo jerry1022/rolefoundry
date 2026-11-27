@@ -236,4 +236,33 @@ export const assessmentMatching = {
   "Prompt (Traditional Chinese)": "題目（繁體中文）",
   "Option {number} (Traditional Chinese)": "選項 {number}（繁體中文）",
   "Explanation (Traditional Chinese)": "解說（繁體中文）",
+  "Seniority fit has not been established. Skill overlap and self-reported years do not determine it.":
+    "尚未確認年資是否相符。技能重疊與自行回報的年數都不能決定這一點。",
+  "The listed workplace matches an explicit preference.": "職缺的工作型態符合你明確設定的偏好。",
+  "The listed workplace is outside the selected preferences.":
+    "職缺的工作型態不在你選擇的偏好之內。",
+  "Workplace or preference information is missing.": "缺少工作型態或偏好資訊。",
+  "Self-reported years meet the listed minimum; relevance still needs review.":
+    "自行回報的年數達到職缺要求的最低年數，但相關性仍需確認。",
+  "Self-reported years are below the listed minimum.": "自行回報的年數低於職缺要求的最低年數。",
+  "Experience requirements or self-reported years are unknown.": "經驗要求或自行回報的年數未知。",
+  "The owner reports meeting this exact listed requirement; it is not independently verified.":
+    "你回報符合這項列出的要求，但這未經獨立驗證。",
+  "The owner reports not meeting this listed requirement.": "你回報不符合這項列出的要求。",
+  "No conclusion can be drawn from the available information.": "現有資訊不足以得出結論。",
+  "This recipe uses rules only; semantic/model ranking and narrative generation are unavailable.":
+    "此配對方式只使用規則，沒有語意或模型排序，也不會生成敘述。",
+  "Order within equal rule results used semantic-rank-v1; strengths, gaps and conditions remain rule-based.":
+    "規則結果相同的職缺使用 semantic-rank-v1 排序；優勢、落差與條件仍以規則判斷。",
+  "A scored scenario suggests revisiting this skill; other claims remain separate.":
+    "一項已評分的情境建議你複習這個技能；其他主張仍分開看待。",
+  "No supporting evidence is linked to this requirement. This does not prove inability.":
+    "這項要求沒有連結任何佐證，但這不代表你做不到。",
+  "This textual requirement has no reviewed skill mapping; check it directly.":
+    "這項文字要求沒有審查過的技能對應，請直接確認。",
+  "Coverage counts linked observations, self-reports and unreviewed references; it does not establish independent mastery or hiring probability.":
+    "涵蓋率計入已連結的觀察、自行回報與未審查的參考資料，不代表經獨立驗證的熟練度或錄取機率。",
+  "An unknown condition is not a conflict. Confirm it with the source before deciding.":
+    "未知的條件不等於不符合。做決定前請向來源確認。",
+  "At least {years} years": "至少 {years} 年",
 } satisfies Messages;

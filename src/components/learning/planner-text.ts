@@ -1,4 +1,5 @@
 import { msg } from "../../lib/i18n";
+import { translateStoredText, type StoredTemplate, type Translate } from "../ui/stored-text";
 
 /**
  * Plans store the planner's English sentences (issues, notes and generated practice text), so a
@@ -40,7 +41,7 @@ export const fixedPlannerText = [
   msg("Completing a course or submitting a reference never changes capability evidence."),
 ];
 
-const templates: { pattern: RegExp; message: string; names: string[] }[] = [
+const templates: StoredTemplate[] = [
   {
     pattern:
       /^Complete the assigned (\d+) study minutes, keep notes and continue the remaining work in a later plan\. This step does not mean course completion\.$/,
@@ -57,17 +58,5 @@ const templates: { pattern: RegExp; message: string; names: string[] }[] = [
   },
 ];
 
-type Translate = (source: string, vars?: Record<string, string | number>) => string;
-
-/** Translated text for a stored planner sentence; unknown text (such as course titles) passes through. */
-export function plannerText(text: string, t: Translate) {
-  for (const template of templates) {
-    const match = template.pattern.exec(text);
-    if (match)
-      return t(
-        template.message,
-        Object.fromEntries(template.names.map((name, index) => [name, match[index + 1]])),
-      );
-  }
-  return t(text);
-}
+/** Translated text for a stored planner sentence; course titles pass through. */
+export const plannerText = (text: string, t: Translate) => translateStoredText(text, t, templates);

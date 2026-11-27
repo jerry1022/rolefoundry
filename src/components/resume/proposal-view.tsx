@@ -3,6 +3,7 @@ import { WordingSuggestions } from "./wording-suggestions";
 import { useState } from "react";
 import { useI18n } from "@/lib/i18n";
 import type { ResumeProposal } from "@/modules/resume/model";
+import { resumeText } from "./resume-text";
 export function ResumeProposalView({
   proposal,
   busy,
@@ -77,7 +78,7 @@ export function ResumeProposalView({
                   />
                   {t("Use this change")}
                 </label>
-                <p>{change.reason}</p>
+                <p>{resumeText(change.reason, t)}</p>
                 <div className="resume-diff">
                   <section>
                     <h3>{t("Before")}</h3>
@@ -112,7 +113,7 @@ export function ResumeProposalView({
               <h3>{t("Questions for missing evidence")}</h3>
               {proposal.output.questions.map((question) => (
                 <p key={question.skillId}>
-                  <strong>{question.skillId}</strong> · {question.prompt}
+                  <strong>{question.skillId}</strong> · {resumeText(question.prompt, t)}
                 </p>
               ))}
             </section>
@@ -123,7 +124,7 @@ export function ResumeProposalView({
           <details>
             <summary>{t("Suggestion limits")}</summary>
             {proposal.output.limitations.map((text) => (
-              <p key={text}>{text}</p>
+              <p key={text}>{resumeText(text, t)}</p>
             ))}
           </details>
         </>
