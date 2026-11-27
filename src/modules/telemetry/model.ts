@@ -83,6 +83,8 @@ export const telemetrySnapshotSchema = z
             fallbacks: z.number().int().nonnegative(),
             inputTokens: z.number().int().nonnegative(),
             outputTokens: z.number().int().nonnegative(),
+            /** Estimated micro-dollars where pricing is configured. */
+            costMicros: z.number().int().nonnegative().optional(),
           })
           .strict(),
       )

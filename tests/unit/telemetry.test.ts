@@ -226,3 +226,28 @@ it("renders recorded gateway usage per approved provider and rejects free-form p
   ];
   expect(() => renderMetrics(snapshot)).toThrow();
 });
+it("renders estimated provider spend only where pricing produced a cost", () => {
+  const snapshot = telemetrySnapshot();
+  snapshot.gateway = [
+    {
+      provider: "openai",
+      calls: 2,
+      failures: 0,
+      fallbacks: 0,
+      inputTokens: 1000,
+      outputTokens: 200,
+      costMicros: 6000,
+    },
+    {
+      provider: "lunaroute",
+      calls: 1,
+      failures: 0,
+      fallbacks: 0,
+      inputTokens: 10,
+      outputTokens: 1,
+    },
+  ];
+  const text = renderMetrics(snapshot);
+  expect(text).toContain('rolefoundry_ai_estimated_cost_usd_24h{provider="openai"} 0.006');
+  expect(text).not.toContain('rolefoundry_ai_estimated_cost_usd_24h{provider="lunaroute"}');
+});

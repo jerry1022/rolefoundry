@@ -597,3 +597,71 @@ it("reserves rolling provider token budgets and settles once", async () => {
     ]);
   }
 });
+
+it("records estimated cost from configured pricing and reports provider spend", async () => {
+  const recipient = `fake-cost-${suffix}`;
+  expect(
+    (
+      await stack.request("identity/admin/ai-recipients", admin, "POST", {
+        purpose: "resume",
+        recipient,
+        reason: "Reviewed priced route",
+      })
+    ).status,
+  ).toBe(201);
+  try {
+    const member = await stack.member();
+    const taskId = await startedTask(member, "resume-version:cost");
+    const priced = new AIGateway({
+      policy: parseGatewayPolicy(
+        JSON.stringify({
+          routes: {
+            "resume.wording": {
+              primary: {
+                adapter: recipient,
+                model: "fake-model",
+                recipients: [recipient],
+                pricing: { inputPerMillionUsd: 3, outputPerMillionUsd: 15 },
+              },
+              deadlineMs: 5000,
+              primaryAttempts: 1,
+              maxInputChars: 4000,
+              maxOutputTokens: 200,
+              concurrency: 1,
+            },
+          },
+        }),
+      ),
+      adapters: [
+        new FakeAdapter(recipient, [
+          { text: good, usage: { inputTokens: 1000, outputTokens: 200 } },
+        ]),
+      ],
+      templates: gatewayTemplates,
+      authority: new SupabaseGatewayAuthority(stack.privileged),
+    });
+    const result = await priced.execute(
+      request(taskId, member.id, "resume-version:cost"),
+      wordingSpec,
+      new AbortController().signal,
+    );
+    expect(result).toMatchObject({ state: "succeeded", costMicros: 6000 });
+    await new SupabaseGatewayRecorder(stack.privileged).record(
+      result,
+      new AbortController().signal,
+    );
+    const stored = await stack.sql.query(
+      "select cost_micros from public.gateway_results where task_id=$1",
+      [taskId],
+    );
+    expect(stored.rows[0].cost_micros).toBe("6000");
+    const snapshot = telemetrySnapshotSchema.parse(
+      (await stack.privileged.rpc("telemetry_snapshot")).data,
+    );
+    expect(snapshot.gateway?.find((item) => item.provider === recipient)?.costMicros).toBe(6000);
+  } finally {
+    await stack.sql.query("delete from public.ai_recipient_approvals where recipient=$1", [
+      recipient,
+    ]);
+  }
+});

@@ -84,6 +84,8 @@ export interface GatewayAttempt {
   outcome: "ok" | ProviderFailureKind | "invalid-json" | "invalid-schema" | "invalid-reference";
   latencyMs: number;
   usage: GatewayUsage | null;
+  /** Estimated cost in micro-dollars from reported usage and configured pricing; null if unknown. */
+  costMicros: number | null;
   fallbackReason: ProviderFailureKind | null;
 }
 
@@ -101,6 +103,8 @@ export interface GatewayResult<T> {
   model: string | null;
   attempts: GatewayAttempt[];
   usage: GatewayUsage;
+  /** Sum of known attempt costs (micro-dollars); null when no attempt had pricing and usage. */
+  costMicros: number | null;
   latencyMs: number;
 }
 
