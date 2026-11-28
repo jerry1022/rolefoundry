@@ -313,7 +313,7 @@ test("dark theme applies before paint, persists and follows the system setting",
   expect(luminance).toBeGreaterThan(0.4);
 });
 
-test("demo routes meet WCAG 2.1 AA in light and dark themes and both languages", async ({
+test("demo routes meet WCAG 2.1 AA in light and dark themes and all three languages", async ({
   browser,
 }) => {
   test.setTimeout(180000);
@@ -338,6 +338,8 @@ test("demo routes meet WCAG 2.1 AA in light and dark themes and both languages",
     ...["/", "/jobs/", "/learning/"].flatMap((route) => [
       { route, theme: "light", locale: "zh-TW" },
       { route, theme: "dark", locale: "zh-TW" },
+      { route, theme: "light", locale: "ja" },
+      { route, theme: "dark", locale: "ja" },
     ]),
   ];
   const failures: string[] = [];
@@ -354,6 +356,7 @@ test("demo routes meet WCAG 2.1 AA in light and dark themes and both languages",
     await page.goto(route);
     await expect(page.locator("h1")).toBeVisible();
     await expect(page.locator("html")).toHaveAttribute("data-theme", theme);
+    await expect(page.locator("html")).toHaveAttribute("lang", locale);
     const result = await new AxeBuilder({ page })
       .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"])
       .analyze();
@@ -392,4 +395,46 @@ test("mobile navigation is keyboard operable and hidden from Tab while closed", 
   // On desktop the sidebar is always reachable.
   await page.setViewportSize({ width: 1280, height: 900 });
   await expect(page.locator("#workspace-navigation")).not.toHaveAttribute("inert", "");
+});
+
+test("Japanese translates content, survives reload and fits a phone", async ({
+  page,
+}, testInfo) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.goto("/");
+  await page.getByRole("button", { name: /日本語/ }).click();
+  await expect(page.locator("html")).toHaveAttribute("lang", "ja");
+  await expect(page.locator("h1")).toContainText("新しい可能性");
+  await expect(page.getByRole("navigation")).toContainText("求人を探す");
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  await page.screenshot({ path: testInfo.outputPath("orbit-ja-desktop.png"), fullPage: true });
+  await page.getByRole("button", { name: "ダークテーマ", exact: true }).click();
+  await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
+  await page.screenshot({ path: testInfo.outputPath("orbit-ja-dark.png"), fullPage: true });
+  await page.getByRole("button", { name: "ライトテーマ", exact: true }).click();
+  await page.reload();
+  await expect(page.locator("html")).toHaveAttribute("lang", "ja");
+  await page.goto("/jobs/");
+  await expect(page.locator(".job-card").first()).toContainText("エンジニア");
+  await page.getByLabel("求人を検索", { exact: true }).fill("AIアプリケーション");
+  await expect(page.locator(".job-card")).toHaveCount(1);
+  await page.goto("/assessments/");
+  await expect(page.locator("h2").first()).toContainText("引用が誤っています");
+  await page.setViewportSize({ width: 390, height: 844 });
+  for (const route of ["/", "/jobs/", "/learning/", "/resume/", "/applications/"]) {
+    await page.goto(route);
+    await expect(page.locator("html")).toHaveAttribute("lang", "ja");
+    await expect(page.locator("h1")).toBeVisible();
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(
+      391,
+    );
+  }
+  await page.goto("/");
+  await page.screenshot({ path: testInfo.outputPath("orbit-ja-mobile.png"), fullPage: true });
+  await page.getByRole("button", { name: /中文/ }).click();
+  await expect(page.locator("html")).toHaveAttribute("lang", "zh-TW");
+  await expect(page.locator("h1")).toContainText("好事正在前方");
+  await page.getByRole("button", { name: /EN English/ }).click();
+  await expect(page.locator("html")).toHaveAttribute("lang", "en");
+  await expect(page.locator("h1")).toContainText("Good things ahead");
 });

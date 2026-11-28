@@ -1,9 +1,10 @@
 # Localization
 
-The workspace shell and every demo screen are available in English and Traditional Chinese (Taiwan). The top-bar **EN / Chinese** switch stores the choice per browser (`rolefoundry.locale.v1`), separately from workspace data, and keeps `<html lang>` in sync so screen readers and CJK font fallbacks follow it. Static pages render English first and apply a stored preference after hydration.
+The workspace shell and every demo screen are available in English, Traditional Chinese (Taiwan) and Japanese. The top-bar **English / Chinese / Japanese** switch stores the choice per browser (`rolefoundry.locale.v1`), separately from workspace data, and keeps `<html lang>` in sync so screen readers and CJK font fallbacks follow it. Static pages render English first and apply a stored preference after hydration.
 
 ## How it works
 
+- Japanese UI messages live in `src/lib/messages/ja/`, with the same English keys and placeholders as zh-TW. Japanese demo content and career guides live in `fixtures-ja.ts` and `career-paths-ja.ts`.
 - `src/lib/i18n.tsx` provides `LocaleProvider`, `useI18n()` → `{ locale, setLocale, t, fmt }` and the `msg()` marker.
 - Keys are the English source strings. `t("{n}% overlap", { n })` interpolates named placeholders; a missing translation falls back to English, so an untranslated string never breaks a screen.
 - `fmt` wraps `Intl`: `number`, `date`, `percent`, `list` (conjunctions follow the locale) and `monthlyRange` (`NT$90k–140k / month` in English; compact ten-thousand units and a localized per-month suffix in Traditional Chinese).
@@ -13,7 +14,7 @@ The workspace shell and every demo screen are available in English and Tradition
 ## Adding or changing text
 
 1. Wrap UI text in `t("…")` inside components. For messages defined outside a component (navigation, option lists), wrap the literal in `msg("…")` and render it with `t(value)`.
-2. Add the Traditional Chinese entry to the matching area file in `src/lib/messages/zh-TW/` (`shell`, `catalog`, `dashboard`, `profile`, `learning`, `resume`, `applications`, `admin`, `architecture`, `vocabulary` for short shared data labels, or `common` for generic UI words used by several areas). A newly localized screen gets its own file, registered in `index.ts`.
+2. Add the Japanese entry in `src/lib/messages/ja/` and the Traditional Chinese entry to the matching area file in `src/lib/messages/zh-TW/` (`shell`, `catalog`, `dashboard`, `profile`, `learning`, `resume`, `applications`, `admin`, `architecture`, `vocabulary` for short shared data labels, or `common` for generic UI words used by several areas). A newly localized screen gets its own file, registered in `index.ts`.
 3. Run `npm run i18n:check`. CI runs it too, and fails on missing, unused or duplicated keys. Unit tests also require every placeholder to appear in its translation.
 
 Keep `t()` arguments literal. The checker extracts literals, so `t(cond ? "A" : "B")` hides keys; write `cond ? t("A") : t("B")`.
@@ -40,4 +41,8 @@ English output is byte-identical to the pre-localization UI, so English plural q
 
 ## Loading
 
-English source strings are the keys, so English needs no catalogue. The zh-TW catalogue (about 52 KB gzip) is a separate chunk loaded on demand by `loadMessages`. The locale provider switches to zh-TW only after it has loaded, a stale load cannot override a newer choice, and a failed load keeps the current language. English visitors never download it. Code that calls `translate("zh-TW", …)` outside the provider, such as unit tests, must `await loadMessages("zh-TW")` first.
+English source strings are the keys, so English needs no catalogue. The zh-TW and Japanese catalogues are separate chunks loaded on demand by `loadMessages`. The locale provider switches to a translated locale only after its catalogue has loaded, a stale load cannot override a newer choice, and a failed load keeps the current language. English visitors never download it. Code that calls `translate("zh-TW", …)` outside the provider, such as unit tests, must `await loadMessages("zh-TW")` first.
+
+## Japanese content boundaries
+
+All UI messages, including connected screen labels and server error translations, have Japanese entries checked against the same source keys and placeholders. Demo jobs, all 30 course notes, 12 scenarios and ten career guides have Japanese editorial text. Official course titles remain unchanged. Published backend content still uses its existing reviewed English/zh-TW versions; Japanese viewers receive the English source when no reviewed Japanese content exists. Legal consent text also retains its original version and language. Selecting Japanese does not machine-translate real listings or change consent policy.

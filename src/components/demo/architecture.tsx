@@ -116,7 +116,7 @@ const STATUS = [
       msg("Fixture-backed search, overlap matching and course ranking."),
       msg("Scenario scoring and local evidence records."),
       msg("Local resume editing, text export and an application board."),
-      msg("English and Traditional Chinese, light and dark themes."),
+      msg("English, Traditional Chinese and Japanese, light and dark themes."),
     ],
   },
   {

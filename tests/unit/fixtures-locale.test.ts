@@ -61,3 +61,32 @@ describe("zh-TW demo fixture text", () => {
     }
   });
 });
+
+describe("Japanese editorial fixtures", () => {
+  it("covers every demo role, course, question and career path with aligned lists", () => {
+    for (const job of jobs) {
+      const localized = localizedDemoJob(job, "ja");
+      expect(localized.lang).toBe("ja");
+      expect(localized.responsibilities).toHaveLength(job.responsibilities.length);
+      expect(localized.title).not.toBe(job.title);
+    }
+    for (const course of courses) {
+      const localized = localizedDemoCourse(course, "ja");
+      expect(localized.lang).toBe("ja");
+      expect(localized.title).toBe(course.title);
+      expect(localized.summary).not.toBe(course.summary);
+    }
+    for (const question of questions) {
+      const localized = localizedDemoQuestion(question, "ja");
+      expect(localized.lang).toBe("ja");
+      expect(localized.options).toHaveLength(question.options.length);
+      expect(localized.correct).toBe(question.correct);
+    }
+    for (const path of careerPaths) {
+      const localized = localizedCareerPath(path, "ja");
+      expect(localized.lang).toBe("ja");
+      expect(localized.learning).toHaveLength(path.learning.length);
+      expect(localized.evidence).toHaveLength(path.evidence.length);
+    }
+  });
+});
