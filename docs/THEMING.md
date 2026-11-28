@@ -1,6 +1,6 @@
 # Theming
 
-The workspace ships the **Aurora Forest** light theme and a generated dark theme. The top-bar switch offers system, light and dark. The choice is stored per browser (`rolefoundry.theme.v1`), and "system" follows live OS changes. A small inline script in `<head>` stamps `<html data-theme>` before first paint, so a dark preference never flashes light.
+The workspace ships the **Orbit Studio** light theme and a generated dark theme. The top-bar switch offers system, light and dark. The choice is stored per browser (`rolefoundry.theme.v1`), and "system" follows live OS changes. A small inline script in `<head>` stamps `<html data-theme>` before first paint, so a dark preference never flashes light.
 
 ## How the dark theme is built
 
@@ -44,3 +44,7 @@ axe cannot compute contrast over gradient backgrounds, and it reports those node
 
 Page content is wrapped in React's `<ViewTransition>` keyed by the route (`src/components/shell.tsx`). Navigating fades the old page out and the new page in with a slight rise. The shell (sidebar and top bar) is excluded from the animation, and the transition is disabled under reduced motion. Browsers without the View Transitions API simply swap the page. Staggered section entrance targets `.route-content > *`.
 
+
+## Orbit Studio visual refresh
+
+The shell uses a dark ink-green sidebar, mint active navigation and a cooler paper canvas. The overview hero uses CSS orbital rings, a translucent core and floating skill/work/learning icons. These are code-native decorations with no image download or new animation dependency. Larger typography and cards adapt to English, Traditional Chinese and Japanese. The orbit animation follows reduced-motion preferences; mobile stacks the illustration below the hero copy. Dark colors remain generated through the existing pipeline.

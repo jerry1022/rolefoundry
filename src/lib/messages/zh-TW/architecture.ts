@@ -36,7 +36,8 @@ export const architecture = {
     "本機履歷編輯、文字匯出與應徵看板。",
   "NO ACCOUNT NEEDED": "不需要帳號",
   "In this demo": "示範版內容",
-  "English and Traditional Chinese, light and dark themes.": "英文與繁體中文介面，淺色與深色主題。",
+  "English, Traditional Chinese and Japanese, light and dark themes.":
+    "英文、繁體中文與日文介面，淺色與深色主題。",
   "IMPLEMENTED AND TESTED LOCALLY": "已實作並在本機驗證",
   "With a configured backend": "設定後端之後",
   "Invitation-only Auth, consent, RLS and atomic quota reservations.":

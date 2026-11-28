@@ -18,4 +18,6 @@ These designs describe the production target. Modules 01–10 have server implem
 | [12](12-worker-tasks.md) | Background task execution |
 | [13](13-admin-operations.md) | Administration, security and operations |
 
+Proposed extension: [14 — AI mock interview and learning feedback](14-mock-interview.md). This is a new product plan, not implemented functionality or part of the thirteen-module completion claim.
+
 Shared conventions: IDs are opaque strings; stored timestamps are UTC; public publication and private ownership are different access rules. The API namespace is `/api/v1`. All mutating production operations derive the owner from the authenticated session, never from a trusted client-provided user ID. See [API](../API.md) and [data model](../DATA_MODEL.md).

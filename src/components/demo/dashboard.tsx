@@ -16,7 +16,7 @@ import {
   Sprout,
 } from "lucide-react";
 import { courses, jobs } from "@/lib/fixtures";
-import { searchableDemoJobs } from "@/lib/fixtures-locale";
+import { localizedDemoCourse, localizedDemoJob, searchableDemoJobs } from "@/lib/fixtures-locale";
 import { matchJob, recommendCourses, searchJobs, skillLabels, type Job } from "@/lib/domain";
 import { useWorkspace } from "@/lib/workspace";
 import { useI18n } from "@/lib/i18n";
@@ -24,7 +24,7 @@ import { SectionHeading, JobDetails, JobCard } from "./shared";
 
 export function Dashboard() {
   const { state } = useWorkspace();
-  const { t, fmt } = useI18n();
+  const { t, locale } = useI18n();
   const [selected, setSelected] = useState<Job | null>(null);
   const recommended = searchJobs(
     searchableDemoJobs,
@@ -35,10 +35,12 @@ export function Dashboard() {
   ).slice(0, 3);
   const target = recommended[0];
   const gaps = target ? matchJob(target, state.knownSkills).missing : [];
-  const nextCourse =
+  const nextCourse = localizedDemoCourse(
     recommendCourses(courses, gaps, state.knownSkills).find(
       (r) => !state.completedCourses.includes(r.course.id),
-    )?.course || courses[1];
+    )?.course || courses[1],
+    locale,
+  );
   return (
     <>
       <PageHeading
@@ -75,34 +77,35 @@ export function Dashboard() {
           </span>
         </div>
         <div className="hero-art" aria-hidden="true">
-          <div className="orbit orbit-one" />
-          <div className="orbit orbit-two" />
-          <div className="art-spark spark-one">✳</div>
-          <div className="art-spark spark-two">✦</div>
+          <div className="hero-orbit-scene">
+            <div className="hero-orbit-halo" />
+            <div className="hero-orbit-ring ring-a" />
+            <div className="hero-orbit-ring ring-b" />
+            <div className="hero-orbit-ring ring-c" />
+            <div className="hero-orbit-core">
+              <Sprout size={68} strokeWidth={1.2} />
+            </div>
+            <span className="hero-orbit-satellite satellite-a">
+              <Layers3 size={22} />
+            </span>
+            <span className="hero-orbit-satellite satellite-b">
+              <BriefcaseBusiness size={22} />
+            </span>
+            <span className="hero-orbit-satellite satellite-c">
+              <BookOpen size={22} />
+            </span>
+          </div>
           <div className="floating-label label-top">
             <CheckCircle2 size={15} />
             {t("A little more confidence")}
           </div>
-          <div className="art-card">
-            <span className="art-card-icon">
-              <Sprout size={34} />
-            </span>
-            <span className="art-card-line">{t("YOUR NEXT ROLE")}</span>
-            <strong>
-              {t("Made for")}
-              <br />
-              {t("what's next.")}
-            </strong>
-            <div className="art-progress">
-              <span />
-            </div>
-            <span className="art-card-bottom">
-              {t("Always a work in progress")} <ArrowUpRight size={15} />
-            </span>
-          </div>
           <div className="floating-label label-bottom">
             <Sparkles size={15} />
             {t("Skills with a direction")}
+          </div>
+          <div className="hero-art-caption">
+            {t("YOUR NEXT ROLE")}
+            <span>{t("Always a work in progress")}</span>
           </div>
         </div>
       </section>
@@ -164,7 +167,11 @@ export function Dashboard() {
       </section>
       <div className="dashboard-bottom">
         <section className="panel growth-panel">
-          <SectionHeading title={t("Your growth snapshot")} href="/skills/" link="View profile" />
+          <SectionHeading
+            title={t("Your growth snapshot")}
+            href="/skills/"
+            link={t("View profile")}
+          />
           <div className="growth-content">
             <div className="growth-ring">
               <svg viewBox="0 0 120 120" aria-hidden="true">
@@ -190,7 +197,9 @@ export function Dashboard() {
               <h3>{gaps.length ? t(skillLabels[gaps[0]]) : t("Add evidence to your skills")}</h3>
               <p>
                 {gaps.length
-                  ? t("A useful next step toward {role} roles.", { role: target.title })
+                  ? t("A useful next step toward {role} roles.", {
+                      role: localizedDemoJob(target, locale).title,
+                    })
                   : t("Try a short scenario to make your skills more tangible.")}
               </p>
               <Link href="/assessments/" className="text-link">

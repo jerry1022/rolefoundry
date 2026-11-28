@@ -2,6 +2,7 @@ import type { Messages } from "./types";
 
 /** Overview page. */
 export const dashboard = {
+  "View profile": "查看檔案",
   "YOUR CAREER, IN THE MAKING": "你的職涯，正在成形",
   "Good things ahead, {name}.": "{name}，好事正在前方。",
   "Find your direction. Build the skills. Make your next move.": "找到方向、培養技能、邁出下一步。",
@@ -16,8 +17,6 @@ export const dashboard = {
   "A 3-question preview. No perfect answers required.": "三題快速預覽，不需要完美答案。",
   "A little more confidence": "多一點自信",
   "YOUR NEXT ROLE": "你的下一個角色",
-  "Made for": "為接下來",
-  "what's next.": "而準備。",
   "Always a work in progress": "永遠持續進步中",
   "Skills with a direction": "有方向的技能",
   "Workspace statistics": "工作區統計",

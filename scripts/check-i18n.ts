@@ -4,6 +4,7 @@ import { courses, jobs } from "../src/lib/fixtures";
 import { skillLabels, stages, tracks } from "../src/lib/domain";
 import { careerPaths } from "../src/lib/career-paths";
 import { zhTW, zhTWSections } from "../src/lib/messages/zh-TW/index";
+import { ja, jaSections } from "../src/lib/messages/ja/index";
 
 /**
  * Keeps zh-TW in sync with the source. Keys are English strings found in
@@ -65,7 +66,10 @@ for (const [section, messages] of Object.entries(zhTWSections))
   }
 // Object literals silently keep the last duplicate, so also scan each section file's text.
 const keyLine = /^\s+(?:"((?:[^"\\]|\\.)*)"|([A-Za-z_$][\w$]*)):\s*["\n]/gm;
-for (const file of await walk("src/lib/messages/zh-TW")) {
+for (const file of [
+  ...(await walk("src/lib/messages/zh-TW")),
+  ...(await walk("src/lib/messages/ja")),
+]) {
   const seen = new Set<string>();
   for (const match of (await readFile(file, "utf8")).matchAll(keyLine)) {
     const key = match[1] !== undefined ? JSON.parse(`"${match[1]}"`) : match[2];
@@ -78,6 +82,22 @@ for (const [key, from] of used)
 for (const [key, section] of owners)
   if (!used.has(key)) problems.push(`unused zh-TW: ${JSON.stringify(key)} (${section})`);
 
+// Every supported catalogue must cover the same UI contract, with exact placeholders.
+const placeholders = (text: string) =>
+  [...text.matchAll(/\{(\w+)\}/g)]
+    .map((match) => match[1])
+    .sort()
+    .join(",");
+const japaneseKeys = Object.values(jaSections).flatMap((section) => Object.keys(section));
+if (new Set(japaneseKeys).size !== japaneseKeys.length) problems.push("duplicate Japanese keys");
+for (const [key, from] of used) {
+  if (!ja[key]?.trim()) problems.push(`missing ja: ${JSON.stringify(key)} (${from})`);
+  else if (placeholders(key) !== placeholders(ja[key]))
+    problems.push(`ja placeholders differ: ${JSON.stringify(key)}`);
+}
+for (const key of Object.keys(ja))
+  if (!used.has(key)) problems.push(`unused ja: ${JSON.stringify(key)}`);
+
 for (const problem of problems) console.error(problem);
 if (problems.length) process.exit(1);
-console.log(`All ${used.size} UI and data labels have zh-TW translations.`);
+console.log(`All ${used.size} UI and data labels have zh-TW and ja translations.`);

@@ -71,7 +71,7 @@ Changes stay in your browser. Reset them from **Catalog studio**.
 | **Skill dictionary** | Optional bilingual concepts, exact aliases, immutable snapshots, reviewed relations/merges and runtime skill choices |
 | **Account & privacy** | Optional server-backed email OTP, invitations, consent, weekly allowance and admin controls; static demo stays local |
 
-**English and Traditional Chinese.** The interface, the demo roles, course notes and scenarios, and the version-pinned skill names follow the selected language ([localization](docs/LOCALIZATION.md)). Administrators can publish reviewed zh-TW translations of [jobs](docs/CATALOG_SETUP.md#reviewed-translations), [course notes](docs/LEARNING_SETUP.md#reviewed-course-translations) and [assessment questions](docs/ASSESSMENT_SETUP.md#reviewed-question-translations). Each translation is bound to one published version and audited, and English remains the fallback.
+**English, Traditional Chinese and Japanese.** The interface, the demo roles, course notes and scenarios, and the version-pinned skill names follow the selected language ([localization](docs/LOCALIZATION.md)). Administrators can publish reviewed zh-TW translations of [jobs](docs/CATALOG_SETUP.md#reviewed-translations), [course notes](docs/LEARNING_SETUP.md#reviewed-course-translations) and [assessment questions](docs/ASSESSMENT_SETUP.md#reviewed-question-translations). Each translation is bound to one published version and audited, and English remains the fallback.
 
 ### Honest by default
 
@@ -173,7 +173,7 @@ tests/               Domain tests and browser journeys
 - [Career journey playbook](AI_CAREER_PLAN.md)
 - [Deployment guide](docs/DEPLOYMENT.md) and [roadmap](docs/ROADMAP.md)
 
-All documentation is in English. The initial production market is Taiwan: the workspace UI can switch between English and Traditional Chinese (the EN / Chinese switch in the top bar), with locale-aware number, date and salary formatting. See [localization](docs/LOCALIZATION.md) for the translation workflow and `npm run i18n:check`.
+All documentation is in English. The initial production market is Taiwan: the workspace UI can switch between English, Traditional Chinese and Japanese (the English / Chinese / Japanese switch in the top bar), with locale-aware number, date and salary formatting. See [localization](docs/LOCALIZATION.md) for the translation workflow and `npm run i18n:check`.
 
 ## Development checks
 
@@ -200,6 +200,8 @@ npm run worker:demo
 **Docker:** `docker build -t rolefoundry .` then `docker run --rm -p 3000:3000 rolefoundry`.
 
 See [deployment details](docs/DEPLOYMENT.md). The long-running worker uses `Dockerfile.worker` or `npm run worker:start` and is deployed separately from Vercel Functions; see [worker setup](docs/ASSESSMENT_SETUP.md).
+
+The [AI mock interview plan](docs/design/14-mock-interview.md) proposes a private text interview, evidence-linked feedback, reviewed DeepLearning.AI recommendations and focused retakes. This extension is design only; no mock-interview runtime is connected.
 
 ## Build the next chapter with us
 

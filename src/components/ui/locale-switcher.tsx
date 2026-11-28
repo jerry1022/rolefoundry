@@ -2,9 +2,10 @@
 import { Languages } from "lucide-react";
 import { locales, useI18n, type Locale } from "@/lib/i18n";
 
-const names: Record<Locale, string> = { en: "English", "zh-TW": "繁體中文" };
+const names: Record<Locale, string> = { en: "English", "zh-TW": "繁體中文", ja: "日本語" };
+const labels: Record<Locale, string> = { en: "EN", "zh-TW": "中文", ja: "日本語" };
 
-/** Compact two-option switch; the choice is stored per browser, separate from workspace data. */
+/** Native language names remain recognizable in every locale. */
 export function LocaleSwitcher() {
   const { locale, setLocale, t } = useI18n();
   return (
@@ -19,7 +20,7 @@ export function LocaleSwitcher() {
           className={locale === value ? "selected" : ""}
           onClick={() => setLocale(value)}
         >
-          {value === "en" ? "EN" : "中文"}
+          {labels[value]}
           <span className="sr-only">{names[value]}</span>
         </button>
       ))}

@@ -1,5 +1,6 @@
 import type { CareerPath, CareerPathId } from "./career-paths";
 import type { Locale } from "./i18n";
+import { careerPathsJa } from "./career-paths-ja";
 
 type GuideText = Pick<CareerPath, "work" | "learning" | "evidence" | "project">;
 
@@ -146,13 +147,18 @@ export const careerPathsZhTw: Record<CareerPathId, GuideText> = {
 export function localizedCareerPath(
   path: CareerPath,
   locale: Locale,
-): CareerPath & { lang: "en" | "zh-Hant" } {
-  const text = locale === "zh-TW" ? careerPathsZhTw[path.id] : undefined;
+): CareerPath & { lang: "en" | "zh-Hant" | "ja" } {
+  const text =
+    locale === "zh-TW"
+      ? careerPathsZhTw[path.id]
+      : locale === "ja"
+        ? careerPathsJa[path.id]
+        : undefined;
   if (
     !text ||
     text.learning.length !== path.learning.length ||
     text.evidence.length !== path.evidence.length
   )
     return { ...path, lang: "en" };
-  return { ...path, ...text, lang: "zh-Hant" };
+  return { ...path, ...text, lang: locale === "ja" ? "ja" : "zh-Hant" };
 }

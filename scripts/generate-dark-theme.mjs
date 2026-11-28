@@ -53,7 +53,7 @@ ${ROOT} .segmented button.selected {
 
 /** Already-dark or brand-gradient surfaces keep their light-theme colors. */
 const keep =
-  /(\.sidebar|\.brand|\.hero-|\.learning-hero|\.primary-node|\.button\.(primary|dark)|\.nav-item|\.nav-label|\.nav-count|\.round-button|\.avatar|\.art-|\.floating-label|\.orbit|\.spark|\.tiny-star|\.status-dot|\.locale-switcher button\.selected|\.skip-link|\.mobile-scrim|::selection|\.workspace-tag)/;
+  /(\.sidebar|\.brand|\.hero-|\.learning-hero|\.primary-node|\.button\.(primary|dark)|\.nav-item|\.nav-label|\.nav-count|\.round-button|\.avatar|\.art-|\.floating-label|\.orbit|\.spark|\.satellite-|\.tiny-star|\.status-dot|\.locale-switcher button\.selected|\.skip-link|\.mobile-scrim|::selection|\.workspace-tag)/;
 
 const roleOf = (prop) =>
   /^(color|fill|stroke|caret-color|text-decoration-color|-webkit-text-fill-color|outline-color)$/.test(
